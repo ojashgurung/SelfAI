@@ -13,6 +13,10 @@ class UserAlreadyExists(SelfAIException):
 
     pass
 
+class UserNotFound(SelfAIException):
+    """User Not Found"""
+    pass
+
 def create_exception_handler(
     status_code: int, initial_detail: Any
 ) -> Callable[[Request, Exception], JSONResponse]:
@@ -32,6 +36,17 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "User with email already exists",
                 "error_code": "user_exists",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        UserNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            initial_detail={
+                "message": "User not found",
+                "error_code": "user_not_found",
             },
         ),
     )
