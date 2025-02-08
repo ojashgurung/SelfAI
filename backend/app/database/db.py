@@ -1,11 +1,20 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlmodel import SQLModel, create_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:8021@localhost:5432/SelfAI'
+from ..config import Config
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+async_engine = AsyncEngine(create_async_engine(url=Config.DATABASE_URL, echo=True))
 
-SessionLocal = sessionmaker(autocommit = False, autoflush = False , bind= engine)
+async def init_db() -> None:
+    async with async_engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
 
-Base = declarative_base()
+async def get_session() -> AsyncSession:
+    async_session = sessionmaker(
+        bind=async_engine, class_=AsyncSession, expire_on_commit=False
+    )
+
+    async with async_session() as session:
+        yield session
