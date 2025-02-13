@@ -1,57 +1,39 @@
-import uuid
-from datetime import date, datetime
-from typing import List, Optional
+import uuid as uuid_pkg
+from datetime import datetime
+from typing import Optional
 from enum import Enum
 
-from sqlmodel import Column, Field, SQLModel, create_engine
-import sqlalchemy.dialects.postgresql as pg
+from sqlmodel import Field, SQLModel
+
 
 class UserRole(str, Enum):
     ADMIN = "admin"
     USER = "user"
 
-class User(SQLModel, table = True):
-    uuid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID, nullable=False, primary_key=True, default=uuid.uuid4)
-    )
+class Users(SQLModel, table = True):
+    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
+    
     email: str = Field(unique=True, nullable=False)
-    password_hash: str = Field(
-        sa_column=Column(pg.VARCHAR, nullable=False), exclude=True
-    )
-    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
-    update_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+    password_hash: str = Field(nullable=False, exclude=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    update_at: datetime = Field(default_factory=datetime.now)
 
-    personal_bio: str = Field(
-        sa_column=Column(pg.TEXT, nullable=True)
-    ) 
+    personal_bio: Optional[str] = Field(default=None, nullable=True) 
 
-    linkedin_url: str = Field(
-        sa_column=Column(pg.VARCHAR, nullable=True)
-    )
+    linkedin_url: Optional[str] = Field(default=None, nullable=True)
 
-    github_url: str = Field(
-        sa_column=Column(pg.VARCHAR, nullable=True)
-    )
+    github_url: Optional[str] = Field(default=None, nullable=True)
 
-    resume_url: str = Field(
-        sa_column=Column(pg.VARCHAR, nullable=True)
-    )
+    resume_url: Optional[str] = Field(default=None, nullable=True)
 
-    vector_db_id: str = Field(
-        sa_column=Column(pg.VARCHAR, nullable=True)
-    ) 
+    vector_db_id: Optional[str] = Field(default=None, nullable=True) 
 
-    rag_enabled: bool = Field(
-        sa_column=Column(pg.BOOLEAN, default=True)
-    ) 
+    rag_enabled: bool = Field(default=True)
+    
 
-    is_premium: bool = Field(
-        sa_column=Column(pg.BOOLEAN, default=False)
-    )
+    is_premium: bool = Field(default=False)
 
-    role: UserRole = Field(
-        sa_column= Column(pg.ENUM(UserRole), default = UserRole.USER)
-    )
+    role: UserRole = Field(default= UserRole.USER)
 
     def __repr__(self):
         return f"<User {self.email} - Premium: {self.is_premium}>"
