@@ -10,11 +10,14 @@ class SelfAIException(Exception):
 
 class UserAlreadyExists(SelfAIException):
     """User has provided an email for a user who exists during sign up."""
-
     pass
 
 class UserNotFound(SelfAIException):
     """User Not Found"""
+    pass
+
+class InvalidCredentials(SelfAIException):
+    """User provided wrong email and password during log in."""
     pass
 
 def create_exception_handler(
@@ -47,6 +50,17 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "User not found",
                 "error_code": "user_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        InvalidCredentials,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "message": "Invalid Email or Password",
+                "error_code": "invalid_email_or_password",
             },
         ),
     )
