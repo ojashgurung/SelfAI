@@ -1,7 +1,16 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from .auth.routes import auth_router
+from .database.db import init_db
 
-version = "v1"
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Starting up... Initializing database.")
+    await init_db()  # Initialize the database on startup
+    yield  # This allows the app to run
+    print("Shutting down... Cleanup if necessary.")
+
+api_version = "v1"
 
 description = """
 A REST API for personal RAG application which knows you better than you.
@@ -16,18 +25,19 @@ This REST API is able to;
 - Premium Users role to get premium features and many more e.t.c
 """
 
-version_prefix =f"/api/{version}"
+version_prefix =f"/api/{api_version}"
 
 app = FastAPI(
     title="SelfAI",
     description=description,
-    version=version,
+    version=api_version,
     contact={
         "name": "Ojash Gurung",
-        "url": "https://github.com/ojasggg",
+        "url": "https://ojashgurung.com.np",
         "email":"gurungojash0@gmail.com",
-        "website": "https://ojashgurung.com.np"
     },
+    lifespan= lifespan
 )
+
 
 app.include_router(auth_router, prefix=f"{version_prefix}/auth", tags=["auth"])
