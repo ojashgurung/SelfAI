@@ -16,7 +16,16 @@ def extract_text_from_docx(file_path: str) -> str:
 def extract_text_from_md_html(file_path: str) -> str:
     """Extracts text from a Markdown or HTML file."""
     with open(file_path, "r", encoding="utf-8") as f:
-        return markdown.markdown(f.read())
+        md_content = f.read()
+    
+    html_content = markdown.markdown(md_content)
+    # Clean up the HTML by removing unnecessary tags (keeping only text)
+    text = re.sub(r'<[^>]+>', '', html_content) 
+    
+    # Clean up extra spaces and join text
+    text = ' '.join(text.split())
+
+    return text
     
 def clean_text(text: str) -> str:
     """Preprocess and clean extracted text while preserving currency symbols and percent signs.."""
@@ -24,6 +33,6 @@ def clean_text(text: str) -> str:
         return ""
 
     text = " ".join(text.split())
-    text = re.sub(r"[^a-zA-Z0-9\s$€£¥₹%]", "", text)
+    text = re.sub(r"[^a-zA-Z0-9\s$€£¥₹%://.]", "", text)
     text = text.strip().lower()  # Normalize text
     return text
