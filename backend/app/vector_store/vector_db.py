@@ -10,7 +10,7 @@ async def main():
         if not await pc.has_index(index_name):
             await pc.create_index(
                 name="SelfAI",
-                dimension=1536,
+                dimension=768,
                 metric="cosine",
                 spec=ServerlessSpec(
                     cloud="aws",
