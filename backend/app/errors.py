@@ -28,9 +28,18 @@ class NoSourceProvided(SelfAIException):
     """User didn't provided any source"""
     pass
 
-class TokenExpired(SelfAIException):
-    """User isn't authenticated"""
+class InvalidToken(SelfAIException):
+    """User has provided an invalid or expired token"""
     pass
+
+class AccessTokenRequired(SelfAIException):
+    """User has provided a refresh token when an access token is needed"""
+    pass
+
+class RefreshTokenRequired(SelfAIException):
+    """User has provided an access token when a refresh token is needed"""
+    pass
+
 
 def create_exception_handler(
     status_code: int, initial_detail: Any
@@ -100,12 +109,36 @@ def register_all_errors(app: FastAPI):
     )
 
     app.add_exception_handler(
-        TokenExpired,
+        InvalidToken,
         create_exception_handler(
             status_code=status.HTTP_401_UNAUTHORIZED,
             initial_detail={
-                "message": "User isn't authenticated. Token Expired.",
-                "error_code": "unauthorized_user",
+                "message": "Token is invalid Or expired",
+                "resolution": "Please get new token",
+                "error_code": "invalid_token",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        AccessTokenRequired,
+        create_exception_handler(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            initial_detail={
+                "message": "Please provide a valid access token",
+                "resolution": "Please get an access token",
+                "error_code": "access_token_required",
+            },
+        ),
+    )
+    app.add_exception_handler(
+        RefreshTokenRequired,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Please provide a valid refresh token",
+                "resolution": "Please get an refresh token",
+                "error_code": "refresh_token_required",
             },
         ),
     )
