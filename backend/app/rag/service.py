@@ -1,90 +1,96 @@
-import uuid
+
 import os
 import shutil
-from datetime import datetime
 
-from fastapi import UploadFile, Depends
-from fastapi.security import OAuth2PasswordBearer
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import UploadFile
+from langchain.prompts import ChatPromptTemplate
+from langchain_ollama.llms import OllamaLLM
 
 from .utils import (
     clean_text,
+    split_document,
     extract_text_from_docx,
     extract_text_from_pdf,
-    extract_text_from_md_html
+    extract_text_from_md_html,
+    get_embedding,
+    query_embedding
 )
 
-from ..errors import UnsupportedFileType, TokenExpired
-from ..auth.utils import decode_token
-from ..database.models import UserDataSource
-from .schemas import UserDataSourceCreate
+from ..vector_store.vector_db import (
+    get_query_pinecone,
+    upsert_to_pinecone,
+) 
 
-allowed_extension = ['.pdf','.docx', '.html','.md']
+from ..errors import UnsupportedFileType
 
-async def save_and_extract_text(file: UploadFile) -> str:
-    if file:
-        file_extension = os.path.splitext(file.filename)[1].lower()
 
-        if file_extension not in allowed_extension:
-            raise UnsupportedFileType()
-        
-        temp_file_path = f"temp_{file.filename}"
+class RagService:
+    async def save_and_extract_text(self, file: UploadFile, user_id: str) -> str:
+        allowed_extension = ['.pdf','.docx', '.html','.md']
+        if file:
+            file_extension = os.path.splitext(file.filename)[1].lower()
 
-        try:
-            # Save the uploaded file to a temporary file
-            with open(temp_file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-
-            if file_extension == '.pdf':
-                text = extract_text_from_pdf(temp_file_path)
-            elif file_extension == '.docx':
-                text = extract_text_from_docx(temp_file_path)
-            elif file_extension == '.md' or file_extension == '.html':
-                text = extract_text_from_md_html(temp_file_path)
-            else:
+            if file_extension not in allowed_extension:
                 raise UnsupportedFileType()
-            return clean_text(text)
-        finally:
-            if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
+            
+            temp_file_path = f"temp_{file.filename}"
 
+            try:
+                # Save the uploaded file to a temporary file
+                with open(temp_file_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+                if file_extension == '.pdf':
+                    text = extract_text_from_pdf(temp_file_path)
+                elif file_extension == '.docx':
+                    text = extract_text_from_docx(temp_file_path)
+                elif file_extension == '.md' or file_extension == '.html':
+                    text = extract_text_from_md_html(temp_file_path)
+                else:
+                    raise UnsupportedFileType()
+                print(file.content_type)
+                return await self.clean_and_chunk_text(text, file.filename, file.content_type, user_id)
+            finally:
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):  
-    user = decode_token(token)
-    if not user:
-        raise TokenExpired()
-    return user
-
-
-async def process_vectorize(
-    user_id: str, file: UploadFile = None, text: str = None, session: AsyncSession = None
-):
-    """Process uploaded personal bio file or raw text and store it."""
+    async def clean_and_chunk_text(self, text, filename:str, file_type:str,  user_id: str):
+        document = clean_text(text)
+        chunks = split_document(document, filename, file_type, user_id)
+        embeddings = get_embedding(chunks)
+        # print(embeddings)
+        return await upsert_to_pinecone(embeddings, user_id)
     
-    if not file and not text:
-        raise ValueError("Either a file or text input is required.")
-
-    # Read content
-    content = text or (await file.read()).decode("utf-8")
-
-    # Store in vector DB
-    vector_db_id = await store_in_vector_db(user_id, content)
-
-    # Save metadata in PostgreSQL
-    user_data_source = UserDataSource(
-        id=uuid.uuid4(),
-        uuid=user_id,
-        source="personal_bio",
-        vector_db_id=vector_db_id,
-        data=content,  # Optional: Store raw text
-        created_at=datetime.now,
-        update_at=datetime.now,
-    )
+    async def handle_query(self, text: str, namespace: str):
+        query_embeddings = query_embedding(text)
+        
+        return await get_query_pinecone(query_embeddings, namespace)
     
-    session.add(user_data_source)
-    await session.commit()
+    async def handle_answer(self, answer):
+        extracted_texts = [
+            match["metadata"].get("content", "") for match in answer["matches"]
+        ]
+        return "\n\n".join(extracted_texts)
+    
+    async def query_llm(self, retrieved_text: str, user_query: str): 
+        PROMPT_TEMPLATE = f"""
+            Use the following context to answer the user's question:
 
-    return vector_db_id
+            Context:
+            {retrieved_text}
+
+            User Question:
+            {user_query}
+
+            Provide a concise and accurate response.
+            """
+        
+        prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+        prompt = prompt_template.format(context=retrieved_text, question=user_query)
+        # print(prompt)
+
+        model = OllamaLLM(model="mistral")
+        response_text = model.invoke(prompt)
+        return response_text
+
+    
