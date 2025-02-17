@@ -1,80 +1,61 @@
-import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, status, UploadFile, File
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database.db import get_session
-from ..errors import NoSourceProvided
+from ..errors import NoSourceProvided, NoQueryProvided
 from .service import RagService
-from ..auth.dependencies import TokenBearer
+from ..auth.dependencies import AccessTokenBearer
 
-from pydantic import Field
-
-from .utils import (
-    clean_text
-)
 
 from .schemas import (
-    UploadFileRequest,
-    TestFileRequest
+    QueryRequest
 )
 
 rag_router = APIRouter()
 rag_service = RagService()
-access_token_bearer = TokenBearer()
+access_token_bearer = AccessTokenBearer()
 
-@rag_router.post("/upload-test", status_code=status.HTTP_201_CREATED)
+@rag_router.post("/upload-document", status_code=status.HTTP_201_CREATED)
 async def upload(
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(...),
     current_user: dict = Depends(access_token_bearer)
 ): 
-    user_id = current_user
-    if not file and not text:
+    user_id = current_user["user"]["user_uid"]
+    if not file:
         raise NoSourceProvided()
 
     if file:
         # If file is provided, extract text from it
-        text = await rag_service.save_and_extract_text(file)
-
-    elif text:
-        # If only text is provided, clean it directly
-        text = clean_text(text)
-
-
-    return {
-        "message": "Extracted Text.", 
-        "text": text,
-        "current_user_id" : user_id
-    } 
-
-@rag_router.post("/upload-doc", status_code=status.HTTP_201_CREATED)
-async def upload(
-    document: UploadFileRequest, 
-    session: AsyncSession = Depends(get_session),
-    current_user: dict = Depends(access_token_bearer)
-): 
-    file = document.file
-    text = document.text
-
-    user_uuid = current_user.get("uuid")
-    
-    if not file and not text:
-        raise NoSourceProvided()
-
-    if file:
-        # If file is provided, extract text from it
-        text = await rag_service.save_and_extract_text(file)
-
-    elif text:
-        # If only text is provided, clean it directly
-        text = clean_text(text)
-
-    # vector_db_id = await process_vectorize(user_uuid, file, text, session)
-
-
+        result = await rag_service.save_and_extract_text(file, user_id)
 
     return {
         "message": "File uploaded successfully.", 
-        "vector_db_id": text
-    }
+        "vector_ids": result["inserted_ids"],
+        "namespace" : result["namespace"]
+    } 
+
+
+@rag_router.post("/query", status_code=status.HTTP_201_CREATED)
+async def query_rag(
+    query: QueryRequest,
+    current_user: dict = Depends(access_token_bearer)
+    # TODO: Upload Chat history in Postgresql DB
+): 
+    user_id = current_user["user"]["user_uid"]
+    user_query = query.question
+    
+    if not user_query:
+        raise NoQueryProvided()
+    
+    if user_query:
+        response = await rag_service.handle_query(user_query, user_id)
+
+        if response:
+            retrieve_text = await rag_service.handle_answer(response)
+            answer = await rag_service.query_llm(retrieve_text, user_query)
+
+    return {
+        "message": "Response back successfully", 
+        "response" : answer
+    } 
