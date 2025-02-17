@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .auth.routes import auth_router
+from .rag.routes import rag_router
 from .database.db import init_db
+from .errors import register_all_errors
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,5 +41,7 @@ app = FastAPI(
     lifespan= lifespan
 )
 
+register_all_errors(app)
 
 app.include_router(auth_router, prefix=f"{version_prefix}/auth", tags=["auth"])
+app.include_router(rag_router, prefix=f"{version_prefix}/rag", tags=["rag"])

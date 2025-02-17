@@ -20,6 +20,34 @@ class InvalidCredentials(SelfAIException):
     """User provided wrong email and password during log in."""
     pass
 
+class UnsupportedFileType(SelfAIException):
+    """User provided file of unsupported extension"""
+    pass
+
+class NoSourceProvided(SelfAIException):
+    """User didn't provided any source"""
+    pass
+
+class InvalidToken(SelfAIException):
+    """User has provided an invalid or expired token"""
+    pass
+
+class AccessTokenRequired(SelfAIException):
+    """User has provided a refresh token when an access token is needed"""
+    pass
+
+class RefreshTokenRequired(SelfAIException):
+    """User has provided an access token when a refresh token is needed"""
+    pass
+
+class CollidingSource(SelfAIException):
+    """User has provided both text and file at same time"""
+    pass
+
+class NoQueryProvided(SelfAIException):
+    """User must provide query to retrieve data"""
+    pass
+
 def create_exception_handler(
     status_code: int, initial_detail: Any
 ) -> Callable[[Request, Exception], JSONResponse]:
@@ -65,6 +93,84 @@ def register_all_errors(app: FastAPI):
         ),
     )
 
+    app.add_exception_handler(
+        UnsupportedFileType,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "message": "Unsupported file type. Allowed types are: ['.pdf','.html' ,'.docx' ,'.md']",
+                "error_code": "unsupported_file_type",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        NoSourceProvided,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "message": "No file or text were provided.",
+                "error_code": "no_text_or_file",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        InvalidToken,
+        create_exception_handler(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            initial_detail={
+                "message": "Token is invalid Or expired",
+                "resolution": "Please get new token",
+                "error_code": "invalid_token",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        AccessTokenRequired,
+        create_exception_handler(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            initial_detail={
+                "message": "Please provide a valid access token",
+                "resolution": "Please get an access token",
+                "error_code": "access_token_required",
+            },
+        ),
+    )
+    app.add_exception_handler(
+        RefreshTokenRequired,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Please provide a valid refresh token",
+                "resolution": "Please get an refresh token",
+                "error_code": "refresh_token_required",
+            },
+        ),
+    )
+    app.add_exception_handler(
+        CollidingSource,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Please provide either File or Text",
+                "error_code": "collide_source",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        NoQueryProvided,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            initial_detail={
+                "message": "Query not provided",
+                "error_code": "query_not_provided",
+            },
+        ),
+    )
+
     @app.exception_handler(SQLAlchemyError)
     async def database__error(request, exc):
         print(str(exc))
@@ -75,3 +181,5 @@ def register_all_errors(app: FastAPI):
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+    
+    
