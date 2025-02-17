@@ -1,7 +1,4 @@
-from typing import Any, List
-
-from fastapi import Depends, Request, status
-from fastapi.exceptions import HTTPException
+from fastapi import Depends, Request
 from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -30,8 +27,6 @@ class TokenBearer(HTTPBearer):
             raise InvalidToken("No credentials provided")
 
         token = creds.credentials
-        print(creds)
-        print(f"Received Token: {token}")
 
         try:
             token_data = decode_token(token)  # Ensure decode_token is correct
@@ -41,15 +36,12 @@ class TokenBearer(HTTPBearer):
         if not self.token_valid(token):
             raise InvalidToken()
 
-        # self.verify_token_data(token_data)
+        self.verify_token_data(token_data)
 
         return token_data
 
     def token_valid(self, token: str) -> bool:
-        print(token)
-
         token_data = decode_token(token)
-        print(token_data)
 
         return token_data is not None
 
