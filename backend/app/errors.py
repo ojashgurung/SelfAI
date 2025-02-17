@@ -40,6 +40,13 @@ class RefreshTokenRequired(SelfAIException):
     """User has provided an access token when a refresh token is needed"""
     pass
 
+class CollidingSource(SelfAIException):
+    """User has provided both text and file at same time"""
+    pass
+
+class NoQueryProvided(SelfAIException):
+    """User must provide query to retrieve data"""
+    pass
 
 def create_exception_handler(
     status_code: int, initial_detail: Any
@@ -139,6 +146,27 @@ def register_all_errors(app: FastAPI):
                 "message": "Please provide a valid refresh token",
                 "resolution": "Please get an refresh token",
                 "error_code": "refresh_token_required",
+            },
+        ),
+    )
+    app.add_exception_handler(
+        CollidingSource,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Please provide either File or Text",
+                "error_code": "collide_source",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        NoQueryProvided,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            initial_detail={
+                "message": "Query not provided",
+                "error_code": "query_not_provided",
             },
         ),
     )
