@@ -12,7 +12,7 @@ export default function ChatPage() {
     <div className="flex min-h-full overflow-hidden relative">
       {/* Main Section */}
       <div
-        className={`flex flex-col transition-all duration-300 w-full ${!isChatSidebarOpen ? "" : "w-[70%]"}`}
+        className={`flex flex-col transition-all duration-300 ${!isChatSidebarOpen ? "w-full" : "w-[70%]"}`}
       >
         <div className="border-b border-gray-200">
           <ChatHeader />
