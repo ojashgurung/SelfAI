@@ -1,24 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, GraduationCap, Mail, FileCode } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 
 const prompts = [
   {
-    title: "Write a to-do list for a personal project or task",
-    icon: "👤",
+    title: "Where does he study right now and when does he graduate?",
+    icon: GraduationCap,
   },
   {
-    title: "Generate an email to reply to a job offer",
-    icon: "✉️",
+    title: "Can I get his portfolio website link and also his email?",
+    icon: Mail,
   },
   {
-    title: "Summarise this article or text for me in one paragraph",
-    icon: "📄",
-  },
-  {
-    title: "How does AI work in a technical capacity",
-    icon: "🤖",
+    title:
+      "Is he proficient in Python? And does he have any recent project in it?",
+    icon: FileCode,
   },
 ];
 
@@ -106,14 +103,14 @@ export default function ChatBody() {
           </div>
         ) : (
           <div className="h-full overflow-y-auto">
-            <div className="max-w-3xl mx-auto p-8">
+            <div className="max-w-3xl mx-auto p-8 mt-10">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">
                   Hi there, <span className="text-purple-600">John</span>
                 </h1>
                 <h2 className="text-2xl">
                   What{" "}
-                  <span className="text-purple-700">would like to know?</span>
+                  <span className="text-purple-700">would like to knows?</span>
                 </h2>
                 <p className="text-gray-500 text-sm mt-2">
                   Use one of the most common prompts below or use your own to
@@ -121,15 +118,23 @@ export default function ChatBody() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-4 mb-6 max-w-2xl max-h-lg">
                 {prompts.map((prompt) => (
                   <Card
                     key={prompt.title}
-                    className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="p-6 hover:bg-purple-50 cursor-pointer transition-colors bg-white/95 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm"
                   >
-                    <div className="flex items-start gap-3">
-                      <span className="text-xl">{prompt.icon}</span>
-                      <p className="text-sm">{prompt.title}</p>
+                    <div className="space-y-3">
+                      <div className="w-10 h-10 bg-purple-200 rounded-2xl flex items-center justify-center">
+                        <span className="text-base text-white">
+                          <prompt.icon className="w-5 h-5 text-purple-600" />
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm">
+                          {prompt.title}
+                        </h3>
+                      </div>
                     </div>
                   </Card>
                 ))}
