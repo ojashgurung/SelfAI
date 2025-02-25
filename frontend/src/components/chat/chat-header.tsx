@@ -9,13 +9,13 @@ export function ChatHeader() {
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-          <span className="text-indigo-600 font-medium">OG</span>
+        <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+          <span className="text-purple-600 font-medium">OG</span>
         </div>
         <div className="flex items-center gap-4">
           <h2 className="flex min-w-fit font-medium">Ojash Gurung</h2>
-          <div className="w-full items-center justify bg-gray-100 px-4 py-1 text-white rounded-lg">
-            <span className="text-sm font-medium text-gray-400">
+          <div className="w-full items-center justify bg-purple-100 px-4 py-1 text-white rounded-lg">
+            <span className="text-sm font-medium text-purple-600">
               Data Scientist
             </span>
           </div>
