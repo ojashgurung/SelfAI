@@ -44,14 +44,14 @@ const menuItems = [
   {
     title: "Uploaded Documents",
     icon: FileTextIcon,
-    href: "/dashboard/uploaded-documents",
+    href: "/dashboard/document",
   },
   {
     title: "Embedding Generator",
     icon: FileIcon,
     href: "/dashboard/embedding",
   },
-  { title: "Recent Chat", icon: UsersIcon, href: "/dashboard/recent-chat" },
+  { title: "Recent Chat", icon: UsersIcon, href: "/dashboard/chat" },
 ];
 
 const chatHistory = [
