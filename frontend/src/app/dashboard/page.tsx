@@ -15,17 +15,13 @@ import Link from "next/link";
 const favorites = [
   {
     id: 1,
-    title: "Team Performance Reviews",
+    title: "View Analytics",
     icon: "/icons/performance.png",
-    user: "Wonpil",
-    time: "2 weeks ago",
   },
   {
     id: 2,
     title: "Partnership Performance Reviews",
     icon: "/icons/partnership.png",
-    user: "Young K",
-    time: "3 days ago",
   },
   {
     id: 3,
@@ -57,9 +53,9 @@ const recentFiles = [
 
 export default function DashboardPage() {
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 min-h-full">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold">My Projects</h1>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
         <div className="flex items-center gap-4">
           <Button variant="outline" className="flex items-center gap-2">
             <ShareIcon className="w-4 h-4" />
@@ -83,15 +79,26 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-4 gap-4">
           {favorites.map((item) => (
-            <Link href={`/dashboard/chat/${item.id}`} key={item.id}>
-              <Card className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 mb-3" />
-                <h3 className="font-medium mb-2">{item.title}</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <div className="w-6 h-6 rounded-full bg-gray-200" />
-                  <span>{item.user}</span>
-                  <span>•</span>
-                  <span>{item.time}</span>
+            <Link
+              href={`/dashboard/chat/${item.id}`}
+              key={item.id}
+              className="h-full"
+            >
+              <Card className="p-6 bg-white rounded-3xl hover:bg-gray-50/80 transition-colors h-full flex flex-col">
+                <div className="w-16 h-16 rounded-2xl bg-gray-100 mb-4 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-400 via-rose-300 to-rose-200 flex items-center justify-center">
+                    <div className="w-6 h-6 bg-white/30 rounded-md" />
+                  </div>
+                </div>
+                <h3 className="font-medium text-gray-900 mb-3 text-base flex-1">
+                  {item.title}
+                </h3>
+                <div className="flex items-center gap-2 mt-auto">
+                  <div className="flex items-center text-sm text-gray-500 gap-1">
+                    <span>{item.user}</span>
+                    <span>•</span>
+                    <span>{item.time}</span>
+                  </div>
                 </div>
               </Card>
             </Link>
