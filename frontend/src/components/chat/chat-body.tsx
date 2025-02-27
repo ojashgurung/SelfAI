@@ -1,6 +1,16 @@
+import { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RefreshCcw, GraduationCap, Mail, FileCode } from "lucide-react";
+import {
+  RefreshCcw,
+  GraduationCap,
+  Mail,
+  FileCode,
+  Copy,
+  SquareArrowOutUpRight,
+  ArrowUp,
+} from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 
 const prompts = [
@@ -19,11 +29,37 @@ const prompts = [
   },
 ];
 
+const useTypewriter = (text: string, speed: number = 40) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
+
+  useEffect(() => {
+    let i = 0;
+    setIsTyping(true);
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(text.substring(0, i + 1));
+        i++;
+      } else {
+        setIsTyping(false);
+        clearInterval(timer);
+      }
+    }, speed);
+
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return { displayedText, isTyping };
+};
+
 export default function ChatBody() {
-  const hasChat = false;
+  const response =
+    "He is currently studying at Monroe University, and he graduates in 2026.";
+  const { displayedText, isTyping } = useTypewriter(response);
+  const hasChat = true;
   return (
     <div
-      className="relative flex flex-col h-full"
+      className="relative flex-1 flex flex-col overflow-hidden justify-between"
       style={{
         background:
           "linear-gradient(to top, rgba(233, 235, 252, 0.9) 0%, rgba(255, 255, 255, 0) 50%)",
@@ -31,21 +67,32 @@ export default function ChatBody() {
     >
       <div className="flex-1 overflow-y-auto">
         {hasChat ? (
-          <div className="h-full overflow-y-auto">
+          <div className="overflow-y-auto">
             <div className="max-w-3xl mx-auto px-4">
               {/* Timestamp */}
-              <div className="text-center my-4">
-                <span className="text-sm text-gray-500">Today 2:45 PM</span>
+              <div className="text-center my-4 relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative">
+                  <span className="bg-white px-4 text-xs text-gray-500">
+                    Today 2:45 PM
+                  </span>
+                </div>
               </div>
 
               {/* User Message */}
               <div className="flex items-start gap-3 mb-6">
                 <Avatar>
-                  <img src="/avatars/alex.jpg" alt="Alex" />
+                  <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
+                    <span className="text-indigo-600 font-medium text-sm">
+                      MD
+                    </span>
+                  </div>
                 </Avatar>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">Alex Ferguson</span>
+                    <span className="font-medium">MS Dhoni</span>
                     <span className="text-sm text-gray-500">2:45 PM</span>
                   </div>
                   <p className="text-gray-700">
@@ -56,46 +103,49 @@ export default function ChatBody() {
               </div>
 
               {/* AI Response */}
-              <div className="flex items-start gap-3 mb-6">
-                <Avatar>
-                  <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
-                    <span className="text-indigo-600 font-medium text-sm">
-                      AI
-                    </span>
-                  </div>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">Ciphy.io</span>
-                    <span className="text-sm text-gray-500">2:46 PM</span>
-                  </div>
-                  <Card className="p-4 bg-white">
-                    <p className="text-gray-700 mb-4">
-                      Sure! Our model counts tokens in both input and output,
-                      including spaces and special characters. Each token
-                      corresponds roughly to one word, depending on the language
-                      and complexity of the sentence. For more detailed tracking
-                      of your interactions, we use timestamps and session IDs to
-                      ensure the most relevant responses.
-                    </p>
-                    <div className="flex items-center justify-between border-t pt-3">
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
-                          <RefreshCcw className="w-4 h-4 mr-2" />
-                          Regenerate
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          Copy
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          Share
-                        </Button>
-                      </div>
-                      <span className="text-sm text-gray-500">32 tokens</span>
+              <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-purple-200 transition rounded-xl mb-4">
+                <div className="flex items-start gap-3">
+                  <Avatar>
+                    <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
+                      <span className="text-indigo-600 font-medium text-sm">
+                        AI
+                      </span>
                     </div>
-                  </Card>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">SelfAI</span>
+                      <span className="text-sm text-gray-500">2:46 PM</span>
+                    </div>
+                    <div>
+                      <p className="text-gray-700 mb-2">
+                        {displayedText}
+                        {isTyping && <span className="animate-pulse">▋</span>}
+                      </p>
+                      <div className="flex items-center justify-between border-t pt-3">
+                        {!isTyping && (
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="sm">
+                              <RefreshCcw className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <SquareArrowOutUpRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                        {!isTyping && (
+                          <span className="text-sm text-gray-500">
+                            32 tokens
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </Card>
 
               {/* Gradient fade at bottom */}
               <div className="h-32 bg-gradient-to-t from-white to-transparent pointer-events-none fixed bottom-0 left-0 right-0" />
@@ -153,12 +203,9 @@ export default function ChatBody() {
               placeholder="Ask SelfAI anything about me..."
               className="flex-1 ml-4 resize-none border-none outline-none bg-transparent focus:ring-0 text-base placeholder:text-gray-400"
             />
-            <Button
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-700 rounded-full py-4 px-6"
-            >
-              Send
-            </Button>
+            <div className="flex items-center justify-center w-10 h-10 bg-purple-600 hover:bg-purple-700 rounded-full text-base cursor-pointer">
+              <ArrowUp className="w-6 h-6 text-purple-100" />
+            </div>
           </div>
         </div>
       </div>

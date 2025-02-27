@@ -9,7 +9,7 @@ import { ChatInfoSidebar } from "@/components/chat/chat-info-sidebar";
 export default function ChatPage() {
   const { isChatSidebarOpen } = useChatSidebar();
   return (
-    <div className="flex min-h-full overflow-hidden relative">
+    <div className="flex h-full relative">
       {/* Main Section */}
       <div
         className={`flex flex-col transition-all duration-300 ${!isChatSidebarOpen ? "w-full" : "w-[70%]"}`}
@@ -17,7 +17,7 @@ export default function ChatPage() {
         <div className="border-b border-gray-200">
           <ChatHeader />
         </div>
-        <div className="flex-1 overflow-y-auto h-full">
+        <div className="flex-1 flex overflow-y-auto">
           <ChatBody />
         </div>
       </div>
