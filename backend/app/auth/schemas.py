@@ -5,12 +5,14 @@ from typing import List
 from pydantic import BaseModel, Field
 
 class UserCreateModel(BaseModel):
+    fullname: str = Field(max_length=40)
     email: str = Field(max_length=40)
     password: str = Field(min_length=8)
 
     model_config = {
         "json_schema_extra": {
             "example": {
+                "fullname" : "John Doe",
                 "email": "johndoe123@co.com",
                 "password": "testpass123",
             }
