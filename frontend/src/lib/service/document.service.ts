@@ -27,4 +27,6 @@ export const DocumentService = {
 
     return response.json();
   },
+
+  async getDocuments(file: File) {},
 };
