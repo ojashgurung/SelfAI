@@ -1,7 +1,7 @@
 
 import os
 import shutil
-
+import aiofiles
 from fastapi import UploadFile
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama.llms import OllamaLLM
@@ -25,6 +25,10 @@ from ..errors import UnsupportedFileType
 
 
 class RagService:
+    def __init__(self):
+        self.upload_dir = "./documents/uploads"
+        os.makedirs(self.upload_dir, exist_ok=True)
+
     async def save_and_extract_text(self, file: UploadFile, user_id: str) -> str:
         allowed_extension = ['.pdf','.docx', '.html','.md']
         if file:
@@ -33,26 +37,36 @@ class RagService:
             if file_extension not in allowed_extension:
                 raise UnsupportedFileType()
             
-            temp_file_path = f"temp_{file.filename}"
+            # Create user directory
+            user_dir = os.path.join(self.upload_dir, user_id)
+            os.makedirs(user_dir, exist_ok=True)
 
+            # # Save file permanently
+            file_path = os.path.join(user_dir, file.filename)
+            # print(file_path)
+            async with aiofiles.open(file_path, 'wb') as out_file:
+                content = await file.read()
+                await out_file.write(content)
             try:
-                # Save the uploaded file to a temporary file
-                with open(temp_file_path, "wb") as buffer:
-                    shutil.copyfileobj(file.file, buffer)
-
                 if file_extension == '.pdf':
-                    text = extract_text_from_pdf(temp_file_path)
+                    text = extract_text_from_pdf(file_path)
                 elif file_extension == '.docx':
-                    text = extract_text_from_docx(temp_file_path)
+                    text = extract_text_from_docx(file_path)
                 elif file_extension == '.md' or file_extension == '.html':
-                    text = extract_text_from_md_html(temp_file_path)
+                    text = extract_text_from_md_html(file_path)
                 else:
                     raise UnsupportedFileType()
-                print(file.content_type)
-                return await self.clean_and_chunk_text(text, file.filename, file.content_type, user_id)
-            finally:
-                if os.path.exists(temp_file_path):
-                    os.remove(temp_file_path)
+                
+
+                result = await self.clean_and_chunk_text(text, file.filename, file.content_type, user_id)
+                result['file_path'] = file_path
+                return result
+
+            except Exception as e:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                raise e
+            
 
     async def clean_and_chunk_text(self, text, filename:str, file_type:str,  user_id: str):
         document = clean_text(text)
