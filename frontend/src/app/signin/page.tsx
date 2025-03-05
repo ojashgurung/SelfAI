@@ -1,11 +1,41 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useId } from "react";
+import { useId, useState } from "react";
+import { useRouter } from "next/navigation";
+import { authService } from "@/lib/service/auth";
+import { TokenService } from "@/lib/utils/utils";
 
 export default function SigninPage() {
   const id = useId();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    try {
+      const response = await authService.signin({
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+      });
+      if (response.access_token && response.refresh_token) {
+        TokenService.setTokens(response.access_token, response.refresh_token);
+      }
+      router.push("/dashboard");
+    } catch (err) {
+      setError("Failed to sign in. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="fixed left-1/2 top-1/2 z-[101] grid max-h-[calc(100%-4rem)] w-full -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto border bg-background p-6 shadow-lg shadow-black/5 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:max-w-[400px] sm:rounded-xl">
       <div className="flex-col items-center gap-2 flex">
@@ -34,24 +64,28 @@ export default function SigninPage() {
         </div>
       </div>
 
-      <form className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div className="space-y-2 animate-appear">
             <Label htmlFor={`${id}-email`}>Email</Label>
             <Input
               id={`${id}-email`}
+              name="email"
               placeholder="hi@yourcompany.com"
               type="email"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2 animate-appear">
             <Label htmlFor={`${id}-password`}>Password</Label>
             <Input
               id={`${id}-password`}
+              name="password"
               placeholder="Enter your password"
               type="password"
               required
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -69,8 +103,15 @@ export default function SigninPage() {
             Forgot password?
           </a>
         </div>
-        <Button type="button" className="w-full animate-appear">
-          Sign in
+        {error && (
+          <div className="text-sm text-red-500 text-center">{error}</div>
+        )}
+        <Button
+          type="submit"
+          className="w-full animate-appear"
+          disabled={isLoading}
+        >
+          {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
