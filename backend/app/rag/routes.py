@@ -7,6 +7,9 @@ from ..errors import NoSourceProvided, NoQueryProvided
 from .service import RagService
 from ..auth.dependencies import AccessTokenBearer
 
+from ..vector_store.vector_db import (
+    delete_vectors
+) 
 
 from .schemas import (
     QueryRequest
@@ -87,6 +90,44 @@ async def upload(
                 "vector_ids": result["inserted_ids"],
                 "namespace": result["namespace"]
             }
+        }
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@rag_router.delete("/documents/{document_id}", status_code=status.HTTP_200_OK)
+async def delete_document(
+    document_id: str,
+    current_user: dict = Depends(access_token_bearer),
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        user_id = current_user["user"]["user_id"]
+        
+        # Find the document and verify ownership
+        query = select(Documents).where(Documents.id == document_id, Documents.user_id == user_id)
+        result = await session.execute(query)
+        document = result.scalar_one_or_none()
+       
+        if not document:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found or you don't have permission to delete it"
+            )
+
+        # Delete vectors from Pinecone
+        await delete_vectors(document.vector_ids, document.namespace)
+        
+        # Delete document from database
+        await session.delete(document)
+        await session.commit()
+
+        return {
+            "message": "Document and associated vectors deleted successfully",
+            "document_id": document_id
         }
     except Exception as e:
         await session.rollback()
