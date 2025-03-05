@@ -66,7 +66,7 @@ export default function ChatBody() {
       }}
     >
       <div className="flex-1 overflow-y-auto">
-        {hasChat ? (
+        {hasChat !== undefined ? (
           <div className="overflow-y-auto">
             <div className="max-w-3xl mx-auto px-4">
               {/* Timestamp */}
