@@ -16,6 +16,44 @@ rag_router = APIRouter()
 rag_service = RagService()
 access_token_bearer = AccessTokenBearer()
 
+# ... existing imports ...
+from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
+from sqlmodel import select
+# ... other imports ...
+
+@rag_router.get("/documents", status_code=status.HTTP_200_OK)
+async def get_user_documents(
+    current_user: dict = Depends(access_token_bearer),
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        user_id = current_user["user"]["user_id"]
+        
+        # Query documents for the current user
+        query = select(Documents).where(Documents.user_id == user_id)
+        result = await session.execute(query)
+        documents = result.scalars().all()
+
+        return {
+            "message": "Documents retrieved successfully",
+            "documents": [
+                {
+                    "id": doc.id,
+                    "filename": doc.file_name,
+                    "created_at": doc.created_at,
+                    "namespace": doc.namespace,
+                    "vector_ids": doc.vector_ids
+                }
+                for doc in documents
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
 @rag_router.post("/upload-document", status_code=status.HTTP_201_CREATED)
 async def upload(
     file: Optional[UploadFile] = File(...),
