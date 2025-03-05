@@ -5,8 +5,6 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-
-
 from .schemas import (
     UserCreateModel,
     UserModel,
@@ -59,11 +57,7 @@ async def create_user_Account(
     bg_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Create user account using email
-    params:
-        user_data: UserCreateModel
-    """
+    fullname = user_data.fullname
     email = user_data.email
 
     user_exists = await user_service.user_exists(email, session)
@@ -73,10 +67,28 @@ async def create_user_Account(
 
     new_user = await user_service.create_user(user_data, session)
 
-    return {
-        "message": "Account Created! Check email to verify your account",
-        "user": new_user,
-    }
+    access_token = create_access_token(
+        user_data={
+            "email": new_user.email,
+            "user_id": str(new_user.uuid),
+            "role": new_user.role,
+        }
+    )
+
+    refresh_token = create_access_token(
+        user_data={"email": new_user.email, "user_id": str(new_user.uuid)},
+        refresh=True,
+        expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
+    )
+
+    return JSONResponse(
+        content={
+            "message": "Account Created! Check email to verify your account",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user": {"email": new_user.email, "user_id": str(new_user.uuid)},
+        }
+    )
 
 @auth_router.get("/verify/{token}")
 async def verify_user_account(token: str, session: AsyncSession = Depends(get_session)):
@@ -120,13 +132,13 @@ async def login_users(
             access_token = create_access_token(
                 user_data={
                     "email": user.email,
-                    "user_uid": str(user.uuid),
+                    "user_id": str(user.uuid),
                     "role": user.role,
                 }
             )
 
             refresh_token = create_access_token(
-                user_data={"email": user.email, "user_uuid": str(user.uuid)},
+                user_data={"email": user.email, "user_uid": str(user.uuid)},
                 refresh=True,
                 expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
             )
@@ -136,7 +148,7 @@ async def login_users(
                     "message": "Login successful",
                     "access_token": access_token,
                     "refresh_token": refresh_token,
-                    "user": {"email": user.email, "uuid": str(user.uuid)},
+                    "user": {"email": user.email, "user_id": str(user.uuid)},
                 }
             )
 

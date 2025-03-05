@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .auth.routes import auth_router
 from .rag.routes import rag_router
@@ -39,6 +40,14 @@ app = FastAPI(
         "email":"gurungojash0@gmail.com",
     },
     lifespan= lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 register_all_errors(app)

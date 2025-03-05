@@ -1,7 +1,7 @@
 from typing import Optional
-
-from fastapi import APIRouter, Depends, status, UploadFile, File
-
+from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
+from sqlmodel.ext.asyncio.session import AsyncSession
+from ..database.models import Documents
 from ..database.db import get_session
 from ..errors import NoSourceProvided, NoQueryProvided
 from .service import RagService
@@ -19,28 +19,50 @@ access_token_bearer = AccessTokenBearer()
 @rag_router.post("/upload-document", status_code=status.HTTP_201_CREATED)
 async def upload(
     file: Optional[UploadFile] = File(...),
-    current_user: dict = Depends(access_token_bearer)
+    current_user: dict = Depends(access_token_bearer),
+    session: AsyncSession = Depends(get_session),
 ): 
-    user_id = current_user["user"]["user_uid"]
+    user_id = current_user["user"]["user_id"]
     if not file:
         raise NoSourceProvided()
 
-    if file:
-        # If file is provided, extract text from it
+    try:
+        # Save file and process for RAG
+        print(file.filename)
         result = await rag_service.save_and_extract_text(file, user_id)
 
-    return {
-        "message": "File uploaded successfully.", 
-        "vector_ids": result["inserted_ids"],
-        "namespace" : result["namespace"]
-    } 
+        # Store document metadata in database
+        document = Documents(
+            user_id=user_id,
+            file_name=file.filename,
+            file_path=result["file_path"],
+            vector_ids=result["inserted_ids"],
+            namespace=result["namespace"],
+        )
+        session.add(document)
+        await session.commit()
+
+        return {
+            "message": "File uploaded and trained successfully",
+            "document": {
+                "filename": file.filename,
+                "vector_ids": result["inserted_ids"],
+                "namespace": result["namespace"]
+            }
+        }
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 
 @rag_router.post("/query", status_code=status.HTTP_201_CREATED)
 async def query_rag(
     query: QueryRequest,
     current_user: dict = Depends(access_token_bearer)
-    # TODO: Upload Chat history in Postgresql DB
+    # Later: Upload Chat history in Postgresql DB
 ): 
     user_id = current_user["user"]["user_uid"]
     user_query = query.question
