@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Document, DocumentService } from "@/lib/service/document.service";
 import { UploadDialog } from "@/components/document/upload-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,10 +35,37 @@ export default function DocumentPage() {
     "all" | "documents" | "media" | "pdf"
   >("all");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+  const loadDocuments = async () => {
+    try {
+      const data = await DocumentService.getDocuments();
+      setDocuments(data.documents);
+    } catch (error) {
+      console.error("Failed to load documents:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUploadSuccess = async () => {
+    setUploadOpen(false);
+    await loadDocuments();
+  };
+
   return (
     <div className="max-h-full overflow-hidden ">
       <div className="p-8 py-6 space-y-6">
-        <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} />
+        <UploadDialog
+          open={uploadOpen}
+          onOpenChange={setUploadOpen}
+          onSuccess={handleUploadSuccess}
+        />
         <h1 className="text-2xl font-semibold">Trained Documents</h1>
 
         <div className="flex items-center justify-between">

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { toast } from "sonner";
+import { DocumentService } from "@/lib/service/document.service";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +13,16 @@ import { Download, HelpCircle, X } from "lucide-react";
 interface UploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
+export function UploadDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+}: UploadDialogProps) {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const handleFileChange = (file: File) => {
     if (file.size > 25 * 1024 * 1024) {
       // 25MB limit
@@ -27,6 +35,30 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) handleFileChange(file);
+  };
+
+  const handleUpload = async () => {
+    if (!uploadedFile) return;
+
+    setIsUploading(true);
+    try {
+      await DocumentService.uploadDocument(uploadedFile);
+      toast.success("Document uploaded successfully");
+      setUploadedFile(null);
+      onSuccess?.();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      // if (error?.response?.status === 403) {
+      //   toast.error("Please login to upload documents");
+      //   // Optionally redirect to login
+      //   window.location.href = "/signin";
+      // } else {
+      //   toast.error("Failed to upload document");
+    }
+    // } finally {
+    //   setIsUploading(false);
+    // }
   };
 
   return (
@@ -106,7 +138,13 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
               >
                 Cancel
               </Button>
-              <Button size="sm">Next</Button>
+              <Button
+                size="sm"
+                onClick={handleUpload}
+                disabled={!uploadedFile || isUploading}
+              >
+                {isUploading ? "Uploading..." : "Upload"}
+              </Button>
             </div>
           </div>
         </div>
