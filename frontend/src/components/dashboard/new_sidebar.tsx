@@ -27,10 +27,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LogoutDialog } from "@/components/logout-dialog/logout-dialog";
+import { UserService, UserInfo } from "@/lib/service/user.service";
 
 const menuItems = [
   { title: "Overview", icon: HomeIcon, href: "/dashboard" },
@@ -66,6 +67,7 @@ const chatHistory = [
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
@@ -85,6 +87,18 @@ export function Sidebar() {
         : [...prev, title]
     );
   };
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await UserService.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to load user:", error);
+      }
+    };
+    loadUser();
+  }, []);
   return (
     <>
       <div className="w-[280px] border-r h-screen flex flex-col bg-gray-50">
@@ -190,12 +204,21 @@ export function Sidebar() {
               <div className="w-full ">
                 <div className="flex items-center gap-3 p-2 rounded-lg">
                   <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center">
-                    <span className="text-indigo-700 font-medium">FP</span>
+                    <span className="text-indigo-700 font-medium">
+                      {user?.fullname
+                        ? user.fullname
+                            .split(" ")
+                            .map((name) => name[0])
+                            .join("")
+                            .toUpperCase()
+                        : "..."}
+                    </span>
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-sm font-medium text-left">
-                      Fandaww Punx
+                      {user?.fullname || "Loading..."}
                     </p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                   <DropdownMenuTrigger>
                     <Settings className="w-5 h-5 mr-2 text-gray-500 hover:text-black transition-colors" />
