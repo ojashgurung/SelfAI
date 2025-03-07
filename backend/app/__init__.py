@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .auth.routes import auth_router
 from .rag.routes import rag_router
+from .user.routes import user_router
 from .database.db import init_db
 from .errors import register_all_errors
 
@@ -54,3 +55,4 @@ register_all_errors(app)
 
 app.include_router(auth_router, prefix=f"{version_prefix}/auth", tags=["auth"])
 app.include_router(rag_router, prefix=f"{version_prefix}/rag", tags=["rag"])
+app.include_router(user_router, prefix=f"{version_prefix}/user", tags=["user"])
