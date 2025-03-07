@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Document, DocumentService } from "@/lib/service/document.service";
+import { DocumentService, Document } from "@/lib/service/document.service";
 import { UploadDialog } from "@/components/document/upload-dialog";
 import { Button } from "@/components/ui/button";
 import {
+  MoreVertical,
+  Trash2,
+  Download,
   Folder,
   FileText,
   Plus,
@@ -12,6 +15,13 @@ import {
   ArrowUpDown,
   Search,
 } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const recentFiles = [
   { name: "Analysis Data July", date: "Aug 5, 2023", size: "1.0 MB" },
@@ -44,8 +54,8 @@ export default function DocumentPage() {
 
   const loadDocuments = async () => {
     try {
-      const data = await DocumentService.getDocuments();
-      setDocuments(data.documents);
+      const documents = await DocumentService.getDocuments();
+      setDocuments(documents);
     } catch (error) {
       console.error("Failed to load documents:", error);
     } finally {
@@ -56,6 +66,15 @@ export default function DocumentPage() {
   const handleUploadSuccess = async () => {
     setUploadOpen(false);
     await loadDocuments();
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    try {
+      await DocumentService.deleteDocument(documentId);
+      await loadDocuments();
+    } catch (error) {
+      console.error("Failed to delete document:", error);
+    }
   };
 
   return (
@@ -91,7 +110,7 @@ export default function DocumentPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-4">Uploaded Files</h2>
-          {!recentFiles || recentFiles.length === 0 ? (
+          {!documents || documents.length === 0 ? (
             <button
               className="border-2 border-dashed border-purple-200 bg-purple-50/50 p-8 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors"
               onClick={() => setUploadOpen(true)}
@@ -110,16 +129,21 @@ export default function DocumentPage() {
             </button>
           ) : (
             <div className="grid grid-cols-5 gap-4">
-              {recentFiles.slice(0, 4).map((file) => (
+              {documents.slice(0, 4).map((doc) => (
                 <div
-                  key={file.name}
+                  key={doc.id}
                   className="bg-purple-50 p-6 w-52 rounded-xl space-y-2 cursor-pointer"
                 >
                   <Folder className="w-6 h-6 text-purple-500" />
                   <div>
-                    <h3 className="font-medium text-sm">{file.name}</h3>
+                    <h3 className="font-medium text-sm">{doc.filename}</h3>
                     <p className="text-sm text-gray-500">
-                      {file.date} · {file.size}
+                      {new Date(doc.created_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}{" "}
+                      · {doc.filesize}
                     </p>
                   </div>
                 </div>
@@ -201,41 +225,102 @@ export default function DocumentPage() {
             </div>
           </div>
           <div className="bg-white border shadow-[0_1px_3px_rgba(0,0,0,0.1)] rounded-xl overflow-hidden hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-shadow divide-y divide-gray-200 h-">
-            <div className="grid grid-cols-3 px-4 py-3 bg-gray-50/90">
-              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
+            <div className="grid grid-cols-12 px-4 py-3 bg-gray-50/90">
+              <div className="col-span-4 flex items-center gap-1.5 text-sm font-medium text-gray-800">
                 Name <ArrowUpDown className="w-3.5 h-3.5 text-gray-600" />
               </div>
-              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
+              <div className="col-span-2 flex items-center gap-1.5 text-sm font-medium text-gray-800">
+                Size <ArrowUpDown className="w-3.5 h-3.5 text-gray-600" />
+              </div>
+              <div className="col-span-2 flex items-center gap-1.5 text-sm font-medium text-gray-800">
                 Type <ArrowUpDown className="w-3.5 h-3.5 text-gray-600" />
               </div>
-              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
-                Upload By <ArrowUpDown className="w-3.5 h-3.5 text-gray-600" />
+              <div className="col-span-3 flex items-center gap-1.5 text-sm font-medium text-gray-800">
+                Upload At <ArrowUpDown className="w-3.5 h-3.5 text-gray-600" />
+              </div>
+              <div className="col-span-1 flex items-center gap-1.5 text-sm font-medium text-gray-800">
+                Actions
               </div>
             </div>
             <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-200">
-              {(activeTab === "all"
-                ? allFiles
-                : allFiles.filter((file) => file.type === activeTab)
-              ).map((file, index) => (
-                <div
-                  key={file.name}
-                  className="grid grid-cols-3 px-4 py-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700">{file.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">{file.type}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-gray-200" />
-                    <span className="text-sm text-gray-700">
-                      {file.uploadedBy}
-                    </span>
-                  </div>
+              {isLoading ? (
+                <div className="p-4 text-center text-gray-500">Loading...</div>
+              ) : documents.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No documents found
                 </div>
-              ))}
+              ) : (
+                documents
+                  .filter(
+                    (doc) =>
+                      activeTab === "all" ||
+                      doc.filename.toLowerCase().endsWith(activeTab)
+                  )
+                  .map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="grid grid-cols-12 px-4 py-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="col-span-4 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-700">
+                          {doc.filename}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center gap-2">
+                        <span className="text-sm text-gray-700">
+                          {doc.filesize}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center gap-2">
+                        <span className="text-sm text-gray-700">
+                          {doc.filename.split(".").pop()?.toUpperCase() ||
+                            "Unknown"}
+                        </span>
+                      </div>
+                      <div className="col-span-3 flex items-center gap-2">
+                        <span className="text-sm text-gray-700">
+                          {new Date(doc.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="col-span-1 flex items-center justify-left">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="hover:bg-gray-100"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
         </div>
