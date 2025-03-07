@@ -34,6 +34,7 @@ class Documents(SQLModel, table = True):
     id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
     user_id: uuid_pkg.UUID = Field(foreign_key="users.uuid", nullable=False)
     file_name: str = Field(nullable=False)
+    file_size: str
     file_path: str
     vector_ids: List[str] = Field(sa_type=JSON, default=[])
     namespace: str

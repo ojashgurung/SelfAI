@@ -53,3 +53,14 @@ async def get_query_pinecone(query_embedding, namespace: str):
     except Exception as e:
         print(f"Error while Quering to Pinecone: {e}")
         
+
+async def delete_vectors(vector_ids: list, namespace: str):
+    try:
+        # Initialize Pinecone client
+        print(vector_ids, namespace)
+        index = get_pinecone_index()
+        
+        # Delete vectors
+        index.delete(ids=vector_ids, namespace=namespace)
+    except Exception as e:
+        print(f"Failed to delete vectors: {e}")
