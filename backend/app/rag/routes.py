@@ -6,6 +6,7 @@ from ..database.db import get_session
 from ..errors import NoSourceProvided, NoQueryProvided
 from .service import RagService
 from ..auth.dependencies import AccessTokenBearer
+from sqlmodel import select
 
 from ..vector_store.vector_db import (
     delete_vectors
@@ -19,10 +20,6 @@ rag_router = APIRouter()
 rag_service = RagService()
 access_token_bearer = AccessTokenBearer()
 
-# ... existing imports ...
-from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
-from sqlmodel import select
-# ... other imports ...
 
 @rag_router.get("/documents", status_code=status.HTTP_200_OK)
 async def get_user_documents(
@@ -43,6 +40,7 @@ async def get_user_documents(
                 {
                     "id": doc.id,
                     "filename": doc.file_name,
+                    "filesize": doc.file_size,
                     "created_at": doc.created_at,
                     "namespace": doc.namespace,
                     "vector_ids": doc.vector_ids
@@ -56,6 +54,14 @@ async def get_user_documents(
             detail=str(e)
         )
 
+def convert_size(size_bytes: int) -> str:
+    """Convert bytes to human readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.2f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.2f} TB"
+
 
 @rag_router.post("/upload-document", status_code=status.HTTP_201_CREATED)
 async def upload(
@@ -63,19 +69,18 @@ async def upload(
     current_user: dict = Depends(access_token_bearer),
     session: AsyncSession = Depends(get_session),
 ): 
-    user_id = current_user["user"]["user_id"]
-    if not file:
-        raise NoSourceProvided()
-
     try:
-        # Save file and process for RAG
-        print(file.filename)
-        result = await rag_service.save_and_extract_text(file, user_id)
+        user_id = current_user["user"]["user_id"]
 
+        if not file:
+            raise NoSourceProvided()
+        result = await rag_service.save_and_extract_text(file, user_id)
+        file_size = convert_size(file.size)
         # Store document metadata in database
         document = Documents(
             user_id=user_id,
             file_name=file.filename,
+            file_size = file_size,
             file_path=result["file_path"],
             vector_ids=result["inserted_ids"],
             namespace=result["namespace"],
@@ -87,6 +92,7 @@ async def upload(
             "message": "File uploaded and trained successfully",
             "document": {
                 "filename": file.filename,
+                "filesize" : file_size,
                 "vector_ids": result["inserted_ids"],
                 "namespace": result["namespace"]
             }
