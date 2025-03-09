@@ -12,6 +12,7 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { ChatSession } from "@/types/chat";
 
 const prompts = [
   {
@@ -28,6 +29,11 @@ const prompts = [
     icon: FileCode,
   },
 ];
+
+interface ChatBodyProps {
+  isPublic?: boolean;
+  session?: ChatSession; // Add type
+}
 
 const useTypewriter = (text: string, speed: number = 40) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -52,7 +58,7 @@ const useTypewriter = (text: string, speed: number = 40) => {
   return { displayedText, isTyping };
 };
 
-export default function ChatBody() {
+export default function ChatBody({ isPublic, session }: ChatBodyProps) {
   const response =
     "He is currently studying at Monroe University, and he graduates in 2026.";
   const { displayedText, isTyping } = useTypewriter(response);

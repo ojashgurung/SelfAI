@@ -1,8 +1,16 @@
 import { BrainCircuit, Link } from "lucide-react";
-
 import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { ChatSession } from "@/types/chat";
 
-export function ChatInfoSidebar() {
+interface ChatInfoSidebarProps {
+  isPublic?: boolean;
+  session?: ChatSession;
+}
+
+export default function ChatInfoSidebar({
+  isPublic,
+  session,
+}: ChatInfoSidebarProps) {
   return (
     <div className="border-l bg-white p-6 overflow-hidden">
       <div className="space-y-6">

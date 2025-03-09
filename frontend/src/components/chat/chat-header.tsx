@@ -3,8 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { PanelRight, PanelRightClose } from "lucide-react";
 import { useChatSidebar } from "@/context/chat-sidebar-context";
+import { ChatSession } from "@/types/chat";
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  isPublic?: boolean;
+  session?: ChatSession;
+}
+
+export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
   const { isChatSidebarOpen, toggleChatSidebar } = useChatSidebar();
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b">
