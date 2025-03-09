@@ -2,7 +2,7 @@ import uuid as uuid_pkg
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
-from sqlalchemy import JSON
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel, Relationship
 
 
@@ -25,7 +25,15 @@ class Users(SQLModel, table = True):
     rag_enabled: bool = Field(default=True)
     is_premium: bool = Field(default=False)
     role: UserRole = Field(default= UserRole.USER)
-    Documents: list["Documents"] = Relationship(back_populates="Users")
+    documents: list["Documents"] = Relationship(back_populates="users")
+    owned_chats: List["ChatSessions"] = Relationship(
+        back_populates="owner",
+        sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"}
+    )
+    visited_chats: List["ChatSessions"] = Relationship(
+        back_populates="visitor",
+        sa_relationship_kwargs={"foreign_keys": "ChatSessions.visitor_id"}
+    )
 
     def __repr__(self):
         return f"<User {self.email} - Premium: {self.is_premium}>"
@@ -41,7 +49,30 @@ class Documents(SQLModel, table = True):
     created_at: datetime = Field(default_factory=datetime.now)
     update_at: datetime = Field(default_factory=datetime.now)
 
-    Users: "Users" = Relationship(back_populates="Documents")
+    users: "Users" = Relationship(back_populates="documents")
 
     def __repr__(self):
         return f"<Documents(user_id={self.user_id}, source={self.file_name}, created_at={self.created_at})>"
+
+class ChatSessions(SQLModel, table=True):
+    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
+    user_id: Optional[uuid_pkg.UUID]  = Field(foreign_key="users.uuid", nullable=True)
+    visitor_id: Optional[uuid_pkg.UUID] = Field(foreign_key="users.uuid", nullable=True)
+    namespace: str
+    title: str
+    is_public: bool = Field(default=False)
+    share_token: Optional[str] = Field(unique=True, index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    owner: Optional["Users"] = Relationship(back_populates="owned_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"})
+    visitor: Optional["Users"] = Relationship(back_populates="visited_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.visitor_id"})
+    messages: List["ChatMessages"] = Relationship(back_populates="session")
+
+class ChatMessages(SQLModel, table=True):
+    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
+    session_id: uuid_pkg.UUID = Field(foreign_key="chatsessions.id")
+    role: str
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    session: "ChatSessions" = Relationship(back_populates="messages")
