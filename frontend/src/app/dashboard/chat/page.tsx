@@ -3,8 +3,8 @@
 import { useChatSidebar } from "@/context/chat-sidebar-context";
 
 import ChatBody from "@/components/chat/chat-body";
-import { ChatHeader } from "@/components/chat/chat-header";
-import { ChatInfoSidebar } from "@/components/chat/chat-info-sidebar";
+import ChatHeader from "@/components/chat/chat-header";
+import ChatInfoSidebar from "@/components/chat/chat-info-sidebar";
 
 export default function ChatPage() {
   const { isChatSidebarOpen } = useChatSidebar();
