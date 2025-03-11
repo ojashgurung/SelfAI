@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { TokenService, cn } from "@/lib/utils/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +67,7 @@ const chatHistory = [
 
 export function Sidebar() {
   const router = useRouter();
+  const { logout } = useAuth();
   const pathname = usePathname();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [openMenus, setOpenMenus] = useState<string[]>([]);
@@ -76,8 +78,9 @@ export function Sidebar() {
   };
 
   const handleLogoutConfirm = () => {
-    TokenService.removeTokens();
+    logout();
     router.push("/signin");
+    setShowLogoutDialog(false);
   };
 
   const toggleMenu = (title: string) => {
@@ -258,7 +261,7 @@ export function Sidebar() {
         isOpen={showLogoutDialog}
         onClose={() => setShowLogoutDialog(false)}
         onConfirm={handleLogoutConfirm}
-        email="user@example.com" // Replace with actual user email
+        email={user?.email || ""}
       />
     </>
   );
