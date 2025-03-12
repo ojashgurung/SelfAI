@@ -58,6 +58,7 @@ class ChatSessions(SQLModel, table=True):
     id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
     user_id: Optional[uuid_pkg.UUID]  = Field(foreign_key="users.uuid", nullable=True)
     visitor_id: Optional[uuid_pkg.UUID] = Field(foreign_key="users.uuid", nullable=True)
+    parent_id: Optional[uuid_pkg.UUID] = Field(foreign_key="chatsessions.id", nullable=True)
     namespace: str
     title: str
     is_public: bool = Field(default=False)
@@ -68,6 +69,8 @@ class ChatSessions(SQLModel, table=True):
     owner: Optional["Users"] = Relationship(back_populates="owned_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"})
     visitor: Optional["Users"] = Relationship(back_populates="visited_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.visitor_id"})
     messages: List["ChatMessages"] = Relationship(back_populates="session")
+    parent_session: Optional["ChatSessions"] = Relationship(back_populates="child_sessions", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id", "remote_side": "ChatSessions.id"})
+    child_sessions: List["ChatSessions"] = Relationship(back_populates="parent_session", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id"})
 
 class ChatMessages(SQLModel, table=True):
     id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
