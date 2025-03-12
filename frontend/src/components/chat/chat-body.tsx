@@ -9,9 +9,9 @@ import {
   FileCode,
   Copy,
   SquareArrowOutUpRight,
-  ArrowUp,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { ChatSession, ChatMessage } from "@/types/chat";
 
 const prompts = [
   {
@@ -28,6 +28,14 @@ const prompts = [
     icon: FileCode,
   },
 ];
+
+interface ChatBodyProps {
+  isPublic?: boolean;
+  session?: ChatSession;
+  messages: ChatMessage[];
+  isLoading?: boolean;
+  onPromptClick?: (prompt: string) => void;
+}
 
 const useTypewriter = (text: string, speed: number = 40) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -52,106 +60,18 @@ const useTypewriter = (text: string, speed: number = 40) => {
   return { displayedText, isTyping };
 };
 
-export default function ChatBody() {
-  const response =
-    "He is currently studying at Monroe University, and he graduates in 2026.";
-  const { displayedText, isTyping } = useTypewriter(response);
-  const hasChat = true;
+export default function ChatBody({
+  isPublic,
+  session,
+  messages,
+  isLoading,
+  onPromptClick,
+}: ChatBodyProps) {
+  // const { displayedText, isTyping } = useTypewriter(response);
   return (
-    <div
-      className="relative flex-1 flex flex-col overflow-hidden justify-between"
-      style={{
-        background:
-          "linear-gradient(to top, rgba(233, 235, 252, 0.9) 0%, rgba(255, 255, 255, 0) 50%)",
-      }}
-    >
+    <div className="h-full flex flex-col overflow-hidden justify-between">
       <div className="flex-1 overflow-y-auto">
-        {hasChat !== undefined ? (
-          <div className="overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-4">
-              {/* Timestamp */}
-              <div className="text-center my-4 relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative">
-                  <span className="bg-white px-4 text-xs text-gray-500">
-                    Today 2:45 PM
-                  </span>
-                </div>
-              </div>
-
-              {/* User Message */}
-              <div className="flex items-start gap-3 mb-6">
-                <Avatar>
-                  <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
-                    <span className="text-indigo-600 font-medium text-sm">
-                      MD
-                    </span>
-                  </div>
-                </Avatar>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">MS Dhoni</span>
-                    <span className="text-sm text-gray-500">2:45 PM</span>
-                  </div>
-                  <p className="text-gray-700">
-                    Hey, can you explain how the model determines token usage
-                    and tracks interactions?
-                  </p>
-                </div>
-              </div>
-
-              {/* AI Response */}
-              <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-purple-200 transition rounded-xl mb-4">
-                <div className="flex items-start gap-3">
-                  <Avatar>
-                    <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
-                      <span className="text-indigo-600 font-medium text-sm">
-                        AI
-                      </span>
-                    </div>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">SelfAI</span>
-                      <span className="text-sm text-gray-500">2:46 PM</span>
-                    </div>
-                    <div>
-                      <p className="text-gray-700 mb-2">
-                        {displayedText}
-                        {isTyping && <span className="animate-pulse">▋</span>}
-                      </p>
-                      <div className="flex items-center justify-between border-t pt-3">
-                        {!isTyping && (
-                          <div className="flex items-center justify-center gap-1">
-                            <Button variant="ghost" size="sm">
-                              <RefreshCcw className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <SquareArrowOutUpRight className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                        {!isTyping && (
-                          <span className="text-sm text-gray-500">
-                            32 tokens
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Gradient fade at bottom */}
-              <div className="h-32 bg-gradient-to-t from-white to-transparent pointer-events-none fixed bottom-0 left-0 right-0" />
-            </div>
-          </div>
-        ) : (
+        {messages.length === 0 ? (
           <div className="h-full overflow-y-auto">
             <div className="max-w-3xl mx-auto p-8 mt-10">
               <div className="mb-8">
@@ -172,6 +92,7 @@ export default function ChatBody() {
                 {prompts.map((prompt) => (
                   <Card
                     key={prompt.title}
+                    onClick={() => onPromptClick?.(prompt.title)}
                     className="p-6 hover:bg-purple-50 cursor-pointer transition-colors bg-white/95 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm"
                   >
                     <div className="space-y-3">
@@ -191,23 +112,100 @@ export default function ChatBody() {
               </div>
             </div>
           </div>
-        )}
-      </div>
+        ) : (
+          <div className="overflow-y-auto">
+            <div className="max-w-3xl mx-auto px-4">
+              {/* Timestamp */}
+              {/* Messages */}
+              {messages.map((message, index) => (
+                <div key={message.id}>
+                  {/* Add timestamp for first message or when date changes */}
+                  {index === 0 && (
+                    <div className="text-center my-4 relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200"></div>
+                      </div>
+                      <div className="relative">
+                        <span className="bg-gray-50/50 px-4 text-xs text-gray-500">
+                          {new Date(message.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
-      {/* Chat Input - Always visible */}
-      <div className="sticky bottom-0 left-0 right-0 p-4 mt-auto shadow-2xl">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center justify-center gap-2 bg-white rounded-full border shadow-sm p-2">
-            <input
-              type="text"
-              placeholder="Ask SelfAI anything about me..."
-              className="flex-1 ml-4 resize-none border-none outline-none bg-transparent focus:ring-0 text-base placeholder:text-gray-400"
-            />
-            <div className="flex items-center justify-center w-10 h-10 bg-purple-600 hover:bg-purple-700 rounded-full text-base cursor-pointer">
-              <ArrowUp className="w-6 h-6 text-purple-100" />
+                  {message.role === "user" ? (
+                    /* User Message */
+                    <div className="flex items-start gap-3 mb-6">
+                      <Avatar>
+                        <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
+                          <span className="text-indigo-600 font-medium text-sm">
+                            U
+                          </span>
+                        </div>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">You</span>
+                          <span className="text-sm text-gray-500">
+                            {new Date(message.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <p className="text-gray-700">{message.content}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    /* AI Response */
+                    <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-purple-200 transition rounded-xl mb-4">
+                      <div className="flex items-start gap-3">
+                        <Avatar>
+                          <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
+                            <span className="text-indigo-600 font-medium text-sm">
+                              AI
+                            </span>
+                          </div>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium">SelfAI</span>
+                            <span className="text-sm text-gray-500">
+                              {new Date(
+                                message.created_at
+                              ).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-gray-700 mb-2">
+                              {message.content}
+                              {isLoading && index === messages.length - 1 && (
+                                <span className="animate-pulse">▋</span>
+                              )}
+                            </p>
+                            <div className="flex items-center justify-between border-t pt-3">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button variant="ghost" size="sm">
+                                  <RefreshCcw className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm">
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm">
+                                  <SquareArrowOutUpRight className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              ))}
+
+              {/* Gradient fade at bottom */}
+              <div className="h-32 bg-gradient-to-t from-white to-transparent pointer-events-none fixed bottom-0 left-0 right-0" />
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
