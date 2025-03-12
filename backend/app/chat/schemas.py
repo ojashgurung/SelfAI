@@ -7,7 +7,8 @@ class MessageBase(BaseModel):
     content: str
 
 class MessageCreate(MessageBase):
-    pass
+    content: str
+    share_token: Optional[str] = None
 
 class MessageRead(MessageBase):
     id: UUID

@@ -1,4 +1,4 @@
-from sqlmodel import select
+from sqlmodel import select, join
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Optional
 from uuid import UUID
@@ -58,7 +58,10 @@ class ChatService:
     ) -> Optional[ChatSessions]:
         statement = select(ChatSessions).where(ChatSessions.id == session_id)
         result = await db_session.execute(statement)
-        return result.scalar_one_or_none()
+        session = result.scalar_one_or_none()
+        if session:
+            await db_session.refresh(session, ['messages'])
+        return session
 
     async def get_session_by_token(
         self,
@@ -71,6 +74,40 @@ class ChatService:
         if session:
             await db_session.refresh(session, ['messages'])
         return session
+    
+    async def get_or_create_visitor_session(
+    self,
+    template_session_id: UUID,
+    visitor_id: str,
+    namespace: str,
+    db_session: AsyncSession
+) -> ChatSessions:
+        statement = select(ChatSessions).where(
+            ChatSessions.parent_id == template_session_id,
+            ChatSessions.title == f"Visitor: {visitor_id}"
+        )
+        result = await db_session.execute(statement)
+        session = result.scalar_one_or_none()
+
+        if session:
+            await db_session.refresh(session, ['messages'])
+            return session
+
+        # Create new visitor session if none exists
+        new_session = ChatSessions(
+            parent_id=template_session_id,
+            title=f"Visitor: {visitor_id}",
+            namespace=namespace,
+            is_public=True,
+            share_token=None,
+            visitor_id=None  # Visitor sessions don't need share tokens
+        )
+        
+        db_session.add(new_session)
+        await db_session.commit()
+        await db_session.refresh(new_session, ['messages'])
+        
+        return new_session
 
     async def process_message(
         self,
@@ -85,9 +122,12 @@ class ChatService:
         if not session:
             raise ValueError("Chat session not found")
 
-        if not session.is_public and not current_user:
-            raise ValueError("Authentication required for private sessions")
 
+        if not session.is_public and (not current_user or current_user.get("sub") != str(session.user_id)):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this chat"
+            )
         # Save user message
         user_message = ChatMessages(
             session_id=session_id,
