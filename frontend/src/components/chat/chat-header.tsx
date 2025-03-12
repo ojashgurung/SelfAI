@@ -3,20 +3,33 @@
 import { Button } from "@/components/ui/button";
 import { PanelRight, PanelRightClose } from "lucide-react";
 import { useChatSidebar } from "@/context/chat-sidebar-context";
+import { ChatSession } from "@/types/chat";
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  isPublic?: boolean;
+  session?: ChatSession;
+}
+
+export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
   const { isChatSidebarOpen, toggleChatSidebar } = useChatSidebar();
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-          <span className="text-purple-600 font-medium">OG</span>
+          <span className="text-purple-600 font-medium">
+            {session?.owner?.fullname
+              ?.split(" ")
+              .map((n) => n[0])
+              .join("") || "AI"}
+          </span>
         </div>
         <div className="flex items-center gap-4">
-          <h2 className="flex min-w-fit font-medium">Ojash Gurung</h2>
+          <h2 className="flex min-w-fit font-medium">
+            {session?.owner?.fullname || "AI Assistant"}
+          </h2>
           <div className="w-full items-center justify bg-purple-100 px-4 py-1 text-white rounded-lg">
             <span className="text-sm font-medium text-purple-600">
-              Data Scientist
+              {session?.owner?.personal_bio || "Personal AI Assistant"}
             </span>
           </div>
         </div>

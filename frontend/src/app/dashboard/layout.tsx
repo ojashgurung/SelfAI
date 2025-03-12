@@ -3,7 +3,7 @@
 import { Sidebar } from "@/components/dashboard/new_sidebar";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TokenService } from "@/lib/utils/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardLayout({
   children,
@@ -11,9 +11,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!TokenService.getAccessToken()) {
+    if (!isAuthenticated) {
       router.replace("/signin");
       return;
     }
@@ -28,7 +29,7 @@ export default function DashboardLayout({
     return () => {
       window.removeEventListener("popstate", preventAuthNavigation);
     };
-  }, [router]);
+  }, [router, isAuthenticated]);
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
