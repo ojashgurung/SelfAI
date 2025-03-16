@@ -24,6 +24,8 @@ class TokenBearer(HTTPBearer):
         creds = await super().__call__(request)
 
         if not creds:
+            if not self.auto_error:
+                return None
             raise InvalidToken("No credentials provided")
 
         token = creds.credentials
@@ -31,12 +33,21 @@ class TokenBearer(HTTPBearer):
         try:
             token_data = decode_token(token)  # Ensure decode_token is correct
         except Exception as e:
+            if not self.auto_error:
+                return None
             raise InvalidToken(f"Token decoding failed: {str(e)}")
 
         if not self.token_valid(token):
+            if not self.auto_error:
+                return None
             raise InvalidToken()
 
-        self.verify_token_data(token_data)
+        try:
+            self.verify_token_data(token_data)
+        except Exception:
+            if not self.auto_error:
+                return None
+            raise
 
         return token_data
 
