@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlmodel import select, join
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Optional
@@ -13,15 +14,22 @@ class ChatService:
     async def create_session(
         self,
         session_data: ChatSessionCreate,
-        current_user: dict,
+        current_user: Optional[dict],
         rag_service: RagService,
         db_session: AsyncSession,
     ):
-        print(current_user)  # Debugging step
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required to create a session"
+            ) 
 
         user_id = current_user.get("user", {}).get("user_id")
         if not user_id:
-            raise ValueError("User ID is missing from current_user")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid user credentials"
+            )
 
         share_token = secrets.token_urlsafe(16) if session_data.is_public else None
 
@@ -82,38 +90,47 @@ class ChatService:
     namespace: str,
     db_session: AsyncSession
 ) -> ChatSessions:
-        statement = select(ChatSessions).where(
-            ChatSessions.parent_id == template_session_id,
-            ChatSessions.title == f"Visitor: {visitor_id}"
-        )
-        result = await db_session.execute(statement)
-        session = result.scalar_one_or_none()
+        try:
+            # First try to find existing session
+            statement = select(ChatSessions).where(
+                ChatSessions.parent_id == template_session_id,
+                ChatSessions.title == f"Visitor: {visitor_id}"
+            )
+            result = await db_session.execute(statement)
+            session = result.scalar_one_or_none()
 
-        if session:
-            await db_session.refresh(session, ['messages'])
-            return session
+            if session:
+                await db_session.refresh(session, ['messages'])
+                return session
 
-        # Create new visitor session if none exists
-        new_session = ChatSessions(
-            parent_id=template_session_id,
-            title=f"Visitor: {visitor_id}",
-            namespace=namespace,
-            is_public=True,
-            share_token=None,
-            visitor_id=None  # Visitor sessions don't need share tokens
-        )
-        
-        db_session.add(new_session)
-        await db_session.commit()
-        await db_session.refresh(new_session, ['messages'])
-        
-        return new_session
+            try:
+                visitor_uuid = UUID(visitor_id)
+            except ValueError:
+                visitor_uuid = None
+
+            # Create new session
+            new_session = ChatSessions(
+                parent_id=template_session_id,
+                title=f"Visitor: {visitor_id}",
+                namespace=namespace,
+                is_public=True,
+                visitor_id=visitor_uuid
+            )
+
+            db_session.add(new_session)
+            await db_session.commit()
+            await db_session.refresh(new_session, ['messages'])
+            
+            return new_session
+        except Exception as e:
+            await db_session.rollback()
+            raise ValueError(f"Failed to create visitor session: {str(e)}")
 
     async def process_message(
         self,
         session_id: UUID,
         message_data: MessageCreate,
-        current_user: Optional[dict],
+        user_id : UUID,
         rag_service: RagService,
         db_session: AsyncSession
     ) -> ChatMessages:
@@ -123,7 +140,7 @@ class ChatService:
             raise ValueError("Chat session not found")
 
 
-        if not session.is_public and (not current_user or current_user.get("sub") != str(session.user_id)):
+        if not session.is_public and str(user_id) != str(session.user_id):  
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to access this chat"
@@ -132,6 +149,7 @@ class ChatService:
         user_message = ChatMessages(
             session_id=session_id,
             role="user",
+            user_id=user_id,
             content=message_data.content
         )
         db_session.add(user_message)
@@ -151,13 +169,6 @@ class ChatService:
             content=ai_response
         )
         db_session.add(ai_message)
-
-        # Update visitor_id if authenticated user
-        if current_user:
-            user_id = current_user.get("user", {}).get("user_id")
-            if user_id and session.visitor_id != user_id:
-                session.visitor_id = user_id
-                db_session.add(session)
 
         await db_session.commit()
         await db_session.refresh(ai_message)
