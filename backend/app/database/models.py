@@ -25,7 +25,8 @@ class Users(SQLModel, table = True):
     rag_enabled: bool = Field(default=True)
     is_premium: bool = Field(default=False)
     role: UserRole = Field(default= UserRole.USER)
-    documents: list["Documents"] = Relationship(back_populates="users")
+    documents: List["Documents"] = Relationship(back_populates="users")
+    messages: List["ChatMessages"] = Relationship(back_populates="user")
     owned_chats: List["ChatSessions"] = Relationship(
         back_populates="owner",
         sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"}
@@ -66,7 +67,7 @@ class ChatSessions(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    owner: Optional["Users"] = Relationship(back_populates="owned_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"})
+    owner: "Users" = Relationship(back_populates="owned_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"})
     visitor: Optional["Users"] = Relationship(back_populates="visited_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.visitor_id"})
     messages: List["ChatMessages"] = Relationship(back_populates="session")
     parent_session: Optional["ChatSessions"] = Relationship(back_populates="child_sessions", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id", "remote_side": "ChatSessions.id"})
@@ -75,7 +76,9 @@ class ChatSessions(SQLModel, table=True):
 class ChatMessages(SQLModel, table=True):
     id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
     session_id: uuid_pkg.UUID = Field(foreign_key="chatsessions.id")
+    user_id: Optional[uuid_pkg.UUID] = Field(foreign_key="users.uuid", nullable=True)
     role: str
     content: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     session: "ChatSessions" = Relationship(back_populates="messages")
+    user: Optional["Users"] = Relationship(back_populates="messages")
