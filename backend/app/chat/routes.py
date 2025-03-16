@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Security
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Optional
 from uuid import UUID
@@ -22,10 +22,10 @@ from ..rag.service import RagService
 from ..auth.dependencies import AccessTokenBearer
 
 
-
 chat_router = APIRouter()
 chat_service = ChatService()
-access_token_bearer = AccessTokenBearer()
+strict_token_bearer = AccessTokenBearer(auto_error=True)
+access_token_bearer = AccessTokenBearer(auto_error=False)
 
 async def get_rag_service():
     return RagService()
@@ -33,7 +33,7 @@ async def get_rag_service():
 @chat_router.post("/sessions", response_model=ChatSessionRead)
 async def create_chat_session(
     session_data: ChatSessionCreate,
-    current_user: dict = Depends(access_token_bearer),
+    current_user: dict = Depends(strict_token_bearer),
     rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session),
 ):
@@ -43,23 +43,11 @@ async def create_chat_session(
 async def send_message(
     session_id: UUID,
     message: MessageCreate,
-    request: Request,
+    current_user: Optional[dict] = Depends(access_token_bearer),
     rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session)
 ):  
-    print("Message:", message)
-    print("Share token:", message.share_token)
-    auth_header = request.headers.get("Authorization")
-    current_user = None
-    template_session = None
-    
-    if auth_header and auth_header.startswith("Bearer "):
-        try:
-            current_user = await access_token_bearer(request)
-        except:
-            # If token is invalid, continue as public access
-            pass
-
+    user_id = current_user["user"]["user_id"] if current_user else None
 
     session = await chat_service.get_session(session_id, db_session)
     if not session:
@@ -79,16 +67,10 @@ async def send_message(
                 detail="Invalid share token or unauthorized access"
             )
 
-        if session.id != template_session.id and session.parent_id != template_session.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid session access"
-            )
-
     return await chat_service.process_message(
         session_id,
         message,
-        current_user,
+        user_id,
         rag_service,
         db_session
     )
@@ -97,53 +79,32 @@ async def send_message(
 async def get_public_chat_session(
     share_token: str,
     request: Request,
+    current_user: Optional[dict] = Security(access_token_bearer),
     rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session),
 ):
     """Access a public chat session using share token"""
+    
     session = await chat_service.get_session_by_token(share_token, db_session)
     if not session or not session.is_public:
         raise HTTPException(status_code=404, detail="Chat session not found")
 
-    visitor_id = request.client.host
+    try:
+        if current_user:
+            visitor_id = str(current_user["user"]["user_id"])
+        else:
+            visitor_id = request.client.host
+    except (KeyError, TypeError):
+        visitor_id = request.client.host
 
     visitor_session = await chat_service.get_or_create_visitor_session(
-        session.parent_id,
+        session.id,
         visitor_id,
         session.namespace,
         db_session
     )
-    visitor_session.share_token = share_token
     
     return visitor_session
-
-# @chat_router.patch("/sessions/{session_id}", response_model=ChatSessionRead)
-# async def update_chat_session(
-#     session_id: UUID,
-#     update_data: ChatSessionUpdate,
-#     current_user: Users = Depends(get_current_user),
-#     db: AsyncSession = Depends(get_session),
-#     rag_service: RagService = Depends(get_rag_service)
-# ):
-#     """Update a chat session's properties"""
-#     chat_service = ChatService(db, rag_service)
-#     session = await chat_service.update_session(session_id, update_data, current_user, db)
-#     if not session:
-#         raise HTTPException(status_code=404, detail="Chat session not found")
-#     return session
-
-# @chat_router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
-# async def delete_chat_session(
-#     session_id: UUID,
-#     current_user: Users = Depends(get_current_user),
-#     db: AsyncSession = Depends(get_session),
-#     rag_service: RagService = Depends(get_rag_service)
-# ):
-#     """Delete a chat session"""
-#     chat_service = ChatService(db, rag_service)
-#     success = await chat_service.delete_session(session_id, current_user, db)
-#     if not success:
-#         raise HTTPException(status_code=404, detail="Chat session not found")
 
 @chat_router.get("/public/{share_token}/qr")
 async def get_session_qr(
