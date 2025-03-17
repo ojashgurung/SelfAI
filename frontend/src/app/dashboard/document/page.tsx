@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { DocumentService, Document } from "@/lib/service/document.service";
+import { UserService } from "@/lib/service/user.service";
+import { ChatService } from "@/lib/service/chat.service";
 import { UploadDialog } from "@/components/document/upload-dialog";
+import { ShareDialog } from "@/components/document/share-dialog";
 import { Button } from "@/components/ui/button";
 import {
   MoreVertical,
@@ -14,6 +17,7 @@ import {
   Filter,
   ArrowUpDown,
   Search,
+  Share2,
 } from "lucide-react";
 
 import {
@@ -23,23 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const recentFiles = [
-  { name: "Analysis Data July", date: "Aug 5, 2023", size: "1.0 MB" },
-  { name: "Q2 Results", date: "Jul 31, 2023", size: "2.5 MB" },
-  { name: "Electrometer Data", date: "Jul 25, 2023", size: "1.9 MB" },
-];
-
-const allFiles = [
-  {
-    name: "Sequence Data",
-    uploadedBy: "Cameron Williamson",
-    type: "documents",
-  },
-  { name: "Q4 Results", uploadedBy: "Jenny Wilson", type: "pdf" },
-  { name: "Analysis Data April", uploadedBy: "Floyd Miles", type: "documents" },
-  { name: "Q2 Results", uploadedBy: "Kristin Watson", type: "pdf" },
-];
-
 export default function DocumentPage() {
   const [activeTab, setActiveTab] = useState<
     "all" | "documents" | "media" | "pdf"
@@ -47,6 +34,9 @@ export default function DocumentPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [currentShareUrl, setCurrentShareUrl] = useState("");
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -60,6 +50,27 @@ export default function DocumentPage() {
       console.error("Failed to load documents:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleShareClick = async () => {
+    try {
+      const user_data = await UserService.getCurrentUser();
+      setIsCreatingSession(true);
+      const session = await ChatService.createSession({
+        namespace: user_data.user_id,
+        title: "Owner",
+        is_public: true,
+      });
+
+      setCurrentShareUrl(
+        `${window.location.origin}/chat/public/${session.share_token}`
+      );
+      setShareDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to create chat session:", error);
+    } finally {
+      setIsCreatingSession(false);
     }
   };
 
@@ -85,6 +96,11 @@ export default function DocumentPage() {
           onOpenChange={setUploadOpen}
           onSuccess={handleUploadSuccess}
         />
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          shareUrl={currentShareUrl}
+        />
         <h1 className="text-2xl font-semibold">Trained Documents</h1>
 
         <div className="flex items-center justify-between">
@@ -104,6 +120,16 @@ export default function DocumentPage() {
             <Button size="sm" variant="outline" className="gap-1">
               <ArrowUpDown className="w-3 h-3" />
               Sort By: Latest
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={handleShareClick}
+              disabled={isCreatingSession || documents.length === 0}
+            >
+              {isCreatingSession ? "Creating..." : "Share Link"}
             </Button>
           </div>
         </div>
