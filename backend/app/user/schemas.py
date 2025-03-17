@@ -9,6 +9,7 @@ class DocumentInfo(BaseModel):
     created_at: datetime
 
 class UserResponse(BaseModel):
+    user_id: str
     email: str
     fullname: str
     personal_bio: Optional[str] = None
