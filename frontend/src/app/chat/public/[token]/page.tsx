@@ -43,10 +43,11 @@ export default function PublicChatPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${session.share_token}`,
           },
           body: JSON.stringify({
             content: inputMessage,
-            share_token: session.share_token,
+            share_token: token,
           }),
         }
       );
@@ -83,9 +84,10 @@ export default function PublicChatPage() {
           );
         }
         const data = await response.json();
-        if (data.user_id) {
+        console.log(data.namespace);
+        if (data.user_id || data.namespace) {
           const userResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/${data.user_id}`
+            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/${data.user_id || data.namespace}`
           );
           if (userResponse.ok) {
             const userData = await userResponse.json();
