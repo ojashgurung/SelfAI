@@ -22,6 +22,7 @@ async def get_current_user_info(
         await session.refresh(user, ['documents'])
         
         return UserResponse(
+            user_id=user_id,
             email=user.email,
             fullname=user.fullname,
             personal_bio=user.personal_bio,
@@ -57,6 +58,7 @@ async def get_user_by_id(
         await session.refresh(user, ['documents'])
 
         return UserResponse(
+            user_id=user_id,
             email=user.email,
             fullname=user.fullname,
             personal_bio=user.personal_bio,
