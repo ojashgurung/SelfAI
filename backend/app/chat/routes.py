@@ -129,3 +129,72 @@ async def get_session_qr(
     img_buffer.seek(0)
     
     return StreamingResponse(img_buffer, media_type="image/png")
+
+@chat_router.get("/sessions/history", response_model=List[ChatSessionWithMessages])
+async def get_user_chat_history(
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Get all chat sessions related to the user"""
+    try:
+        user_id = current_user["user"]["user_id"]
+        user = await db_session.get(Users, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Refresh relationships to get latest data
+        await db_session.refresh(user, ['owned_chats', 'visited_chats'])
+
+        # Combine owned and visited chats
+        all_chats = []
+        all_chats.extend(user.owned_chats)
+        all_chats.extend(user.visited_chats)
+
+        # Sort by most recent first
+        all_chats.sort(key=lambda x: x.updated_at, reverse=True)
+
+        # Load messages for each chat
+        for chat in all_chats:
+            await db_session.refresh(chat, ['messages'])
+
+        return all_chats
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@chat_router.delete("/sessions/history", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chat_history(
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Delete all chat sessions related to the user"""
+    try:
+        user_id = current_user["user"]["user_id"]
+        user = await db_session.get(Users, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Refresh relationships to get latest data
+        await db_session.refresh(user, ['owned_chats', 'visited_chats'])
+
+        # Delete all owned chats
+        for chat in user.owned_chats:
+            await db_session.delete(chat)
+
+        # Remove user from visited chats
+        for chat in user.visited_chats:
+            chat.visitor_id = None
+            db_session.add(chat)
+
+        await db_session.commit()
+        return None
+
+    except Exception as e:
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
