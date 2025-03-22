@@ -91,7 +91,6 @@ class ChatService:
     db_session: AsyncSession
 ) -> ChatSessions:
         try:
-            # First try to find existing session
             statement = select(ChatSessions).where(
                 ChatSessions.parent_id == template_session_id,
                 ChatSessions.title == f"Visitor: {visitor_id}"
@@ -102,6 +101,10 @@ class ChatService:
             if session:
                 await db_session.refresh(session, ['messages'])
                 return session
+            
+            template_session = await self.get_session(template_session_id, db_session)
+            if not template_session:
+                raise ValueError("Template session not found")
 
             try:
                 visitor_uuid = UUID(visitor_id)
@@ -111,6 +114,7 @@ class ChatService:
             # Create new session
             new_session = ChatSessions(
                 parent_id=template_session_id,
+                user_id= template_session.user_id,
                 title=f"Visitor: {visitor_id}",
                 namespace=namespace,
                 is_public=True,

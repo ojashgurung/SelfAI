@@ -142,18 +142,12 @@ async def get_user_chat_history(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Refresh relationships to get latest data
-        await db_session.refresh(user, ['owned_chats', 'visited_chats'])
+        await db_session.refresh(user, ['visited_chats'])
 
-        # Combine owned and visited chats
-        all_chats = []
-        all_chats.extend(user.owned_chats)
-        all_chats.extend(user.visited_chats)
 
-        # Sort by most recent first
+        all_chats = user.visited_chats
         all_chats.sort(key=lambda x: x.updated_at, reverse=True)
 
-        # Load messages for each chat
         for chat in all_chats:
             await db_session.refresh(chat, ['messages'])
 
@@ -177,14 +171,8 @@ async def delete_chat_history(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Refresh relationships to get latest data
-        await db_session.refresh(user, ['owned_chats', 'visited_chats'])
+        await db_session.refresh(user, ['visited_chats'])
 
-        # Delete all owned chats
-        for chat in user.owned_chats:
-            await db_session.delete(chat)
-
-        # Remove user from visited chats
         for chat in user.visited_chats:
             chat.visitor_id = None
             db_session.add(chat)
@@ -194,6 +182,96 @@ async def delete_chat_history(
 
     except Exception as e:
         await db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@chat_router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chat_session(
+    session_id: UUID,
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Delete a specific chat session"""
+    try:
+        user_id = current_user["user"]["user_id"]
+        session = await chat_service.get_session(session_id, db_session)
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+            
+        if session.visitor_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this chat session"
+            )
+            
+        session.visitor_id = None
+        db_session.add(session)
+        await db_session.commit()
+        
+        return None
+
+    except Exception as e:
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@chat_router.get("/sessions/analytics", response_model=List[dict])
+async def get_chat_analytics(
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    try:
+        user_id = current_user["user"]["user_id"]
+        user = await db_session.get(Users, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        await db_session.refresh(user, ['owned_chats'])
+        
+        analytics = []
+        for chat in user.owned_chats:
+            if "owner" in chat.title.lower():
+                continue
+            await db_session.refresh(chat, ['messages', 'visitor'])
+            
+            # Calculate message statistics
+            total_messages = len(chat.messages)
+            user_messages = sum(1 for m in chat.messages if m.user_id == user_id)
+            ai_messages = sum(1 for m in chat.messages if m.role == "assistant")
+            
+            # Calculate visitor statistics
+            unique_visitors = set()
+            for message in chat.messages:
+                if message.user_id and message.user_id != user_id:
+                    unique_visitors.add(message.user_id)
+            
+            analytics.append({
+                "session_id": str(chat.id),
+                "title": chat.title,
+                "is_public": chat.is_public,
+                "share_token": chat.share_token,
+                "created_at": chat.created_at,
+                "last_activity": chat.updated_at,
+                "stats": {
+                    "total_messages": total_messages,
+                    "user_messages": user_messages,
+                    "ai_messages": ai_messages,
+                    "unique_visitors": len(unique_visitors),
+                    "average_response_length": sum(len(m.content) for m in chat.messages) / total_messages if total_messages > 0 else 0,
+                }
+            })
+
+        analytics.sort(key=lambda x: x["stats"]["total_messages"], reverse=True)
+        
+        return analytics
+
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
