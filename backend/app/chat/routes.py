@@ -191,7 +191,7 @@ async def delete_chat_history(
 async def delete_chat_session(
     session_id: UUID,
     current_user: dict = Depends(strict_token_bearer),
-    db_session: AsyncSession = Depends(get_session),
+    db_session: AsyncSession = Depends(get_session), 
 ):
     """Delete a specific chat session"""
     try:
@@ -201,14 +201,18 @@ async def delete_chat_session(
         if not session:
             raise HTTPException(status_code=404, detail="Chat session not found")
             
-        if session.visitor_id != user_id:
+        if str(session.visitor_id)!= str(user_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to delete this chat session"
             )
             
-        session.visitor_id = None
-        db_session.add(session)
+        if session.parent_id:
+            session.visitor_id = None
+            db_session.add(session)
+        else:
+            await db_session.delete(session)
+
         await db_session.commit()
         
         return None
@@ -270,6 +274,36 @@ async def get_chat_analytics(
         analytics.sort(key=lambda x: x["stats"]["total_messages"], reverse=True)
         
         return analytics
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+    
+@chat_router.get("/sessions/{session_id}", response_model=ChatSessionWithMessages)
+async def get_chat_session(
+    session_id: UUID,
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Get chat session details by session ID"""
+    try:
+        user_id = current_user["user"]["user_id"]
+        session = await chat_service.get_session(session_id, db_session)
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+            
+        # Check if user is either the owner or a visitor of this session
+        if str(session.user_id) != user_id and str(session.visitor_id) != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this chat session"
+            )
+        
+        await db_session.refresh(session, ['messages'])
+        return session
 
     except Exception as e:
         raise HTTPException(
