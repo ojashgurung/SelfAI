@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DocumentService } from "@/lib/service/document.service";
+import { ChatService } from "@/lib/service/chat.service";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +15,7 @@ import { Download, HelpCircle, X } from "lucide-react";
 interface UploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (response: { session_id: string }) => void;
 }
 
 export function UploadDialog({
@@ -21,7 +23,11 @@ export function UploadDialog({
   onOpenChange,
   onSuccess,
 }: UploadDialogProps) {
+  const router = useRouter();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "training"
+  >("idle");
   const [isUploading, setIsUploading] = useState(false);
   const handleFileChange = (file: File) => {
     if (file.size > 25 * 1024 * 1024) {
@@ -42,23 +48,30 @@ export function UploadDialog({
 
     setIsUploading(true);
     try {
-      await DocumentService.uploadDocument(uploadedFile);
-      toast.success("Document uploaded successfully");
+      setUploadStatus("uploading");
+      const response = await DocumentService.uploadDocument(uploadedFile);
+      console.log(response.document);
+      setUploadStatus("training");
+      toast.info("Document uploaded, waiting for training to complete...");
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const chatSession = await ChatService.createSession({
+        namespace: response.document.namespace,
+        title: "Owner",
+        is_public: true,
+      });
+      localStorage.setItem("ownerSessionId", chatSession.id);
+      toast.success("Document uploaded and trained successfully");
       setUploadedFile(null);
-      onSuccess?.();
+      onSuccess?.({ session_id: chatSession.id });
       onOpenChange(false);
+      router.push(`/dashboard/chat/${chatSession.id}`);
     } catch (error) {
       console.error("Upload failed:", error);
-      // if (error?.response?.status === 403) {
-      //   toast.error("Please login to upload documents");
-      //   // Optionally redirect to login
-      //   window.location.href = "/signin";
-      // } else {
-      //   toast.error("Failed to upload document");
+      toast.error("Failed to upload or train document");
+    } finally {
+      setUploadStatus("idle");
+      setIsUploading(false);
     }
-    // } finally {
-    //   setIsUploading(false);
-    // }
   };
 
   return (
@@ -143,7 +156,11 @@ export function UploadDialog({
                 onClick={handleUpload}
                 disabled={!uploadedFile || isUploading}
               >
-                {isUploading ? "Uploading..." : "Upload"}
+                {uploadStatus === "uploading"
+                  ? "Uploading..."
+                  : uploadStatus === "training"
+                    ? "Training..."
+                    : "Upload"}
               </Button>
             </div>
           </div>
