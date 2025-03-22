@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { DocumentService, Document } from "@/lib/service/document.service";
 import { UserService } from "@/lib/service/user.service";
 import { ChatService } from "@/lib/service/chat.service";
-import { UploadDialog } from "@/components/document/upload-dialog";
-import { ShareDialog } from "@/components/document/share-dialog";
+import { UploadDialog } from "@/components/dialog/upload-dialog";
+import { ShareDialog } from "@/components/dialog/share-dialog";
 import { Button } from "@/components/ui/button";
 import {
   MoreVertical,
@@ -33,6 +33,7 @@ export default function DocumentPage() {
   >("all");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [ownerSessionId, setOwnerSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentShareUrl, setCurrentShareUrl] = useState("");
@@ -74,9 +75,17 @@ export default function DocumentPage() {
     }
   };
 
-  const handleUploadSuccess = async () => {
-    setUploadOpen(false);
-    await loadDocuments();
+  const handleUploadSuccess = async (response: { session_id: string }) => {
+    try {
+      setUploadOpen(false);
+      if (response.session_id) {
+        localStorage.setItem("ownerSessionId", response.session_id);
+        setOwnerSessionId(response.session_id);
+      }
+      await loadDocuments();
+    } catch (error) {
+      console.error("Failed to handle upload success:", error);
+    }
   };
 
   const handleDeleteDocument = async (documentId: string) => {
