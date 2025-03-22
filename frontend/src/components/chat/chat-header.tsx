@@ -35,22 +35,25 @@ export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-1.5">
-          <svg
-            className="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              d="M12 5v14M5 12h14"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="text-sm font-medium">Connect</span>
-        </button>
+        {session?.title !== "Owner" && (
+          <button className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-1.5">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="text-sm font-medium">Connect</span>
+          </button>
+        )}
+
         <div className="h-6 w-[1px] bg-gray-200 mx-2" />
         <button className="p-2 hover:bg-gray-50 rounded-lg">
           <svg
