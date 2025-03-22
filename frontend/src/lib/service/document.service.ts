@@ -31,7 +31,7 @@ export const DocumentService = {
       if (response.status === 401) {
         throw new Error("Unauthorized. Please login again.");
       }
-      throw new Error("Document upload failed");
+      throw new Error("Document upload and training failed");
     }
 
     return response.json();

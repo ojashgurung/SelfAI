@@ -1,6 +1,6 @@
 "use client";
 
-import { Sidebar } from "@/components/dashboard/new_sidebar";
+import { Sidebar } from "@/components/dashboard/sidebar";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";

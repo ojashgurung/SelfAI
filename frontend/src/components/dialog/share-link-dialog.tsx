@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ShareLinkDialogProps {
   isOpen: boolean;
@@ -21,12 +23,46 @@ export function ShareLinkDialog({
   onClose,
   onJoin,
 }: ShareLinkDialogProps) {
+  const { getAuthHeader } = useAuth();
   const [shareToken, setShareToken] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onJoin(shareToken);
-    setShareToken("");
+    const token = shareToken.includes("/chat/public/")
+      ? shareToken.split("/chat/public/")[1]
+      : shareToken;
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/public/${token}`,
+        {
+          // Include cookies for authentication
+          headers: {
+            ...getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Please login to join this chat");
+        }
+        if (response.status === 404) {
+          throw new Error("Invalid share token or chat not found");
+        }
+        throw new Error("Failed to join chat");
+      }
+
+      onJoin(token);
+      setShareToken("");
+      onClose();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to join chat"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,8 +90,8 @@ export function ShareLinkDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!shareToken.trim()}>
-              Join Chat
+            <Button type="submit" disabled={!shareToken.trim() || isLoading}>
+              {isLoading ? "Joining..." : "Join Chat"}
             </Button>
           </DialogFooter>
         </form>

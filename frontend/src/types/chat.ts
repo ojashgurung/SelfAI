@@ -2,7 +2,8 @@ export interface ChatSession {
   id: string;
   title: string;
   namespace: string;
-  user_id: string;
+  user_id?: string;
+  visitor_id?: string;
   is_public: boolean;
   share_token?: string;
   messages: ChatMessage[];
