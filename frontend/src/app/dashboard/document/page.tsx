@@ -116,7 +116,7 @@ export default function DocumentPage() {
           <div className="flex gap-2">
             <Button
               size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-indigo-600 hover:bg-indigo-700"
               onClick={() => setUploadOpen(true)}
             >
               <Plus className="w-3 h-3 mr-1" />
@@ -134,7 +134,7 @@ export default function DocumentPage() {
           <div className="flex gap-2">
             <Button
               size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-indigo-600 hover:bg-indigo-700"
               onClick={handleShareClick}
               disabled={isCreatingSession || documents.length === 0}
             >
