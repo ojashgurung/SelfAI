@@ -145,13 +145,14 @@ export function UploadDialog({
             </Button>
             <div className="space-x-2">
               <Button
-                variant="outline"
+                className="bg-red-600 hover:bg-red-700 text-white"
                 size="sm"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
               <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
                 size="sm"
                 onClick={handleUpload}
                 disabled={!uploadedFile || isUploading}

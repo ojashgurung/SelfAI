@@ -33,14 +33,6 @@ export function ShareDialog({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">Share with Friends</DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
           <p className="text-gray-600 text-sm mt-2">
             Learning is more effective when you connect with friends!
@@ -57,7 +49,9 @@ export function ShareDialog({
             <Button
               size="sm"
               onClick={handleCopy}
-              className={copied ? "bg-green-600" : ""}
+              className={
+                copied ? "bg-green-600" : "bg-indigo-600 hover:bg-indigo-700"
+              }
             >
               {copied ? "Copied!" : "Copy"}
             </Button>
@@ -77,7 +71,7 @@ export function ShareDialog({
           </div>
 
           <Button
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full bg-indigo-600 hover:bg-indigo-700"
             onClick={() => {
               const qrUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/public/${shareUrl.split("/").pop()}/qr`;
               window.open(qrUrl, "_blank");

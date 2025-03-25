@@ -29,10 +29,18 @@ export function LogoutDialog({
           <DialogDescription>Log out of SelfAI as {email}?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            onClick={onClose}
+          >
             Cancel
           </Button>
-          <Button onClick={onConfirm}>Log out</Button>
+          <Button
+            onClick={onConfirm}
+            className="bg-red-700 text-white hover:bg-red-800"
+          >
+            Log out
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
