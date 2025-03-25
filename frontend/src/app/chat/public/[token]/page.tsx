@@ -22,6 +22,10 @@ export default function PublicChatPage() {
   const [isSending, setIsSending] = useState(false);
 
   // Add message handling function
+  const handlePromptClick = (prompt: string) => {
+    setInputMessage(prompt);
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !session?.id) return;
 
@@ -151,7 +155,13 @@ export default function PublicChatPage() {
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 overscroll-none">
           <div className="h-full">
-            <ChatBody isPublic={true} session={session} messages={messages} />
+            <ChatBody
+              messages={messages}
+              session={session}
+              isLoading={isLoading}
+              isPublic={true}
+              onPromptClick={handlePromptClick}
+            />
           </div>
         </div>
         <div className="flex-none p-4">

@@ -76,12 +76,25 @@ export default function ChatBody({
             <div className="max-w-3xl mx-auto p-8 mt-10">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">
-                  Hi there, <span className="text-purple-600">John</span>
+                  Hi there,{" "}
+                  <span className="text-purple-600">
+                    {session?.title === "Owner"
+                      ? session?.owner?.fullname?.split(" ")[0]
+                      : `I am ${session?.owner?.fullname?.split(" ")[0]} SelfAI`}
+                  </span>
                 </h1>
-                <h2 className="text-2xl">
-                  What{" "}
-                  <span className="text-purple-700">would like to knows?</span>
-                </h2>
+                {session?.title === "Owner" ? (
+                  <h2 className="text-2xl">
+                    Curious about what{" "}
+                    <span className="text-purple-700">I know about you?</span>
+                  </h2>
+                ) : (
+                  <h2 className="text-2xl">
+                    Curious about my work or thoughts?{" "}
+                    <span className="text-purple-700">Just ask.</span>
+                  </h2>
+                )}
+
                 <p className="text-gray-500 text-sm mt-2">
                   Use one of the most common prompts below or use your own to
                   begin

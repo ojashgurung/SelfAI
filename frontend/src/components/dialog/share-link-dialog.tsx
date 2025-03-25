@@ -87,10 +87,18 @@ export function ShareLinkDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              type="button"
+              onClick={onClose}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!shareToken.trim() || isLoading}>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              type="submit"
+              disabled={!shareToken.trim() || isLoading}
+            >
               {isLoading ? "Joining..." : "Join Chat"}
             </Button>
           </DialogFooter>

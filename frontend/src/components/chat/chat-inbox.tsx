@@ -27,7 +27,7 @@ export default function ChatInbox({
         <button
           onClick={onSendMessage}
           disabled={!inputMessage.trim() || isLoading}
-          className="flex items-center justify-center w-10 h-10 bg-purple-600 hover:bg-purple-700 rounded-full text-base cursor-pointer"
+          className="flex items-center justify-center w-10 h-10 bg-indigo-600 hover:bg-indigo-700 rounded-full text-base cursor-pointer"
         >
           <ArrowUp className="w-6 h-6 text-purple-100" />
         </button>
