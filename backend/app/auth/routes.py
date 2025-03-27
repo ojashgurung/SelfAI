@@ -64,12 +64,12 @@ async def create_user_Account(
 
         response = JSONResponse(
             content={
-                "message": "Login successful",
+                "message": "Sign-up successful",
                 "user" : {
-                        "user_id": str(user.uuid),
-                        "fullname": user.fullname,
-                        "email": user.email,
-                        "role": user.role,
+                        "user_id": str(new_user.uuid),
+                        "fullname": new_user.fullname,
+                        "email": new_user.email,
+                        "role": new_user.role,
                     }
                 }
             )
