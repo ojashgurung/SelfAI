@@ -46,10 +46,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000",  "http://127.0.0.1:3000"],  # Your frontend URL
+    allow_origins=["http://0.0.0.0:3000"], 
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"], 
 )
 
 register_all_errors(app)
