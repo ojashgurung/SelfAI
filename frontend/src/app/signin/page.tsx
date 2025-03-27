@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/service/auth";
-import { TokenService } from "@/lib/utils/utils";
 
 export default function SigninPage() {
   const id = useId();
@@ -26,10 +25,11 @@ export default function SigninPage() {
         email: formData.get("email") as string,
         password: formData.get("password") as string,
       });
-      if (response.access_token && response.refresh_token) {
-        TokenService.setTokens(response.access_token, response.refresh_token);
+      if (response.user) {
+        router.push("/dashboard");
+      } else {
+        setError("Invalid response from server");
       }
-      router.push("/dashboard");
     } catch (err) {
       setError("Failed to sign in. Please try again.");
     } finally {
