@@ -37,7 +37,13 @@ async def create_chat_session(
     rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session),
 ):
-    return await chat_service.create_session(session_data,current_user, rag_service, db_session)
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to create a chat session"
+        )
+
+    return await chat_service.create_session(session_data, current_user, rag_service, db_session)
 
 @chat_router.post("/sessions/{session_id}/messages", response_model=MessageRead)
 async def send_message(
@@ -47,7 +53,7 @@ async def send_message(
     rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session)
 ):  
-    user_id = current_user["user"]["user_id"] if current_user else None
+    user_id = current_user["user"]["id"] if current_user else None
 
     session = await chat_service.get_session(session_id, db_session)
     if not session:
@@ -91,7 +97,7 @@ async def get_public_chat_session(
 
     try:
         if current_user:
-            visitor_id = str(current_user["user"]["user_id"])
+            visitor_id = str(current_user["user"]["id"])
         else:
             visitor_id = request.client.host
     except (KeyError, TypeError):
@@ -118,7 +124,7 @@ async def get_session_qr(
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
 
-    url = f"http://192.168.1.146:3000/dashboard/chat/public/{share_token}"
+    url = f"http://localhost:3000/dashboard/chat/public/{share_token}"
     
     qr = QRCode(version=1, box_size=10, border=5)
     qr.add_data(url)
@@ -137,7 +143,7 @@ async def get_user_chat_history(
 ):
     """Get all chat sessions related to the user"""
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         user = await db_session.get(Users, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -166,7 +172,7 @@ async def delete_chat_history(
 ):
     """Delete all chat sessions related to the user"""
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         user = await db_session.get(Users, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -195,7 +201,7 @@ async def delete_chat_session(
 ):
     """Delete a specific chat session"""
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         session = await chat_service.get_session(session_id, db_session)
         
         if not session:
@@ -231,7 +237,7 @@ async def get_chat_analytics(
     db_session: AsyncSession = Depends(get_session),
 ):
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         user = await db_session.get(Users, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -289,7 +295,7 @@ async def get_chat_session(
 ):
     """Get chat session details by session ID"""
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         session = await chat_service.get_session(session_id, db_session)
         
         if not session:
