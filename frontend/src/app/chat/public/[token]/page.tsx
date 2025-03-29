@@ -42,7 +42,7 @@ export default function PublicChatPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/sessions/${session.id}/messages`,
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/sessions/${session.id}/messages`,
         {
           method: "POST",
           headers: {
@@ -78,7 +78,7 @@ export default function PublicChatPage() {
     const fetchSession = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/public/${token}`
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/public/${token}`
         );
         if (!response.ok) {
           throw new Error(
@@ -91,11 +91,11 @@ export default function PublicChatPage() {
         console.log(data.namespace);
         if (data.user_id || data.namespace) {
           const userResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/${data.user_id || data.namespace}`
+            `${process.env.NEXT_PUBLIC_API_URL}/user/${data.user_id || data.namespace}`
           );
           if (userResponse.ok) {
             const userData = await userResponse.json();
-            data.owner = userData; // Add user data to session
+            data.owner = userData;
           }
         }
 

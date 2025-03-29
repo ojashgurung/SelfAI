@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DocumentService, Document } from "@/lib/service/document.service";
-import { UserService } from "@/lib/service/user.service";
+import { useAuth } from "@/hooks/use-auth";
 import { ChatService } from "@/lib/service/chat.service";
 import { UploadDialog } from "@/components/dialog/upload-dialog";
 import { ShareDialog } from "@/components/dialog/share-dialog";
@@ -31,6 +31,7 @@ export default function DocumentPage() {
   const [activeTab, setActiveTab] = useState<
     "all" | "documents" | "media" | "pdf"
   >("all");
+  const { user } = useAuth();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [ownerSessionId, setOwnerSessionId] = useState<string | null>(null);
@@ -55,11 +56,13 @@ export default function DocumentPage() {
   };
 
   const handleShareClick = async () => {
+    if (!user) {
+      return;
+    }
     try {
-      const user_data = await UserService.getCurrentUser();
       setIsCreatingSession(true);
       const session = await ChatService.createSession({
-        namespace: user_data.user_id,
+        namespace: user.id,
         title: "Owner",
         is_public: true,
       });

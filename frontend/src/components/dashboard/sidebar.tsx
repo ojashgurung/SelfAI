@@ -24,7 +24,6 @@ import Link from "next/link";
 import { LogoutDialog } from "@/components/dialog/logout-dialog";
 import { ShareLinkDialog } from "@/components/dialog/share-link-dialog";
 import { UserDropdown } from "@/components/dropdown/user-dropdown";
-import { UserService, UserInfo } from "@/lib/service/user.service";
 import { ChatService } from "@/lib/service/chat.service";
 
 interface ChatSession {
@@ -48,9 +47,9 @@ interface ChatSession {
 
 export function Sidebar() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const pathname = usePathname();
-  const [user, setUser] = useState<UserInfo | null>(null);
+
   const [ownerSessionId, setOwnerSessionId] = useState<string | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [openMenus, setOpenMenus] = useState<string[]>([]);
@@ -124,18 +123,6 @@ export function Sidebar() {
       fetchChatHistory();
     }
   }, [user]);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await UserService.getCurrentUser();
-        setUser(userData);
-      } catch (error) {
-        console.error("Failed to load user:", error);
-      }
-    };
-    loadUser();
-  }, []);
 
   const menuItems = [
     { title: "Overview", icon: HomeIcon, href: "/dashboard" },
@@ -278,7 +265,13 @@ export function Sidebar() {
             </div>
           </div>
 
-          <UserDropdown user={user} onLogout={handleLogoutClick} />
+          {user ? (
+            <UserDropdown user={user} onLogout={handleLogoutClick} />
+          ) : (
+            <div className="p-4 border-t">
+              <div className="animate-pulse h-10 bg-gray-100 rounded-md" />
+            </div>
+          )}
         </div>
       </div>
       <LogoutDialog

@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserInfo } from "@/lib/service/user.service";
+import { UserInfo } from "@/types/user";
 
 interface UserDropdownProps {
   user: UserInfo | null;

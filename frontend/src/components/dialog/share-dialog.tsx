@@ -62,7 +62,7 @@ export function ShareDialog({
               <h3 className="text-sm font-medium">Scan QR Code</h3>
               <div className="flex justify-center p-4 bg-white rounded-lg">
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/public/${shareUrl.split("/").pop()}/qr`}
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/chat/public/${shareUrl.split("/").pop()}/qr`}
                   alt="QR Code"
                   className="w-48 h-48"
                 />
@@ -73,7 +73,7 @@ export function ShareDialog({
           <Button
             className="w-full bg-indigo-600 hover:bg-indigo-700"
             onClick={() => {
-              const qrUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/public/${shareUrl.split("/").pop()}/qr`;
+              const qrUrl = `${process.env.NEXT_PUBLIC_API_URL}/chat/public/${shareUrl.split("/").pop()}/qr`;
               window.open(qrUrl, "_blank");
             }}
           >

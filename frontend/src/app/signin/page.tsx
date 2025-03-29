@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/lib/service/auth";
+import { authService } from "@/lib/service/auth.service";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SigninPage() {
   const id = useId();
   const router = useRouter();
+  const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,18 +22,31 @@ export default function SigninPage() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await authService.signin({
-        email: formData.get("email") as string,
-        password: formData.get("password") as string,
-      });
+      const response = await authService.signin({ email, password });
       if (response.user) {
+        setUser({
+          id: response.user.id,
+          fullname: response.user.fullname,
+          email: response.user.email,
+          role: response.user.role,
+        });
         router.push("/dashboard");
       } else {
-        setError("Invalid response from server");
+        setError("Authentication failed. Please try again.");
       }
-    } catch (err) {
-      setError("Failed to sign in. Please try again.");
+    } catch (err: any) {
+      console.log(err.message);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
