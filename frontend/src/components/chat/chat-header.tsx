@@ -1,7 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { UserService } from "@/lib/service/user.service";
+import { useAuth } from "@/hooks/use-auth";
 import { ChatService } from "@/lib/service/chat.service";
 import { Button } from "@/components/ui/button";
 import { PanelRight, PanelRightClose } from "lucide-react";
@@ -15,23 +16,28 @@ interface ChatHeaderProps {
 }
 
 export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
+  const { user } = useAuth();
+  const router = useRouter();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { isChatSidebarOpen, toggleChatSidebar } = useChatSidebar();
   const [currentShareUrl, setCurrentShareUrl] = useState("");
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   const handleShareClick = async () => {
+    if (!user) {
+      router.push("/signin");
+      return;
+    }
     try {
-      const user_data = await UserService.getCurrentUser();
       setIsCreatingSession(true);
       const session = await ChatService.createSession({
-        namespace: user_data.user_id,
+        namespace: user.id,
         title: "Owner",
         is_public: true,
       });
 
       setCurrentShareUrl(
-        `${window.location.origin}/chat/public/${session.share_token}`
+        `${process.env.NEXT_PUBLIC_URL}/chat/public/${session.share_token}`
       );
       setShareDialogOpen(true);
     } catch (error) {

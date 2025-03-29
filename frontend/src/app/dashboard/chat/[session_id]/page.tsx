@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
 import { ChatSession, ChatMessage } from "@/types/chat";
 import { useChatSidebar } from "@/context/chat-sidebar-context";
 
@@ -14,7 +13,6 @@ import ChatInfoSidebar from "@/components/chat/chat-info-sidebar";
 export default function ChatPage() {
   const { session_id } = useParams();
   const { isChatSidebarOpen } = useChatSidebar();
-  const { getAuthHeader } = useAuth();
   const [session, setSession] = useState<ChatSession | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,14 +40,15 @@ export default function ChatPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/sessions/${session.id}/messages`,
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/sessions/${session.id}/messages`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            ...(session.share_token
-              ? { Authorization: `Bearer ${session.share_token}` }
-              : getAuthHeader()),
+            ...(session.share_token && {
+              Authorization: `Bearer ${session.share_token}`,
+            }),
           },
           body: JSON.stringify({
             content: inputMessage,
@@ -73,10 +72,12 @@ export default function ChatPage() {
     const fetchSession = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/sessions/${session_id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/sessions/${session_id}`,
+
           {
+            credentials: "include",
             headers: {
-              ...getAuthHeader(),
+              "Content-Type": "application/json",
             },
           }
         );
@@ -88,7 +89,7 @@ export default function ChatPage() {
         const data = await response.json();
         if (data.user_id || data.namespace) {
           const userResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/user/${data.user_id || data.namespace}`
+            `${process.env.NEXT_PUBLIC_API_URL}/user/${data.user_id || data.namespace}`
           );
           if (userResponse.ok) {
             const userData = await userResponse.json();

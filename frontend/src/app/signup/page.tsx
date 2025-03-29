@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/lib/service/auth";
-import { TokenService } from "@/lib/utils/utils";
+import { authService } from "@/lib/service/auth.service";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignupPage() {
   const id = useId();
   const router = useRouter();
+  const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,22 +21,37 @@ export default function SignupPage() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    console.log(formData);
+    const fullname = formData.get("fullname") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!fullname || !email || !password) {
+      setError("Please fill in all fields");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await authService.signup({
-        fullname: formData.get("fullname") as string,
-        email: formData.get("email") as string,
-        password: formData.get("password") as string,
+        fullname,
+        email,
+        password,
       });
-      // Store tokens in cookies
-      if (response.access_token && response.refresh_token) {
-        TokenService.setTokens(response.access_token, response.refresh_token);
+      if (response.user) {
+        setUser({
+          id: response.user.id,
+          fullname: response.user.fullname,
+          email: response.user.email,
+          role: response.user.role,
+        });
+        router.push("/dashboard");
+      } else {
+        setError("Registration failed. Please try again.");
       }
-
-      router.push("/dashboard");
-    } catch (err) {
-      setError("Failed to create account. Please try again.");
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.detail || err.message || "Failed to create account";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
 
 interface ShareLinkDialogProps {
   isOpen: boolean;
@@ -23,7 +22,6 @@ export function ShareLinkDialog({
   onClose,
   onJoin,
 }: ShareLinkDialogProps) {
-  const { getAuthHeader } = useAuth();
   const [shareToken, setShareToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,11 +32,10 @@ export function ShareLinkDialog({
       : shareToken;
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/public/${token}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/chat/public/${token}`,
         {
-          // Include cookies for authentication
+          credentials: "include",
           headers: {
-            ...getAuthHeader(),
             "Content-Type": "application/json",
           },
         }
