@@ -50,14 +50,14 @@ async def create_user_Account(
 
         access_token = create_access_token(
             user_data={
+                "id": str(new_user.uuid),
                 "email": new_user.email,
-                "user_id": str(new_user.uuid),
                 "role": new_user.role,
             }
         )
 
         refresh_token = create_access_token(
-            user_data={"email": new_user.email, "user_id": str(new_user.uuid)},
+            user_data={"email": new_user.email, "id": str(new_user.uuid)},
             refresh=True,
             expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
         )
@@ -66,7 +66,7 @@ async def create_user_Account(
             content={
                 "message": "Sign-up successful",
                 "user" : {
-                        "user_id": str(new_user.uuid),
+                        "id": str(new_user.uuid),
                         "fullname": new_user.fullname,
                         "email": new_user.email,
                         "role": new_user.role,
@@ -121,14 +121,14 @@ async def login_users(
         if password_valid:
             access_token = create_access_token(
                 user_data={
+                    "id": str(user.uuid),
                     "email": user.email,
-                    "user_id": str(user.uuid),
                     "role": user.role,
                 }
             )
 
             refresh_token = create_access_token(
-                user_data={"email": user.email, "user_uid": str(user.uuid)},
+                user_data={"email": user.email, "id": str(user.uuid)},
                 refresh=True,
                 expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
             )
@@ -137,7 +137,7 @@ async def login_users(
                 content={
                     "message": "Login successful",
                     "user" : {
-                            "user_id": str(user.uuid),
+                            "id": str(user.uuid),
                             "fullname": user.fullname,
                             "email": user.email,
                             "role": user.role,
@@ -224,7 +224,6 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
                 content = {"message": "Invalid token"}
             )
         user_email = payload["user"].get("email")
-        print(user_email)
         
         user = await user_service.get_user_by_email(user_email, session)
 
@@ -238,7 +237,7 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
             status_code = status.HTTP_200_OK,
             content = {"vaild": True,
                         "user" : {
-                            "user_id": str(user.uuid),
+                            "id": str(user.uuid),
                             "fullname": user.fullname,
                             "email": user.email,
                             "role": user.role,
