@@ -1,5 +1,4 @@
 from fastapi import Depends, Request
-from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -16,40 +15,35 @@ from ..errors import InvalidToken, AccessTokenRequired, RefreshTokenRequired
 
 user_service = UserService()
 
-class TokenBearer(HTTPBearer):
-    def __init__(self, auto_error=True):
+class TokenBearer:
+    def __init__(self, auto_error: bool=True):
+        self.auto_error = auto_error
         super().__init__(auto_error=auto_error)
 
-    async def __call__(self, request: Request) -> HTTPAuthorizationCredentials | None:
-        creds = await super().__call__(request)
+    async def __call__(self, request: Request) -> dict:
+        token = request.cookies.get("access_token")
 
-        if not creds:
+        if not token:
             if not self.auto_error:
                 return None
             raise InvalidToken("No credentials provided")
 
-        token = creds.credentials
 
         try:
-            token_data = decode_token(token)  # Ensure decode_token is correct
+            token_data = decode_token(token)
+            if not token_data:
+                if not self.auto_error:
+                    return None
+                raise InvalidToken("Invalid token data")
+            
+            self.verify_token_data(token_data)
+            return token_data
+
         except Exception as e:
             if not self.auto_error:
                 return None
             raise InvalidToken(f"Token decoding failed: {str(e)}")
 
-        if not self.token_valid(token):
-            if not self.auto_error:
-                return None
-            raise InvalidToken()
-
-        try:
-            self.verify_token_data(token_data)
-        except Exception:
-            if not self.auto_error:
-                return None
-            raise
-
-        return token_data
 
     def token_valid(self, token: str) -> bool:
         token_data = decode_token(token)

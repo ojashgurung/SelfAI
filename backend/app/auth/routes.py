@@ -50,14 +50,14 @@ async def create_user_Account(
 
         access_token = create_access_token(
             user_data={
+                "id": str(new_user.uuid),
                 "email": new_user.email,
-                "user_id": str(new_user.uuid),
                 "role": new_user.role,
             }
         )
 
         refresh_token = create_access_token(
-            user_data={"email": new_user.email, "user_id": str(new_user.uuid)},
+            user_data={"id": str(new_user.uuid), "email": new_user.email},
             refresh=True,
             expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
         )
@@ -66,7 +66,7 @@ async def create_user_Account(
             content={
                 "message": "Sign-up successful",
                 "user" : {
-                        "user_id": str(new_user.uuid),
+                        "id": str(new_user.uuid),
                         "fullname": new_user.fullname,
                         "email": new_user.email,
                         "role": new_user.role,
@@ -115,60 +115,63 @@ async def login_users(
         if not user:
             raise InvalidCredentials()
 
-    
         password_valid = verify_password(password, user.password_hash)
 
-        if password_valid:
-            access_token = create_access_token(
-                user_data={
-                    "email": user.email,
-                    "user_id": str(user.uuid),
-                    "role": user.role,
-                }
-            )
+        if not password_valid:
+            raise InvalidCredentials()
 
-            refresh_token = create_access_token(
-                user_data={"email": user.email, "user_uid": str(user.uuid)},
-                refresh=True,
-                expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
-            )
+        
+        access_token = create_access_token(
+            user_data={
+                "id": str(user.uuid),
+                "email": user.email,
+                "role": user.role,
+            }
+        )
 
-            response = JSONResponse(
-                content={
-                    "message": "Login successful",
-                    "user" : {
-                            "user_id": str(user.uuid),
-                            "fullname": user.fullname,
-                            "email": user.email,
-                            "role": user.role,
-                        }
-                }
-            )
+        refresh_token = create_access_token(
+            user_data={"email": user.email, "id": str(user.uuid)},
+            refresh=True,
+            expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
+        )
 
-            response.set_cookie(
-                key="access_token",
-                value=access_token,
-                httponly=True,
-                secure=False,
-                samesite="lax",
-                max_age=36000,
-            )
+        response = JSONResponse(
+            content={
+                "message": "Login successful",
+                "user" : {
+                        "id": str(user.uuid),
+                        "fullname": user.fullname,
+                        "email": user.email,
+                        "role": user.role,
+                    }
+            }
+        )
 
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                httponly=True,
-                secure=False,
-                samesite="lax",
-                max_age=172800,
-            )
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            max_age=36000,
+        )
+
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            max_age=172800,
+        )
 
 
-            return response
+        return response
 
     except InvalidCredentials:
         raise
     except Exception as e:
+        print(f"Login error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during login",
@@ -185,19 +188,24 @@ async def verify_user_account(token: str, session: AsyncSession = Depends(get_se
             )
 
         user_email = payload.get("email")
-
-        if user_email:
-            user = await user_service.get_user_by_email(user_email, session)
-
-            if not user:
-                raise UserNotFound()
-
-            await user_service.update_user(user, {"is_verified": True}, session)
-
+        if not user_email:
             return JSONResponse(
-                content={"message": "Account verified successfully"},
-                status_code=status.HTTP_200_OK,
+                content={"message": "Email not found in token"},
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
+
+        
+        user = await user_service.get_user_by_email(user_email, session)
+
+        if not user:
+            raise UserNotFound()
+
+        await user_service.update_user(user, {"is_verified": True}, session)
+
+        return JSONResponse(
+            content={"message": "Account verified successfully"},
+            status_code=status.HTTP_200_OK,
+        )
     except UserNotFound:
         raise
     except Exception as e:
@@ -224,7 +232,6 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
                 content = {"message": "Invalid token"}
             )
         user_email = payload["user"].get("email")
-        print(user_email)
         
         user = await user_service.get_user_by_email(user_email, session)
 
@@ -238,7 +245,7 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
             status_code = status.HTTP_200_OK,
             content = {"vaild": True,
                         "user" : {
-                            "user_id": str(user.uuid),
+                            "id": str(user.uuid),
                             "fullname": user.fullname,
                             "email": user.email,
                             "role": user.role,
