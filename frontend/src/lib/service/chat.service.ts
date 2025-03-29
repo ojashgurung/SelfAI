@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/api/v1/chat";
+const CHAT_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/chat`;
 
 interface ChatSession {
   id: string;
@@ -27,15 +27,11 @@ interface ChatSessionData {
 
 export const ChatService = {
   async createSession(data: ChatSessionData): Promise<ChatSession> {
-    const accessToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("access_token="))
-      ?.split("=")[1];
-    const response = await fetch(`${API_BASE_URL}/sessions`, {
+    const response = await fetch(`${CHAT_BASE_URL}/sessions`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(data),
     });
@@ -51,15 +47,10 @@ export const ChatService = {
   },
 
   async getChatHistory(): Promise<ChatSession[]> {
-    const accessToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("access_token="))
-      ?.split("=")[1];
-
-    const response = await fetch(`${API_BASE_URL}/sessions/history`, {
+    const response = await fetch(`${CHAT_BASE_URL}/sessions/history`, {
       credentials: "include",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
     });
 
