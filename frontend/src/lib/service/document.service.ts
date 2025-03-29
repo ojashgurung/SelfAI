@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/api/v1/rag";
+const RAG_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/rag`;
 
 export interface Document {
   id: string;
@@ -14,16 +14,9 @@ export const DocumentService = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const accessToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("access_token="))
-      ?.split("=")[1];
-
-    const response = await fetch(`${API_BASE_URL}/upload-document`, {
+    const response = await fetch(`${RAG_BASE_URL}/upload-document`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      credentials: "include",
       body: formData,
     });
 
@@ -38,14 +31,11 @@ export const DocumentService = {
   },
 
   async getDocuments() {
-    const accessToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("access_token="))
-      ?.split("=")[1];
-    const response = await fetch(`${API_BASE_URL}/documents`, {
+    const response = await fetch(`${RAG_BASE_URL}/documents`, {
       method: "GET",
+      credentials: "include",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
     });
     if (!response.ok) {
@@ -60,15 +50,11 @@ export const DocumentService = {
   },
 
   async deleteDocument(documentId: string) {
-    const accessToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("access_token="))
-      ?.split("=")[1];
-
-    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+    const response = await fetch(`${RAG_BASE_URL}/documents/${documentId}`, {
       method: "DELETE",
+      credentials: "include",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
     });
 
