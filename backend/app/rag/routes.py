@@ -27,7 +27,7 @@ async def get_user_documents(
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         
         # Query documents for the current user
         query = select(Documents).where(Documents.user_id == user_id)
@@ -70,7 +70,7 @@ async def upload(
     session: AsyncSession = Depends(get_session),
 ): 
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
 
         if not file:
             raise NoSourceProvided()
@@ -111,7 +111,7 @@ async def delete_document(
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        user_id = current_user["user"]["user_id"]
+        user_id = current_user["user"]["id"]
         
         # Find the document and verify ownership
         query = select(Documents).where(Documents.id == document_id, Documents.user_id == user_id)
@@ -149,7 +149,7 @@ async def query_rag(
     current_user: dict = Depends(access_token_bearer)
     # Later: Upload Chat history in Postgresql DB
 ): 
-    user_id = current_user["user"]["user_uid"]
+    user_id = current_user["user"]["id"]
     user_query = query.question
     
     if not user_query:

@@ -24,7 +24,7 @@ class ChatService:
                 detail="Authentication required to create a session"
             ) 
 
-        user_id = current_user.get("user", {}).get("user_id")
+        user_id = current_user["user"]["id"]
         if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
