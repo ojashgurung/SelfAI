@@ -9,38 +9,41 @@ interface SigninData {
   password: string;
 }
 
-const API_BASE_URL = "http://localhost:8000/api/v1/auth";
+const AUTH_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/auth`;
 
 export const authService = {
   async signup(data: SignupData) {
-    const response = await fetch(`${API_BASE_URL}/signup`, {
+    const response = await fetch(`${AUTH_BASE_URL}/signup`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-      throw new Error("Signup failed");
+      throw new Error(result.detail || "Signup failed");
     }
-
-    return response.json();
+    return result;
   },
 
   async signin(data: SigninData) {
-    const response = await fetch(`${API_BASE_URL}/signin`, {
+    const response = await fetch(`${AUTH_BASE_URL}/signin`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      throw new Error("Signin failed");
-    }
+    const result = await response.json();
 
-    return response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Signin failed");
+    }
+    return result;
   },
 };
