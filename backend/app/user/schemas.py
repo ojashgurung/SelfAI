@@ -10,8 +10,8 @@ class DocumentInfo(BaseModel):
 
 class UserResponse(BaseModel):
     user_id: str
-    email: str
     fullname: str
+    email: str
     personal_bio: Optional[str] = None
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None

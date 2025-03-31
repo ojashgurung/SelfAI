@@ -1,12 +1,13 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
-from ..database.models import Documents
+from ..database.models import Documents, ChatSessions, ChatMessages
 from ..database.db import get_session
 from ..errors import NoSourceProvided, NoQueryProvided
 from .service import RagService
 from ..auth.dependencies import AccessTokenBearer
-from sqlmodel import select
+from sqlmodel import select, delete
+from uuid import UUID
 
 from ..vector_store.vector_db import (
     delete_vectors
@@ -76,7 +77,7 @@ async def upload(
             raise NoSourceProvided()
         result = await rag_service.save_and_extract_text(file, user_id)
         file_size = convert_size(file.size)
-        # Store document metadata in database
+   
         document = Documents(
             user_id=user_id,
             file_name=file.filename,
@@ -112,8 +113,7 @@ async def delete_document(
 ):
     try:
         user_id = current_user["user"]["id"]
-        
-        # Find the document and verify ownership
+
         query = select(Documents).where(Documents.id == document_id, Documents.user_id == user_id)
         result = await session.execute(query)
         document = result.scalar_one_or_none()
@@ -124,11 +124,31 @@ async def delete_document(
                 detail="Document not found or you don't have permission to delete it"
             )
 
-        # Delete vectors from Pinecone
         await delete_vectors(document.vector_ids, document.namespace)
-        
-        # Delete document from database
+
         await session.delete(document)
+
+        remaining_docs = await session.execute(
+            select(Documents).where(Documents.user_id == user_id)
+        )
+
+        if not remaining_docs.scalars().first():
+            owned_sessions = await session.execute(
+                select(ChatSessions.id).where(ChatSessions.user_id == user_id)
+            )
+
+            sessions = owned_sessions.scalars().all()
+            session_ids = [str(s) for s in sessions] 
+
+            if session_ids:
+                await session.execute(
+                    delete(ChatMessages).where(ChatMessages.session_id.in_(session_ids))
+                )
+
+                await session.execute(
+                    delete(ChatSessions).where(ChatSessions.id.in_(session_ids))
+                )
+        
         await session.commit()
 
         return {

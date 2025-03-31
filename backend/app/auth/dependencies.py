@@ -18,7 +18,6 @@ user_service = UserService()
 class TokenBearer:
     def __init__(self, auto_error: bool=True):
         self.auto_error = auto_error
-        super().__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request) -> dict:
         token = request.cookies.get("access_token")
