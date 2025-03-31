@@ -58,9 +58,9 @@ async def get_user_by_id(
         await session.refresh(user, ['documents'])
 
         return UserResponse(
-            id=user_id,
-            email=user.email,
+            user_id=user_id,
             fullname=user.fullname,
+            email=user.email,
             personal_bio=user.personal_bio,
             linkedin_url=user.linkedin_url,
             github_url=user.github_url,
