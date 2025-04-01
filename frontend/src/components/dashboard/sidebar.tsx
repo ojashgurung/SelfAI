@@ -17,6 +17,7 @@ import {
   Search,
   Command,
   Plus,
+  LayoutTemplate,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -139,6 +140,20 @@ export function Sidebar() {
       title: "Upload & Train",
       icon: FileTextIcon,
       href: "/dashboard/document",
+    },
+    {
+      title: "Create Widget",
+      icon: LayoutTemplate,
+      href: ownerSessionId
+        ? `/dashboard/widget/configuration`
+        : "/dashboard/document",
+      onClick: () => {
+        if (!ownerSessionId) {
+          toast.error(
+            "Please upload and train a document before creating a widget"
+          );
+        }
+      },
     },
     {
       title: "Own Trained Chat",
