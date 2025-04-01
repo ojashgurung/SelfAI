@@ -1,7 +1,8 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ChatSession, ChatMessage } from "@/types/chat";
 import { useChatSidebar } from "@/context/chat-sidebar-context";
 
@@ -11,6 +12,7 @@ import ChatHeader from "@/components/chat/chat-header";
 import ChatInfoSidebar from "@/components/chat/chat-info-sidebar";
 
 export default function ChatPage() {
+  const router = useRouter();
   const { session_id } = useParams();
   const { isChatSidebarOpen } = useChatSidebar();
   const [session, setSession] = useState<ChatSession | null>(null);
@@ -87,9 +89,9 @@ export default function ChatPage() {
         }
 
         const data = await response.json();
-        if (data.user_id || data.namespace) {
+        if (data.user_id) {
           const userResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/user/${data.user_id || data.namespace}`
+            `${process.env.NEXT_PUBLIC_API_URL}/user/${data.user_id}`
           );
           if (userResponse.ok) {
             const userData = await userResponse.json();
@@ -100,6 +102,8 @@ export default function ChatPage() {
         setMessages(data.messages || []);
       } catch (error) {
         console.error("Error fetching session:", error);
+        toast.error("No Session found. Please upload document to chat.");
+        router.push("/dashboard/document");
       } finally {
         setIsLoading(false);
       }
@@ -107,7 +111,7 @@ export default function ChatPage() {
     if (session_id) {
       fetchSession();
     }
-  }, [session_id]);
+  }, [session_id, router]);
 
   if (isLoading) {
     return (

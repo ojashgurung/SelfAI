@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { DocumentService, Document } from "@/lib/service/document.service";
 import { useAuth } from "@/hooks/use-auth";
@@ -95,8 +96,10 @@ export default function DocumentPage() {
     try {
       await DocumentService.deleteDocument(documentId);
       await loadDocuments();
+      toast.success("Document deleted successfully.");
     } catch (error) {
       console.error("Failed to delete document:", error);
+      toast.error("Failed to delete document.");
     }
   };
 
