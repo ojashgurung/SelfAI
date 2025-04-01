@@ -1,36 +1,44 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
+
 interface WidgetChatInboxProps {
   inputMessage: string;
-  onInputChange: (value: string) => void;
-  onSendMessage: () => void;
+  setInputMessage: (value: string) => void;
+  handleSendMessage: () => void;
   isLoading: boolean;
+  theme?: "light" | "dark";
+  color?: string;
 }
 
 export function WidgetChatInbox({
+  color,
+  theme,
+  setInputMessage,
+  handleSendMessage,
   inputMessage,
-  onInputChange,
-  onSendMessage,
   isLoading,
 }: WidgetChatInboxProps) {
   return (
-    <div className="flex items-center space-x-2 p-2">
-      <input
-        type="text"
-        value={inputMessage}
-        onChange={(e) => onInputChange(e.target.value)}
-        placeholder="Type a message..."
-        className="flex-1 rounded-md border px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        onKeyDown={(e) => e.key === "Enter" && onSendMessage()}
-        disabled={isLoading}
-      />
-      <button
-        onClick={onSendMessage}
-        disabled={isLoading || !inputMessage.trim()}
-        className="rounded-md bg-indigo-600 px-2 py-1 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
-      >
-        Send
-      </button>
+    <div className="border-t p-2">
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          placeholder="Type a message..."
+          className={`flex-1 text-sm xl:text-base p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-${color}-500`}
+        />
+        <Button
+          onClick={handleSendMessage}
+          disabled={!inputMessage.trim() || isLoading}
+          className="transition-all duration-300 ease-in-out hover:brightness-90"
+          style={{ backgroundColor: color }}
+        >
+          <Send className="w-4 h-4 xl:w-5 xl:h-5" />
+        </Button>
+      </div>
     </div>
   );
 }
