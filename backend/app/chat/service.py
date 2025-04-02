@@ -38,7 +38,9 @@ class ChatService:
             share_token=share_token,
             namespace=session_data.namespace,
             title=session_data.title,
-            is_public=session_data.is_public
+            is_public=session_data.is_public,
+            visitor_id= None,
+            parent_id= None
         )
         
         db_session.add(chat_session)
@@ -118,7 +120,8 @@ class ChatService:
                 title=f"Visitor: {visitor_id}",
                 namespace=namespace,
                 is_public=True,
-                visitor_id=visitor_uuid
+                visitor_id=visitor_uuid,
+                share_token = None 
             )
 
             db_session.add(new_session)
@@ -134,7 +137,7 @@ class ChatService:
         self,
         session_id: UUID,
         message_data: MessageCreate,
-        user_id : UUID,
+        user_id : Optional[UUID],
         rag_service: RagService,
         db_session: AsyncSession
     ) -> ChatMessages:
@@ -170,6 +173,7 @@ class ChatService:
         ai_message = ChatMessages(
             session_id=session_id,
             role="assistant",
+            user_id=user_id,
             content=ai_response
         )
         db_session.add(ai_message)

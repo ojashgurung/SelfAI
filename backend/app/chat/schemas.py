@@ -14,6 +14,7 @@ class MessageRead(MessageBase):
     id: UUID
     session_id: UUID
     role: str
+    content: str    
     created_at: datetime
 
 class ChatSessionBase(BaseModel):
@@ -38,4 +39,4 @@ class ChatSessionRead(ChatSessionBase):
     messages: List[MessageRead] = []
 
 class ChatSessionWithMessages(ChatSessionRead):
-    messages: List[MessageRead]
+    messages: List[MessageRead] = []
