@@ -19,6 +19,7 @@ from .utils import (
 from ..vector_store.vector_db import (
     get_query_pinecone,
     upsert_to_pinecone,
+    check_namespace_exists
 ) 
 
 from ..errors import UnsupportedFileType
@@ -108,3 +109,5 @@ class RagService:
         return response_text
 
     
+    async def check_namespace_exists(self, namespace: str) -> bool:
+        return await check_namespace_exists(namespace)

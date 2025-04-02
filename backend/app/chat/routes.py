@@ -42,6 +42,13 @@ async def create_chat_session(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required to create a chat session"
         )
+    
+    namespace_exists = await rag_service.check_namespace_exists(session_data.namespace)
+    if not namespace_exists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No documents found in this namespace. Please upload documents first."
+        )
 
     return await chat_service.create_session(session_data, current_user, rag_service, db_session)
 
@@ -90,7 +97,6 @@ async def get_public_chat_session(
     db_session: AsyncSession = Depends(get_session),
 ):
     """Access a public chat session using share token"""
-    
     session = await chat_service.get_session_by_token(share_token, db_session)
     if not session or not session.is_public:
         raise HTTPException(status_code=404, detail="Chat session not found")

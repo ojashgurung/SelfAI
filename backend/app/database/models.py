@@ -1,6 +1,6 @@
 import uuid as uuid_pkg
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from enum import Enum
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel, Relationship
@@ -35,6 +35,8 @@ class Users(SQLModel, table = True):
         back_populates="visitor",
         sa_relationship_kwargs={"foreign_keys": "ChatSessions.visitor_id"}
     )
+
+    widgets: List["Widgets"] = Relationship(back_populates="owner")
 
     def __repr__(self):
         return f"<User {self.email} - Premium: {self.is_premium}>"
@@ -72,6 +74,7 @@ class ChatSessions(SQLModel, table=True):
     messages: List["ChatMessages"] = Relationship(back_populates="session")
     parent_session: Optional["ChatSessions"] = Relationship(back_populates="child_sessions", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id", "remote_side": "ChatSessions.id"})
     child_sessions: List["ChatSessions"] = Relationship(back_populates="parent_session", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id"})
+    widgets: List["Widgets"] = Relationship(back_populates="session")
 
 class ChatMessages(SQLModel, table=True):
     id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
@@ -82,3 +85,22 @@ class ChatMessages(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     session: "ChatSessions" = Relationship(back_populates="messages")
     user: Optional["Users"] = Relationship(back_populates="messages")
+
+
+class Widgets(SQLModel, table=True):
+    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
+    user_id: uuid_pkg.UUID = Field(foreign_key="users.uuid", nullable=False)
+    share_token: str = Field(unique=True, index=True)
+    theme: str
+    color: str
+    heading: str
+    title: str
+    subtitle: str
+    prompts: List[Dict] = Field(sa_type= JSON, default=[])
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: Optional[datetime] = Field(default=None)
+    is_active: bool = Field(default=True)
+    session_id: uuid_pkg.UUID = Field(foreign_key="chatsessions.id")
+
+    owner: "Users" = Relationship(back_populates="widgets", sa_relationship_kwargs={"foreign_keys": "Widgets.user_id"})
+    session: "ChatSessions" = Relationship(back_populates="widgets")
