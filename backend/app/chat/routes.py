@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Security
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Optional
@@ -105,9 +106,9 @@ async def get_public_chat_session(
         if current_user:
             visitor_id = str(current_user["user"]["id"])
         else:
-            visitor_id = request.client.host
+            visitor_id = request.client.host if request.client else "anonymous"
     except (KeyError, TypeError):
-        visitor_id = request.client.host
+        visitor_id = request.client.host if request.client else "anonymous"
 
     visitor_session = await chat_service.get_or_create_visitor_session(
         session.id,
