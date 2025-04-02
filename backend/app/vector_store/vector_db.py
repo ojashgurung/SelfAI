@@ -64,3 +64,20 @@ async def delete_vectors(vector_ids: list, namespace: str):
         index.delete(ids=vector_ids, namespace=namespace)
     except Exception as e:
         print(f"Failed to delete vectors: {e}")
+
+
+async def check_namespace_exists(namespace: str) -> bool:
+    try:
+        index = get_pinecone_index()
+        dummy_vector = [0] * 768
+        result = index.query(
+            vector=dummy_vector,
+            namespace=namespace,
+            top_k=1,
+            include_metadata=False
+        )
+
+        return len(result.matches) > 0
+    except Exception as e:
+        print(f"Error while checking namespace existence: {e}")
+        return False
