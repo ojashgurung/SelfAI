@@ -62,11 +62,7 @@ export default function DocumentPage() {
     }
     try {
       setIsCreatingSession(true);
-      const session = await ChatService.createSession({
-        namespace: user.id,
-        title: "Owner",
-        is_public: true,
-      });
+      const session = await ChatService.getMasterSession();
 
       setCurrentShareUrl(
         `${window.location.origin}/chat/public/${session.share_token}`

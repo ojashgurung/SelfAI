@@ -30,11 +30,7 @@ export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
     }
     try {
       setIsCreatingSession(true);
-      const session = await ChatService.createSession({
-        namespace: user.id,
-        title: "Owner",
-        is_public: true,
-      });
+      const session = await ChatService.getMasterSession();
 
       setCurrentShareUrl(
         `${process.env.NEXT_PUBLIC_URL}/chat/public/${session.share_token}`

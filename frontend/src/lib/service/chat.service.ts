@@ -26,21 +26,19 @@ interface ChatSessionData {
 }
 
 export const ChatService = {
-  async createSession(data: ChatSessionData): Promise<ChatSession> {
-    const response = await fetch(`${CHAT_BASE_URL}/sessions`, {
-      method: "POST",
+  async getMasterSession(): Promise<ChatSession> {
+    const response = await fetch(`${CHAT_BASE_URL}/sessions/master`, {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error("Unauthorized. Please login again.");
       }
-      throw new Error("Failed to create chat session at the moment");
+      throw new Error("Failed to fetch master session");
     }
 
     return response.json();
