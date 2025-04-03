@@ -51,7 +51,7 @@ export function Sidebar() {
   const { logout, user } = useAuth();
   const pathname = usePathname();
 
-  const [ownerSessionId, setOwnerSessionId] = useState<string | null>(null);
+  const [masterSession, setMasterSession] = useState<ChatSession | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -84,31 +84,18 @@ export function Sidebar() {
   };
 
   useEffect(() => {
-    const sessionId = localStorage.getItem("ownerSessionId");
-    setOwnerSessionId(sessionId);
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "ownerSessionId") {
-        setOwnerSessionId(e.newValue);
+    const fetchMasterSession = async () => {
+      if (user) {
+        try {
+          const session = await ChatService.getMasterSession();
+          setMasterSession(session);
+        } catch (error) {
+          console.error("Failed to fetch master session:", error);
+        }
       }
     };
-
-    const handleCustomStorage = (e: CustomEvent) => {
-      setOwnerSessionId(e.detail);
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener(
-      "ownerSessionIdChange",
-      handleCustomStorage as EventListener
-    );
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener(
-        "ownerSessionIdChange",
-        handleCustomStorage as EventListener
-      );
-    };
-  }, []);
+    fetchMasterSession();
+  }, [user]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
@@ -144,11 +131,11 @@ export function Sidebar() {
     {
       title: "Create Widget",
       icon: LayoutTemplate,
-      href: ownerSessionId
-        ? `/dashboard/widget/configuration`
+      href: masterSession?.id
+        ? "/dashboard/widget/configuration"
         : "/dashboard/document",
       onClick: () => {
-        if (!ownerSessionId) {
+        if (!masterSession?.id) {
           toast.error(
             "Please upload and train a document before creating a widget"
           );
@@ -158,11 +145,11 @@ export function Sidebar() {
     {
       title: "Own Trained Chat",
       icon: UsersIcon,
-      href: ownerSessionId
-        ? `/dashboard/chat/${ownerSessionId}`
+      href: masterSession?.id
+        ? `/dashboard/chat/${masterSession?.id}`
         : "/dashboard/document",
       onClick: () => {
-        if (!ownerSessionId) {
+        if (!masterSession?.id) {
           toast.error("Please upload and train a document first");
         }
       },

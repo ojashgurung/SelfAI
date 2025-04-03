@@ -50,21 +50,16 @@ export function UploadDialog({
     try {
       setUploadStatus("uploading");
       const response = await DocumentService.uploadDocument(uploadedFile);
-      console.log(response.document);
+
       setUploadStatus("training");
       toast.info("Document uploaded, waiting for training to complete...");
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      const chatSession = await ChatService.createSession({
-        namespace: response.document.namespace,
-        title: "Owner",
-        is_public: true,
-      });
-      localStorage.setItem("ownerSessionId", chatSession.id);
+      const masterSession = await ChatService.getMasterSession();
       toast.success("Document uploaded and trained successfully");
       setUploadedFile(null);
-      onSuccess?.({ session_id: chatSession.id });
+      onSuccess?.({ session_id: masterSession.id });
       onOpenChange(false);
-      router.push(`/dashboard/chat/${chatSession.id}`);
+      router.push(`/dashboard/chat/${masterSession.id}`);
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error("Failed to upload or train document");
