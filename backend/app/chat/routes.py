@@ -31,27 +31,27 @@ access_token_bearer = AccessTokenBearer(auto_error=False)
 async def get_rag_service():
     return RagService()
 
-@chat_router.post("/sessions", response_model=ChatSessionRead)
-async def create_chat_session(
-    session_data: ChatSessionCreate,
-    current_user: dict = Depends(strict_token_bearer),
-    rag_service: RagService = Depends(get_rag_service),
-    db_session: AsyncSession = Depends(get_session),
-):
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required to create a chat session"
-        )
+# @chat_router.post("/sessions", response_model=ChatSessionRead)
+# async def create_chat_session(
+#     session_data: ChatSessionCreate,
+#     current_user: dict = Depends(strict_token_bearer),
+#     rag_service: RagService = Depends(get_rag_service),
+#     db_session: AsyncSession = Depends(get_session),
+# ):
+#     if not current_user:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Authentication required to create a chat session"
+#         )
     
-    namespace_exists = await rag_service.check_namespace_exists(session_data.namespace)
-    if not namespace_exists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No documents found in this namespace. Please upload documents first."
-        )
+#     namespace_exists = await rag_service.check_namespace_exists(session_data.namespace)
+#     if not namespace_exists:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="No documents found in this namespace. Please upload documents first."
+#         )
 
-    return await chat_service.create_session(session_data, current_user, rag_service, db_session)
+#     return await chat_service.create_session(session_data, current_user, rag_service, db_session)
 
 @chat_router.post("/sessions/{session_id}/messages", response_model=MessageRead)
 async def send_message(
@@ -293,6 +293,28 @@ async def get_chat_analytics(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+@chat_router.get("/sessions/master", response_model=ChatSessionWithMessages)
+async def get_master_session(
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Get master/owner session for a namespace"""
+    try:
+        user_id = current_user["user"]["id"]
+    
+        master_session = await chat_service.get_master_session(user_id, user_id, db_session)
+        
+        if not master_session:
+            raise HTTPException(status_code=404, detail="Master session not found")
+            
+        return master_session
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
     
 @chat_router.get("/sessions/{session_id}", response_model=ChatSessionWithMessages)
 async def get_chat_session(
@@ -323,3 +345,4 @@ async def get_chat_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
