@@ -5,9 +5,9 @@ from ..database.models import Documents, ChatSessions, ChatMessages
 from ..database.db import get_session
 from ..errors import NoSourceProvided, NoQueryProvided
 from .service import RagService
+from ..chat.service import ChatService
 from ..auth.dependencies import AccessTokenBearer
 from sqlmodel import select, delete
-from uuid import UUID
 
 from ..vector_store.vector_db import (
     delete_vectors
@@ -17,8 +17,13 @@ from .schemas import (
     QueryRequest
 )
 
+from ..chat.schemas import (
+    ChatSessionCreate
+)
+
 rag_router = APIRouter()
 rag_service = RagService()
+chat_service = ChatService()
 access_token_bearer = AccessTokenBearer()
 
 
@@ -55,7 +60,7 @@ async def get_user_documents(
             detail=str(e)
         )
 
-def convert_size(size_bytes: int) -> str:
+def convert_size(size_bytes) -> str:
     """Convert bytes to human readable format"""
     for unit in ['B', 'KB', 'MB', 'GB']:
         if size_bytes < 1024.0:
@@ -73,11 +78,41 @@ async def upload(
     try:
         user_id = current_user["user"]["id"]
 
-        if not file:
+        if not file or not file.filename:
             raise NoSourceProvided()
+
         result = await rag_service.save_and_extract_text(file, user_id)
+
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to process the uploaded file"
+            )
+
         file_size = convert_size(file.size)
    
+        master_session = await session.exec(
+            select(ChatSessions).where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.namespace == result["namespace"],
+                ChatSessions.title == "Owner"
+            )
+        )
+
+        if not master_session.first():
+            session_data = ChatSessionCreate(
+                namespace=result["namespace"],
+                title="Owner",
+                is_public=True
+            )
+            
+            await chat_service.create_session(
+                session_data=session_data,
+                current_user=current_user,
+                rag_service=rag_service,
+                db_session=session
+            )
+
         document = Documents(
             user_id=user_id,
             file_name=file.filename,
@@ -115,8 +150,8 @@ async def delete_document(
         user_id = current_user["user"]["id"]
 
         query = select(Documents).where(Documents.id == document_id, Documents.user_id == user_id)
-        result = await session.execute(query)
-        document = result.scalar_one_or_none()
+        result = await session.exec(query)
+        document = result.first()
        
         if not document:
             raise HTTPException(
@@ -128,19 +163,22 @@ async def delete_document(
 
         await session.delete(document)
 
-        remaining_docs = await session.execute(
+        result = await session.exec(
             select(Documents).where(Documents.user_id == user_id)
         )
 
-        if not remaining_docs.scalars().first():
-            owned_sessions = await session.execute(
+        remaining_docs = result.all()
+
+        if not remaining_docs:
+            owned_sessions = await session.exec(
                 select(ChatSessions.id).where(ChatSessions.user_id == user_id)
             )
 
-            sessions = owned_sessions.scalars().all()
-            session_ids = [str(s) for s in sessions] 
+            owned_sessions_ids = owned_sessions.all()
 
-            if session_ids:
+
+            if owned_sessions_ids:
+                session_ids = [str(session) for session in owned_sessions_ids]
                 await session.execute(
                     delete(ChatMessages).where(ChatMessages.session_id.in_(session_ids))
                 )

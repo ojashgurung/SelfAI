@@ -67,8 +67,8 @@ class ChatService:
         db_session: AsyncSession
     ) -> Optional[ChatSessions]:
         statement = select(ChatSessions).where(ChatSessions.id == session_id)
-        result = await db_session.execute(statement)
-        session = result.scalar_one_or_none()
+        result = await db_session.exec(statement)
+        session = result.first()
         if session:
             await db_session.refresh(session, ['messages'])
         return session
@@ -79,8 +79,8 @@ class ChatService:
         db_session: AsyncSession
     ) -> Optional[ChatSessions]:
         statement = select(ChatSessions).where(ChatSessions.share_token == token, ChatSessions.is_public == True)
-        result = await db_session.execute(statement)
-        session = result.scalar_one_or_none()
+        result = await db_session.exec(statement)
+        session = result.first()
         if session:
             await db_session.refresh(session, ['messages'])
         return session
@@ -97,8 +97,8 @@ class ChatService:
                 ChatSessions.parent_id == template_session_id,
                 ChatSessions.title == f"Visitor: {visitor_id}"
             )
-            result = await db_session.execute(statement)
-            session = result.scalar_one_or_none()
+            result = await db_session.exec(statement)
+            session = result.first()
 
             if session:
                 await db_session.refresh(session, ['messages'])
@@ -182,39 +182,20 @@ class ChatService:
         await db_session.refresh(ai_message)
         return ai_message
 
-    # async def update_session(
-    #     self,
-    #     session_id: UUID,
-    #     update_data: ChatSessionUpdate,
-    #     current_user: Users,
-    #     db: AsyncSession
-    # ) -> Optional[ChatSessions]:
-    #     session = await self.get_session(session_id, db)
-    #     if not session or session.user_id != current_user.uuid:
-    #         return None
-
-    #     for field, value in update_data.dict(exclude_unset=True).items():
-    #         setattr(session, field, value)
-
-    #     self.db.add(session)
-    #     await self.db.commit()
-    #     await self.db.refresh(session)
-    #     return session
-
-    
-    # async def delete_session(
-    #     self,
-    #     session_id: UUID,
-    #     current_user: Users,
-    #     db: AsyncSession
-    # ) -> bool:
-    #     session = await self.get_session(session_id, db)
-    #     if not session or session.user_id != current_user.uuid:
-    #         return False
-
-    #     await db.delete(session)
-    #     await db.commit()
-    #     return True
-
-
-    
+    async def get_master_session(
+        self,
+        namespace: str,
+        user_id: UUID,
+        db_session: AsyncSession
+    ) -> Optional[ChatSessions]:
+        """Get master/owner session for a namespace"""
+        statement = select(ChatSessions).where(
+            ChatSessions.user_id == user_id,
+            ChatSessions.namespace == namespace,
+            ChatSessions.title == "Owner"
+        )
+        result = await db_session.exec(statement)
+        session = result.first()
+        if session:
+            await db_session.refresh(session, ['messages'])
+        return session
