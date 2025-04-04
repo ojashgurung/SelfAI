@@ -59,5 +59,5 @@ app.include_router(auth_router, prefix=f"{version_prefix}/auth", tags=["auth"])
 app.include_router(rag_router, prefix=f"{version_prefix}/rag", tags=["rag"])
 app.include_router(user_router, prefix=f"{version_prefix}/user", tags=["user"])
 app.include_router(chat_router, prefix=f"{version_prefix}/chat", tags=["chat"])
-app.include_router(chat_router, prefix=f"{version_prefix}/widget", tags=["widget"])
+app.include_router(widget_router, prefix=f"{version_prefix}/widget", tags=["widget"])
 
