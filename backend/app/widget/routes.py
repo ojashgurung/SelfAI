@@ -1,20 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
-from typing import List
 from uuid import UUID
-import secrets
-from datetime import datetime, timedelta
 
 from ..database.db import get_session
 from ..auth.dependencies import AccessTokenBearer
 
-from ..database.models import Widgets
 from .service import WidgetService
 from .schemas import (
     WidgetCreate,
     WidgetRead,
     WidgetUpdate,
-    WidgetWithSession
 )
 
 widget_router = APIRouter()
@@ -29,7 +24,11 @@ async def create_widget(
 ):
     """Create a new widget"""
     try:
-        return await widget_service.create_widget(widget_data, current_user["user"]["id"], db_session)
+        user_id = current_user["user"]["id"]
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+        return await widget_service.create_widget(widget_data, user_id, db_session)
     except Exception as e:
         await db_session.rollback()
         raise HTTPException(
@@ -37,21 +36,28 @@ async def create_widget(
             detail=str(e)
         )
 
-@widget_router.get("/", response_model=List[WidgetWithSession])
-async def get_user_widgets(
+@widget_router.get("/", response_model=WidgetRead)
+async def get_user_widget(
     current_user: dict = Depends(strict_token_bearer),
     db_session: AsyncSession = Depends(get_session),
 ):
     """Get all widgets for current user"""
     try:
-        return await widget_service.get_user_widgets(current_user["user"]["id"], db_session)
+        user_id = current_user["user"]["id"]
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        widgets = await widget_service.get_user_widgets(user_id, db_session)
+        if not widgets:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No widget found")
+        return widgets[0]
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
 
-@widget_router.get("/{widget_id}", response_model=WidgetWithSession)
+@widget_router.get("/{widget_id}", response_model=WidgetRead)
 async def get_widget(
     widget_id: UUID,
     current_user: dict = Depends(strict_token_bearer),
