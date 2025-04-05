@@ -66,8 +66,8 @@ class ChatSessions(SQLModel, table=True):
     title: str
     is_public: bool = Field(default=False)
     share_token: Optional[str] = Field(unique=True, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
     owner: "Users" = Relationship(back_populates="owned_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.user_id"})
     visitor: Optional["Users"] = Relationship(back_populates="visited_chats", sa_relationship_kwargs={"foreign_keys": "ChatSessions.visitor_id"})
@@ -82,7 +82,7 @@ class ChatMessages(SQLModel, table=True):
     user_id: Optional[uuid_pkg.UUID] = Field(foreign_key="users.uuid", nullable=True)
     role: str
     content: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
     session: "ChatSessions" = Relationship(back_populates="messages")
     user: Optional["Users"] = Relationship(back_populates="messages")
 
@@ -97,7 +97,7 @@ class Widgets(SQLModel, table=True):
     title: str
     subtitle: str
     prompts: List[Dict] = Field(sa_type= JSON, default=[])
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.now)
     expires_at: Optional[datetime] = Field(default=None)
     is_active: bool = Field(default=True)
     session_id: uuid_pkg.UUID = Field(foreign_key="chatsessions.id")

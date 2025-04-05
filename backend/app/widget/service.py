@@ -3,24 +3,25 @@ from sqlmodel import select, join
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Optional
 from uuid import UUID
-import secrets
+from datetime import datetime, timedelta
 
 from ..database.models import ChatSessions, Users, Widgets
 from .schemas import (
     WidgetCreate,
     WidgetRead,
     WidgetUpdate,
-    WidgetWithSession
 )
 from ..rag.service import RagService
+from ..chat.service import ChatService
 
+chat_service = ChatService()
 
 class WidgetService:
     async def get_widget(self, widget_id: UUID, user_id: UUID, db_session: AsyncSession) -> Optional[Widgets]:
         widget = await db_session.get(Widgets, widget_id)
         if not widget or str(widget.user_id) != str(user_id):
             raise HTTPException(status_code=404, detail="Widget not found")
-        return widget\
+        return widget
     
     async def get_widget_by_token(self, share_token: str, db_session: AsyncSession) -> Optional[Widgets]:
         """Get widget by share token"""
@@ -36,19 +37,32 @@ class WidgetService:
     
     async def create_widget(self, widget_data: WidgetCreate, user_id: UUID, db_session: AsyncSession) -> Widgets:
         """Create a new widget"""
+        existing_widget = await db_session.exec(
+            select(Widgets).where(Widgets.user_id == user_id)
+        )
 
-        session = await db_session.query(ChatSessions).filter(
-        ChatSessions.share_token == widget_data.share_token,
-        ChatSessions.is_public == True,
-        ChatSessions.user_id == user_id
-        ).first()
+        existing_widget = existing_widget.first()
+
+        if existing_widget:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User already has a widget configured"
+            )
+
+        session = await chat_service.get_master_session(user_id, user_id, db_session)
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Master session not found. Please create a chat session first."
+            )
 
         widget = Widgets(
             user_id=user_id,
             session_id=session.id,
-            share_token=share_token,
+            share_token=session.share_token,
+            is_active=True,
             expires_at=datetime.utcnow() + timedelta(days=30),
-            **widget_data.dict(exclude={'share_token'})
+            **widget_data.model_dump(exclude={'share_token'})
         )
         db_session.add(widget)
         await db_session.commit()
@@ -57,8 +71,14 @@ class WidgetService:
     
     async def get_user_widgets(self, user_id: UUID, db_session: AsyncSession) -> List[Widgets]:
         """Get all widgets for a user"""
-        widgets = await db_session.query(Widgets).filter(Widgets.user_id == user_id).all()
-        return widgets
+
+        statement = (
+            select(Widgets)
+            .where(Widgets.user_id == user_id)
+        )
+        result = await db_session.exec(statement)
+        return result.all()
+
     
     async def update_widget(self, widget_id: UUID, widget_data: WidgetUpdate, user_id: UUID, db_session: AsyncSession) -> Widgets:
         """Update widget settings"""

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
 
@@ -9,8 +9,7 @@ class WidgetBase(BaseModel):
     heading: str
     title: str
     subtitle: str
-    prompts: List[Dict] = []
-    session_id: UUID
+    prompts: List[Dict[str, Any]] = []
 
 class WidgetCreate(WidgetBase):
     pass
@@ -27,10 +26,8 @@ class WidgetUpdate(BaseModel):
 class WidgetRead(WidgetBase):
     id: UUID
     user_id: UUID
+    session_id: UUID
     share_token: str
     created_at: datetime
     expires_at: Optional[datetime]
-    is_active: bool
-
-class WidgetWithSession(WidgetRead):
-    session: Optional[dict] = None
+    is_active: bool = False
