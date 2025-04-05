@@ -2,18 +2,21 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useWidgetStore } from "@/context/use-widget-context";
 
 export default function AddToWebsitePage() {
   const [copied, setCopied] = useState(false);
-  // const { generateEmbedCode } = useWidgetStore();
 
-  // const embedCode = generateEmbedCode();
+  const embedCode = `<script src="https://selfai.io/widget.js" data-widget-id="test"></script>`;
 
-  const handleCopy = async () => {
-    // await navigator.clipboard.writeText(embedCode);
+  const handleCopyCode = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(embedCode);
+    toast.success("Copied!", {
+      description: "Widget embed code copied to clipboard",
+    });
   };
 
   return (
@@ -29,23 +32,26 @@ export default function AddToWebsitePage() {
         conversations begin.
       </p>
 
-      <div className="bg-gray-100 rounded-xl p-8 mb-8">
-        <Button
-          onClick={handleCopy}
-          className="bg-black text-white hover:bg-black/90 mb-4"
-        >
-          {copied ? "Copied!" : "Copy code"}
-        </Button>
+      <div className="space-y-4">
+        <div className="bg-gray-100 rounded-xl p-8 mb-8">
+          <Button
+            onClick={handleCopyCode}
+            className="bg-black text-white hover:bg-black/90 mb-4"
+          >
+            {copied ? "Copied!" : "Copy code"}
+          </Button>
 
-        <p className="text-gray-600 mb-4">
-          and paste it before the closing{" "}
-          <code className="text-blue-600 font-mono">&lt;/body&gt;</code> tag to
-          install on your website.
-        </p>
+          <p className="text-gray-600 mb-4">
+            and paste it before the closing{" "}
+            <code className="text-blue-600 font-mono">&lt;/body&gt;</code> tag
+            to install on your website.
+          </p>
 
-        <div className="bg-white rounded-lg p-4 font-mono text-sm overflow-x-auto">
-          {/* <pre>{embedCode || "Testing"}</pre> */}
-          EmbedCode
+          <div className="bg-white rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <pre className="p-4 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
+              {embedCode || "Testing"}
+            </pre>
+          </div>
         </div>
       </div>
 

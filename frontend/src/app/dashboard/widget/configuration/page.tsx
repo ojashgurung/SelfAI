@@ -7,10 +7,18 @@ import { Check } from "lucide-react";
 import { useWidgetStore } from "@/context/use-widget-context";
 import { widgetPrompts } from "@/config/widget-prompts";
 import { useRouter } from "next/navigation";
+import { widgetService } from "@/lib/service/widget.service";
+import { toast } from "sonner";
+import { getIconComponent } from "@/lib/utils/icon-mapping";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function ConfigurationPage() {
   const {
     theme,
+    heading,
+    title,
+    subTitle,
     color,
     showColorPicker,
     selectedPrompts,
@@ -23,6 +31,9 @@ export default function ConfigurationPage() {
     setSelectedPrompts,
   } = useWidgetStore();
 
+  const [isLoading, setIsLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const widgetId = searchParams.get("id");
   const router = useRouter();
 
   const presetColors = [
@@ -36,16 +47,93 @@ export default function ConfigurationPage() {
     "#EC4899", // Pink
   ];
 
-  const handleGenerateEmbedCode = () => {
-    router.push("/dashboard/widget/add-to-website");
+  const handleGenerateEmbedCode = async () => {
+    try {
+      await widgetService.createWidget({
+        theme,
+        color,
+        heading,
+        title,
+        subtitle: subTitle,
+        prompts: selectedPrompts,
+      });
+      router.push("/dashboard/widget/add-to-website");
+    } catch (error) {
+      toast("Error", {
+        description: "Failed to create widget. Please try again.",
+      });
+    }
   };
+
+  const handleUpdateWidget = async () => {
+    try {
+      if (!widgetId) return;
+
+      await widgetService.updateWidget(widgetId, {
+        theme,
+        color,
+        heading,
+        title,
+        subtitle: subTitle,
+        prompts: selectedPrompts,
+      });
+      router.push("/dashboard/widget");
+      toast.success("Widget updated successfully!", {
+        description:
+          "Your widget is updated and live! Share it with your clients and start chatting!",
+      });
+    } catch (error) {
+      toast.error("Failed to update widget. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    const checkOrFetchWidget = async () => {
+      try {
+        if (widgetId) {
+          // Edit mode - fetch existing widget
+          const widget = await widgetService.getWidget();
+          setTheme(widget.theme as "light" | "dark");
+          setHeading(widget.heading);
+          setTitle(widget.title);
+          setSubTitle(widget.subtitle);
+          setColor(widget.color);
+          setSelectedPrompts(widget.prompts);
+        } else {
+          // Create mode - check if widget exists
+          const widget = await widgetService.getWidget();
+          if (widget) {
+            toast.error("Widget exists", {
+              description:
+                "You already have a live widget. Redirecting to your widget.",
+            });
+            router.push("/dashboard/widget");
+          }
+        }
+      } catch (error) {
+        // Handle error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkOrFetchWidget();
+  }, [router, widgetId]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
-      <h1 className="text-4xl font-bold mb-4">Widget Configuration</h1>
+      <h1 className="text-4xl font-bold mb-4">
+        {widgetId ? "Update Widget Configuration" : "Widget Configuration"}
+      </h1>
 
       <div className="rounded-lg p-8 xl:max-h-[700px] 2xl:max-h-[800px] overflow-y-auto">
-        <h2 className="mb-6 text-2xl font-semibold">Pick theme and color</h2>
+        <h2 className="mb-6 text-2xl font-semibold">
+          {widgetId ? "Update theme and color" : "Pick theme and color"}
+        </h2>
 
         <div className="space-y-8">
           <div className="flex gap-4 max-w-xs">
@@ -78,6 +166,7 @@ export default function ConfigurationPage() {
             <div>
               <Input
                 type="text"
+                value={widgetId ? heading : ""}
                 onChange={(e) => setHeading(e.target.value)}
                 placeholder="e.g. Chat with AI"
                 className="w-full bg-white border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-6"
@@ -125,6 +214,7 @@ export default function ConfigurationPage() {
               <div>
                 <Input
                   type="text"
+                  value={widgetId ? title : ""}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Curious about my work or thoughts?"
                   className="w-full bg-white border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-6"
@@ -144,6 +234,7 @@ export default function ConfigurationPage() {
               <div>
                 <Input
                   type="text"
+                  value={widgetId ? subTitle : ""}
                   onChange={(e) => setSubTitle(e.target.value)}
                   placeholder="e.g. Let's chat about it"
                   className="w-full bg-white border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-6"
@@ -166,65 +257,76 @@ export default function ConfigurationPage() {
               </p>
             </div>
             <div className="space-y-2">
-              {widgetPrompts.map((prompt) => (
-                <div
-                  key={prompt.title}
-                  className={`cursor-pointer rounded-lg border p-4 transition-all hover:bg-gray-50 ${
-                    selectedPrompts.some((p) => p.title === prompt.title)
-                      ? "border-indigo-500 bg-indigo-50/50"
-                      : "border-gray-200"
-                  } ${
-                    selectedPrompts.length >= 3 &&
-                    !selectedPrompts.some((p) => p.title === prompt.title)
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    if (selectedPrompts.some((p) => p.title === prompt.title)) {
-                      setSelectedPrompts(
-                        selectedPrompts.filter((p) => p.title !== prompt.title)
-                      );
-                    } else {
-                      if (selectedPrompts.length >= 3) {
-                        setSelectedPrompts([
-                          ...selectedPrompts.slice(1),
-                          {
-                            title: prompt.title,
-                            content: prompt.content,
-                            icon: prompt.icon,
-                          },
-                        ]);
+              {widgetPrompts.map((prompt) => {
+                const IconComponent = getIconComponent(prompt.icon);
+                return (
+                  <div
+                    key={prompt.title}
+                    className={`cursor-pointer rounded-lg border p-4 transition-all hover:bg-gray-50 ${
+                      selectedPrompts.some((p) => p.title === prompt.title)
+                        ? "border-indigo-500 bg-indigo-50/50"
+                        : "border-gray-200"
+                    } ${
+                      selectedPrompts.length >= 3 &&
+                      !selectedPrompts.some((p) => p.title === prompt.title)
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (
+                        selectedPrompts.some((p) => p.title === prompt.title)
+                      ) {
+                        setSelectedPrompts(
+                          selectedPrompts.filter(
+                            (p) => p.title !== prompt.title
+                          )
+                        );
                       } else {
-                        setSelectedPrompts([
-                          ...selectedPrompts,
-                          {
-                            title: prompt.title,
-                            content: prompt.content,
-                            icon: prompt.icon,
-                          },
-                        ]);
+                        if (selectedPrompts.length >= 3) {
+                          setSelectedPrompts([
+                            ...selectedPrompts.slice(1),
+                            {
+                              title: prompt.title,
+                              content: prompt.content,
+                              icon: prompt.icon,
+                            },
+                          ]);
+                        } else {
+                          setSelectedPrompts([
+                            ...selectedPrompts,
+                            {
+                              title: prompt.title,
+                              content: prompt.content,
+                              icon: prompt.icon,
+                            },
+                          ]);
+                        }
                       }
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200">
-                      <prompt.icon className="w-5 h-5" style={{ color }} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{prompt.title}</p>
-                      <p className="text-xs text-gray-500">{prompt.content}</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      {selectedPrompts.some((p) => p.title === prompt.title) ? (
-                        <Check className="w-5 h-5 text-indigo-600" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                      )}
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-gray-200">
+                        <IconComponent className="w-5 h-5" style={{ color }} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{prompt.title}</p>
+                        <p className="text-xs text-gray-500">
+                          {prompt.content}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {selectedPrompts.some(
+                          (p) => p.title === prompt.title
+                        ) ? (
+                          <Check className="w-5 h-5 text-indigo-600" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -232,9 +334,9 @@ export default function ConfigurationPage() {
             <Button
               size="lg"
               className="bg-indigo-600 hover:bg-indigo-700"
-              onClick={handleGenerateEmbedCode}
+              onClick={widgetId ? handleUpdateWidget : handleGenerateEmbedCode}
             >
-              Generate Embed Code
+              {widgetId ? "Update Widget" : "Generate Embed Code"}
             </Button>
           </div>
         </div>
