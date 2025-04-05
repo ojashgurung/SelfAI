@@ -101,7 +101,7 @@ export default function DocumentPage() {
 
   return (
     <div className="max-h-full overflow-hidden ">
-      <div className="p-8 py-6 space-y-6">
+      <div className="p-8 space-y-8 mx-auto">
         <UploadDialog
           open={uploadOpen}
           onOpenChange={setUploadOpen}
@@ -112,7 +112,7 @@ export default function DocumentPage() {
           onOpenChange={setShareDialogOpen}
           shareUrl={currentShareUrl}
         />
-        <h1 className="text-2xl font-semibold">Trained Documents</h1>
+        <h1 className="text-4xl font-bold">Upload and Train Your Documents</h1>
 
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
