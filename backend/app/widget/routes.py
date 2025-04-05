@@ -65,7 +65,10 @@ async def get_widget(
 ):
     """Get a specific widget"""
     try:
-        return await widget_service.get_widget(widget_id, current_user["user"]["id"], db_session)
+        user_id = current_user["user"]["id"]
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        return await widget_service.get_widget(widget_id, user_id, db_session)
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -83,7 +86,15 @@ async def update_widget(
 ):
     """Update widget settings"""
     try:
-        return await widget_service.update_widget(widget_id, widget_data, current_user["user"]["id"], db_session)
+        user_id = current_user["user"]["id"]
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+        existing_widget = await widget_service.get_widget(widget_id, user_id, db_session)
+        if not existing_widget:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+            
+        return await widget_service.update_widget(widget_id, widget_data, user_id, db_session)
     except HTTPException as he:
         await db_session.rollback()
         raise he
@@ -102,7 +113,15 @@ async def delete_widget(
 ):
     """Delete a widget"""
     try:
-        await widget_service.delete_widget(widget_id, current_user["user"]["id"], db_session)
+        user_id = current_user["user"]["id"]
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+        existing_widget = await widget_service.get_widget(widget_id, user_id, db_session)
+        if not existing_widget:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+
+        await widget_service.delete_widget(widget_id, user_id, db_session)
     except HTTPException as he:
         await db_session.rollback()
         raise he
