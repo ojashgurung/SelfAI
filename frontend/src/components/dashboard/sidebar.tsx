@@ -131,9 +131,7 @@ export function Sidebar() {
     {
       title: "Create Widget",
       icon: LayoutTemplate,
-      href: masterSession?.id
-        ? "/dashboard/widget/configuration"
-        : "/dashboard/document",
+      href: masterSession?.id ? "/dashboard/widget" : "/dashboard/document",
       onClick: () => {
         if (!masterSession?.id) {
           toast.error(
@@ -189,11 +187,17 @@ export function Sidebar() {
                       className={cn(
                         "w-full flex items-center justify-between px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50",
                         pathname.startsWith(item.href) &&
-                          "bg-gray-50 text-gray-900"
+                          "bg-indigo-50 text-indigo-600 font-extrabold"
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <item.icon className="w-5 h-5" />
+                        <item.icon
+                          className={cn(
+                            "w-5 h-5 transition-colors duration-200",
+                            pathname.startsWith(item.href) &&
+                              "text-indigo-600 font-extrabold"
+                          )}
+                        />
                         {item.title}
                       </div>
                       {openMenus.includes(item.title) ? (
@@ -206,11 +210,18 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50",
-                        pathname === item.href && "bg-gray-50 text-gray-900"
+                        "flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 transition-all duration-200 ease-in-out",
+                        pathname === item.href &&
+                          "p-3 bg-indigo-50 text-indigo-600 font-bold"
                       )}
                     >
-                      <item.icon className="w-5 h-5" />
+                      <item.icon
+                        className={cn(
+                          "w-5 h-5 transition duration-200",
+                          pathname === item.href &&
+                            "w-6 h-6 text-indigo-600 font-bold "
+                        )}
+                      />
                       {item.title}
                     </Link>
                   )}
@@ -223,7 +234,7 @@ export function Sidebar() {
                           className={cn(
                             "block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md",
                             pathname === subItem.href &&
-                              "bg-gray-50 text-gray-900"
+                              "bg-gray-50 text-gray-900 font-extrabold"
                           )}
                         >
                           {subItem.title}
@@ -255,7 +266,7 @@ export function Sidebar() {
                 <Link
                   key={session.id}
                   href={`/dashboard/chat/${session.id}`}
-                  className="w-full text-left px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md truncate"
+                  className="block w-full text-left px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md truncate bg-transparent"
                 >
                   {"User " +
                     session.user_id?.slice(0, 5) +
@@ -268,7 +279,9 @@ export function Sidebar() {
           </div>
 
           {user ? (
-            <UserDropdown user={user} onLogout={handleLogoutClick} />
+            <div className="relative z-50 bg-gray-50 border-t">
+              <UserDropdown user={user} onLogout={handleLogoutClick} />
+            </div>
           ) : (
             <div className="p-4 border-t">
               <div className="animate-pulse h-10 bg-gray-100 rounded-md" />
