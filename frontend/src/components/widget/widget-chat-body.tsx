@@ -2,6 +2,8 @@
 
 import { ChatMessage } from "@/types/chat";
 import { Card } from "@/components/ui/card";
+import { WidgetPromptProps } from "@/types/widget";
+import { getIconComponent } from "@/lib/utils/icon-mapping";
 
 interface WidgetChatBodyProps {
   messages: ChatMessage[];
@@ -11,11 +13,7 @@ interface WidgetChatBodyProps {
   theme: "light" | "dark";
   title?: string;
   subTitle?: string;
-  selectedPrompts?: Array<{
-    title: string;
-    content: string;
-    icon: React.ComponentType<React.ComponentProps<"svg">>;
-  }>;
+  selectedPrompts?: WidgetPromptProps[];
 }
 
 export function WidgetChatBody({
@@ -79,32 +77,35 @@ export function WidgetChatBody({
             </div>
           </div>
           <div className="grid grid-cols-1 gap-2 xl:gap-3">
-            {selectedPrompts?.map((prompt) => (
-              <Card
-                key={prompt.title}
-                onClick={() => setInputMessage(prompt.content)}
-                className="p-2 hover:bg-gray-50 cursor-pointer transition-colors bg-white/95 rounded-xl shadow-sm hover:shadow-md"
-              >
-                <div className="flex items-center gap-2 xl:gap-3">
-                  <div
-                    className="w-6 h-6 xl:w-8 xl:h-8 rounded-lg flex items-center justify-center"
-                    style={{
-                      backgroundColor: `${color}2A`,
-                    }}
-                  >
-                    <prompt.icon
-                      className="w-3 h-3 xl:w-4 xl:h-4"
+            {selectedPrompts?.map((prompt) => {
+              const IconComponent = getIconComponent(prompt.icon);
+              return (
+                <Card
+                  key={prompt.title}
+                  onClick={() => setInputMessage(prompt.content)}
+                  className="p-2 hover:bg-gray-50 cursor-pointer transition-colors bg-white/95 rounded-xl shadow-sm hover:shadow-md"
+                >
+                  <div className="flex items-center gap-2 xl:gap-3">
+                    <div
+                      className="w-6 h-6 xl:w-8 xl:h-8 rounded-lg flex items-center justify-center"
                       style={{
-                        color: color,
+                        backgroundColor: `${color}2A`,
                       }}
-                    />
+                    >
+                      <IconComponent
+                        className="w-3 h-3 xl:w-4 xl:h-4"
+                        style={{
+                          color: color,
+                        }}
+                      />
+                    </div>
+                    <h3 className="text-xs xl:text-sm font-medium text-gray-900">
+                      {prompt.title}
+                    </h3>
                   </div>
-                  <h3 className="text-xs xl:text-sm font-medium text-gray-900">
-                    {prompt.title}
-                  </h3>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         </div>
       ) : (
