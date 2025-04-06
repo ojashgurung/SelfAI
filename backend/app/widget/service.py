@@ -23,13 +23,11 @@ class WidgetService:
             raise HTTPException(status_code=404, detail="Widget not found")
         return widget
     
-    async def get_widget_by_token(self, share_token: str, db_session: AsyncSession) -> Optional[Widgets]:
+    
+    async def get_public_widget(self, widget_id: UUID, db_session: AsyncSession) -> Optional[Widgets]:
         """Get widget by share token"""
-        widget = await db_session.query(Widgets).filter(
-            Widgets.share_token == share_token,
-            Widgets.is_active == True,
-            Widgets.expires_at > datetime.utcnow()
-        ).first()
+        result = await db_session.exec(select(Widgets).where(Widgets.id == widget_id))
+        widget = result.first()
         
         if not widget:
             raise HTTPException(status_code=404, detail="Widget not found or expired")

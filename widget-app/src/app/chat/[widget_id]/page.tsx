@@ -44,5 +44,9 @@ export default function WidgetChatPage() {
     return <div>Loading...</div>;
   }
 
-  return <ChatWidget embedded={true} />;
+  return (
+    <div className="w-screen h-screen overflow-hidden">
+      <ChatWidget />
+    </div>
+  );
 }
