@@ -28,7 +28,7 @@ export function WidgetChatInbox({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message..."
-          className={`flex-1 text-sm xl:text-base p-2 border rounded-lg focus:outline-none focus:ring-1`}
+          className={`flex-1 text-base p-2 border rounded-lg focus:outline-none focus:ring-1`}
           style={
             {
               "--tw-ring-color": color,
@@ -41,7 +41,7 @@ export function WidgetChatInbox({
           className="transition-all duration-300 ease-in-out hover:brightness-90"
           style={{ backgroundColor: color }}
         >
-          <Send className="w-4 h-4 xl:w-5 xl:h-5" />
+          <Send className="w-5 h-5" />
         </Button>
       </div>
     </div>

@@ -19,21 +19,19 @@ export function WidgetChatHeader({
     <div className="p-3 border-b flex justify-between items-center">
       <div className="flex items-center gap-2">
         <div
-          className="w-6 h-6 xl:w-10 xl:h-10 rounded-full flex items-center justify-center"
+          className="w-10 h-10 rounded-full flex items-center justify-center"
           style={{
             backgroundColor: `${color}2A`,
           }}
         >
           <MessageSquare
-            className="w-3 h-3 xl:w-4 xl:h-4"
+            className="w-4 h-4"
             style={{
               color: color,
             }}
           />
         </div>
-        <span className="text-sm 2xl:text-xl xl:text-lg font-medium">
-          {heading || "Chat with AI"}
-        </span>
+        <span className="text-lg font-medium">{heading || "Chat with AI"}</span>
       </div>
       <button
         onClick={() => setIsOpen(false)}

@@ -17,7 +17,7 @@ export function WidgetMinimizedPage({
   return (
     <Button
       onClick={() => setIsOpen(true)}
-      className={`rounded-full w-16 h-16 text-white shadow-lg transition-colors hover:brightness-90`}
+      className={`fixed bottom-5 right-5 rounded-full w-16 h-16 text-white shadow-lg transition-colors hover:brightness-90`}
       style={{
         backgroundColor: color,
       }}

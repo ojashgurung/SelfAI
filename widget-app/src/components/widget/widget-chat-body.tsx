@@ -43,7 +43,7 @@ export function WidgetChatBody({
               }}
             >
               <h3
-                className="text-sm xl:text-lg font-bold bg-clip-text text-transparent"
+                className="text-lg font-bold bg-clip-text text-transparent"
                 style={{
                   backgroundImage: `linear-gradient(to right, ${color}, ${color}dd)`,
                 }}
@@ -52,11 +52,11 @@ export function WidgetChatBody({
               </h3>
             </div>
             <div>
-              <p className="text-sm xl:text-base font-medium text-gray-700">
+              <p className="text-base font-medium text-gray-700">
                 {title || "Curious about my work or thoughts?"}
               </p>
               <p
-                className="text-xs xl:text-sm inline-block text-transparent bg-clip-text font-semibold"
+                className="text-sm inline-block text-transparent bg-clip-text font-semibold"
                 style={{
                   backgroundImage: `linear-gradient(to right, ${color}, ${color}dd)`,
                 }}
@@ -71,7 +71,7 @@ export function WidgetChatBody({
               <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative text-center">
-              <span className="bg-white px-2 text-xs xl:text-sm text-gray-500">
+              <span className="bg-white px-2 text-sm text-gray-500">
                 Quick prompts to get started
               </span>
             </div>
@@ -87,19 +87,19 @@ export function WidgetChatBody({
                 >
                   <div className="flex items-center gap-2 xl:gap-3">
                     <div
-                      className="w-6 h-6 xl:w-8 xl:h-8 rounded-lg flex items-center justify-center"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
                       style={{
                         backgroundColor: `${color}2A`,
                       }}
                     >
                       <IconComponent
-                        className="w-3 h-3 xl:w-4 xl:h-4"
+                        className="w-4 h-4"
                         style={{
                           color: color,
                         }}
                       />
                     </div>
-                    <h3 className="text-xs xl:text-sm font-medium text-gray-900">
+                    <h3 className="text-sm font-medium text-gray-900">
                       {prompt.title}
                     </h3>
                   </div>
