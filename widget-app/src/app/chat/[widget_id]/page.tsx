@@ -16,6 +16,7 @@ export default function WidgetChatPage() {
     setSubTitle,
     setColor,
     setSelectedPrompts,
+    setShareToken,
   } = useEmbeddedWidgetStore();
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function WidgetChatPage() {
         setSubTitle(response.subtitle);
         setColor(response.color);
         setSelectedPrompts(response.prompts);
+        setShareToken(response.share_token);
       } catch (error) {
         console.error("Failed to load widget:", error);
       } finally {
