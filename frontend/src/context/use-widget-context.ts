@@ -21,9 +21,9 @@ interface WidgetStore {
 
 export const useWidgetStore = create<WidgetStore>((set) => ({
   theme: "light",
-  heading: "Chat with AI",
-  title: "Curious about my work or thoughts?",
-  subTitle: "Let's chat about it",
+  heading: "",
+  title: "",
+  subTitle: "",
   color: "#6366F1",
   showColorPicker: false,
   selectedPrompts: widgetPrompts.slice(0, 3),
