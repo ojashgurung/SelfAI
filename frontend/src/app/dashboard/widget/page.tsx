@@ -9,9 +9,6 @@ import { useWidgetStore } from "@/context/use-widget-context";
 
 export default function WidgetPage() {
   const router = useRouter();
-  const [copied, setCopied] = useState(false);
-  const [widget, setWidget] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const {
     setTheme,
     setHeading,
@@ -20,6 +17,10 @@ export default function WidgetPage() {
     setColor,
     setSelectedPrompts,
   } = useWidgetStore();
+  const [copied, setCopied] = useState(false);
+  const [widgetId, setWidgetId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [embedCode, setEmbedCode] = useState("");
 
   useEffect(() => {
     const fetchWidget = async () => {
@@ -29,13 +30,10 @@ export default function WidgetPage() {
           router.push("/dashboard/widget/configuration");
           return;
         }
-        setWidget(response);
-        setTheme(response.theme as "light" | "dark");
-        setHeading(response.heading);
-        setTitle(response.title);
-        setSubTitle(response.subtitle);
-        setColor(response.color);
-        setSelectedPrompts(response.prompts);
+        setWidgetId(response.id);
+        setEmbedCode(
+          `<script src="https://selfai.io/widget.js" data-widget-id="${response.id}"></script>`
+        );
       } catch (error) {
         toast.error("No Widget exists", {
           description: "Please create a widget to continue",
@@ -47,21 +45,11 @@ export default function WidgetPage() {
     };
 
     fetchWidget();
-  }, [
-    router,
-    setTheme,
-    setHeading,
-    setTitle,
-    setSubTitle,
-    setColor,
-    setSelectedPrompts,
-  ]);
+  }, [router]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
-
-  const embedCode = `<script src="https://selfai.io/widget.js" data-widget-id="${widget}"></script>`;
 
   const handleCopyCode = () => {
     setCopied(true);
@@ -105,22 +93,24 @@ export default function WidgetPage() {
       <div className="flex gap-4">
         <Button
           onClick={() =>
-            router.push(`/dashboard/widget/configuration?id=${widget.id}`)
+            router.push(`/dashboard/widget/configuration?id=${widgetId}`)
           }
           className="bg-purple-600 text-white hover:bg-purple-700"
         >
           Edit Widget
         </Button>
-        <script
-          src="https://selfai.io/widget.js"
-          data-widget-id="[object Object]"
-        ></script>
 
         <Button
           variant="destructive"
           onClick={async () => {
             try {
-              await widgetService.deleteWidget(widget.id);
+              await widgetService.deleteWidget(widgetId);
+              setTheme("light");
+              setHeading("");
+              setTitle("");
+              setSubTitle("");
+              setColor("#6366F1");
+              setSelectedPrompts([]);
               toast("Widget deleted successfully!", {
                 description:
                   "Widget deleted please create new one to make it live again.",
