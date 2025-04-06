@@ -8,10 +8,11 @@ import { WidgetChatInbox } from "./widget-chat-inbox";
 import { WidgetChatBody } from "./widget-chat-body";
 import { WidgetMinimizedPage } from "./widget-minimized";
 import { useWidgetStore } from "@/context/use-widget-context";
+import { useEmbeddedWidgetStore } from "@/context/use-embedded-widget-context";
 
-export function ChatWidget() {
-  const { theme, color, heading, title, subTitle, selectedPrompts } =
-    useWidgetStore();
+export function ChatWidget({ embedded = false }) {
+  const store = embedded ? useEmbeddedWidgetStore() : useWidgetStore();
+  const { theme, color, heading, title, subTitle, selectedPrompts } = store;
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
