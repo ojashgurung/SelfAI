@@ -22,7 +22,15 @@ export function WidgetChatInbox({
 }: WidgetChatInboxProps) {
   return (
     <div className="border-t p-2">
-      <div className="flex items-center gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (inputMessage.trim() && !isLoading) {
+            handleSendMessage();
+          }
+        }}
+        className="flex items-center gap-2"
+      >
         <input
           type="text"
           value={inputMessage}
@@ -43,7 +51,7 @@ export function WidgetChatInbox({
         >
           <Send className="w-5 h-5" />
         </Button>
-      </div>
+      </form>
     </div>
   );
 }

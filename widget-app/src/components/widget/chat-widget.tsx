@@ -8,18 +8,70 @@ import { WidgetChatInbox } from "./widget-chat-inbox";
 import { WidgetChatBody } from "./widget-chat-body";
 import { WidgetMinimizedPage } from "./widget-minimized";
 import { useEmbeddedWidgetStore } from "@/context/use-embedded-widget-context";
+import { widgetService } from "@/lib/service/widget.service";
 
 export function ChatWidget() {
-  const { theme, color, heading, title, subTitle, selectedPrompts } =
-    useEmbeddedWidgetStore();
+  const {
+    theme,
+    color,
+    heading,
+    title,
+    subTitle,
+    selectedPrompts,
+    shareToken,
+  } = useEmbeddedWidgetStore();
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState("");
+
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        setIsLoading(true);
+        const session = await widgetService.initializeSession(shareToken);
+        setSessionId(session.id);
+        setMessages(session.messages);
+      } catch (error) {
+        console.error("Failed to initialize session:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (shareToken) {
+      initSession();
+    }
+  }, [shareToken]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
-    // TODO: Add message sending logic
+    if (!inputMessage.trim() || !sessionId) return;
+
+    const messageContent = inputMessage.trim();
+    const newMessage = {
+      id: Date.now().toString(),
+      content: messageContent,
+      role: "user",
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, { ...newMessage, role: "user" as const }]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      const aiResponse = await widgetService.sendMessage(
+        sessionId,
+        messageContent,
+        shareToken
+      );
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
