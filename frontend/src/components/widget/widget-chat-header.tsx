@@ -32,7 +32,7 @@ export function WidgetChatHeader({
           />
         </div>
         <span className="text-sm 2xl:text-xl xl:text-lg font-medium">
-          {heading}
+          {heading || "Chat with AI"}
         </span>
       </div>
       <button

@@ -53,7 +53,7 @@ export function WidgetChatBody({
             </div>
             <div>
               <p className="text-sm xl:text-base font-medium text-gray-700">
-                {title}
+                {title || "Curious about my work or thoughts?"}
               </p>
               <p
                 className="text-xs xl:text-sm inline-block text-transparent bg-clip-text font-semibold"
@@ -61,7 +61,7 @@ export function WidgetChatBody({
                   backgroundImage: `linear-gradient(to right, ${color}, ${color}dd)`,
                 }}
               >
-                {subTitle}
+                {subTitle || "Let's chat about it"}
               </p>
             </div>
           </div>

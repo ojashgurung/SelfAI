@@ -1,38 +1,33 @@
 import { create } from "zustand";
-import { WidgetPromptProps } from "@/types/widget";
-import { widgetPrompts } from "@/config/widget-prompts";
 
-interface WidgetStore {
+interface EmbeddedWidgetState {
   theme: "light" | "dark";
   heading: string;
   title: string;
   subTitle: string;
   color: string;
-  showColorPicker: boolean;
-  selectedPrompts: Array<WidgetPromptProps>;
+  selectedPrompts: any[];
   setTheme: (theme: "light" | "dark") => void;
   setHeading: (heading: string) => void;
   setTitle: (title: string) => void;
   setSubTitle: (subTitle: string) => void;
   setColor: (color: string) => void;
-  setShowColorPicker: (show: boolean) => void;
-  setSelectedPrompts: (prompts: Array<WidgetPromptProps>) => void;
+  setSelectedPrompts: (prompts: any[]) => void;
 }
 
-export const useWidgetStore = create<WidgetStore>((set) => ({
+export const useEmbeddedWidgetStore = create<EmbeddedWidgetState>((set) => ({
   theme: "light",
   heading: "",
   title: "",
   subTitle: "",
   color: "#6366F1",
   showColorPicker: false,
-  selectedPrompts: widgetPrompts.slice(0, 3),
+  selectedPrompts: [],
 
   setTheme: (theme) => set({ theme }),
   setHeading: (heading) => set({ heading }),
   setTitle: (title) => set({ title }),
   setSubTitle: (subTitle) => set({ subTitle }),
   setColor: (color) => set({ color }),
-  setShowColorPicker: (showColorPicker) => set({ showColorPicker }),
   setSelectedPrompts: (selectedPrompts) => set({ selectedPrompts }),
 }));

@@ -91,9 +91,16 @@ export default function ConfigurationPage() {
     const checkOrFetchWidget = async () => {
       try {
         if (widgetId) {
-          // Edit mode - fetch existing widget
           const widget = await widgetService.getWidget();
-          setTheme(widget.theme as "light" | "dark");
+
+          if (!widget) {
+            toast.error("Widget not found", {
+              description: "The widget you're trying to edit doesn't exist.",
+            });
+            router.push("/dashboard/widget/configuration");
+            return;
+          }
+          setTheme(widget?.theme as "light" | "dark");
           setHeading(widget.heading);
           setTitle(widget.title);
           setSubTitle(widget.subtitle);
@@ -166,7 +173,7 @@ export default function ConfigurationPage() {
             <div>
               <Input
                 type="text"
-                value={widgetId ? heading : ""}
+                value={heading}
                 onChange={(e) => setHeading(e.target.value)}
                 placeholder="e.g. Chat with AI"
                 className="w-full bg-white border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-6"
@@ -214,7 +221,7 @@ export default function ConfigurationPage() {
               <div>
                 <Input
                   type="text"
-                  value={widgetId ? title : ""}
+                  value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Curious about my work or thoughts?"
                   className="w-full bg-white border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-6"
@@ -234,7 +241,7 @@ export default function ConfigurationPage() {
               <div>
                 <Input
                   type="text"
-                  value={widgetId ? subTitle : ""}
+                  value={subTitle}
                   onChange={(e) => setSubTitle(e.target.value)}
                   placeholder="e.g. Let's chat about it"
                   className="w-full bg-white border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-6"

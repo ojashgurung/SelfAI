@@ -28,7 +28,12 @@ export function WidgetChatInbox({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message..."
-          className={`flex-1 text-sm xl:text-base p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-${color}-500`}
+          className={`flex-1 text-sm xl:text-base p-2 border rounded-lg focus:outline-none focus:ring-1`}
+          style={
+            {
+              "--tw-ring-color": color,
+            } as React.CSSProperties
+          }
         />
         <Button
           onClick={handleSendMessage}
