@@ -11,9 +11,9 @@
     /* Customized shadcn/ui colors */
     --background: 0 5.9% 97%;
     --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
+    --card: 0 0% 0% / 0;
     --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
+    --popover: 0 0% 0% / 0;
     --popover-foreground: 240 10% 3.9%;
     --primary: var(--brand);
     --primary-foreground: 0 0% 98%;
@@ -91,9 +91,6 @@
 @layer base {
   * {
     @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
