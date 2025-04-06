@@ -20,9 +20,40 @@ const WIDGET_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/widget`;
 
 export const widgetService = {
   async getWidget() {
-    const response = await fetch(`${WIDGET_BASE_URL}/`, {
+    try {
+      const response = await fetch(`${WIDGET_BASE_URL}/`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.status === 404) {
+        return null;
+      }
+
+      const result = await response.json();
+
+      if (!response.ok && response.status !== 404) {
+        throw new Error(result.detail || "Failed to get widget data.");
+      }
+      return result as WidgetResponse;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message !== "Failed to get widget data."
+      ) {
+        console.error("Widget service error:", error);
+        throw new Error("Failed to fetch widget. Please try again later.");
+      }
+      return null;
+    }
+  },
+
+  async getPublicWidget(widget_id: string) {
+    const response = await fetch(`${WIDGET_BASE_URL}/public/${widget_id}`, {
       method: "GET",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
