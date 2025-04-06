@@ -25,7 +25,7 @@ export function ChatWidget() {
   return (
     <>
       {isOpen ? (
-        <Card className="2xl:h-[600px] 2xl:w-[400px] xl:h-[560px] w-[360px]  bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
+        <Card className="w-full h-full bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col">
           {/* Widget Header */}
           <WidgetChatHeader
             setIsOpen={setIsOpen}
