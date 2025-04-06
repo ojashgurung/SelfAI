@@ -50,25 +50,29 @@ async def get_user_widget(
         if not widgets:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No widget found")
         return widgets[0]
-
+    except HTTPException as he:
+        # Pass through HTTP exceptions
+        raise he
     except Exception as e:
+        print(f"Unexpected error in get_user_widget: {str(e)}")  
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
 
-@widget_router.get("/{widget_id}", response_model=WidgetRead)
-async def get_widget(
+@widget_router.get("/public/{widget_id}", response_model=WidgetRead)
+async def get_public_widget(
     widget_id: UUID,
-    current_user: dict = Depends(strict_token_bearer),
     db_session: AsyncSession = Depends(get_session),
 ):
     """Get a specific widget"""
     try:
-        user_id = current_user["user"]["id"]
-        if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-        return await widget_service.get_widget(widget_id, user_id, db_session)
+        if not widget_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Widget ID is required"
+            )
+        return await widget_service.get_public_widget(widget_id, db_session)
     except HTTPException as he:
         raise he
     except Exception as e:
