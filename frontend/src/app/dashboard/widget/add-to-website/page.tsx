@@ -1,14 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useWidgetStore } from "@/context/use-widget-context";
+import { widgetService } from "@/lib/service/widget.service";
 
 export default function AddToWebsitePage() {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [embedCode, setEmbedCode] = useState("");
 
-  const embedCode = `<script src="https://selfai.io/widget.js" data-widget-id="test"></script>`;
+  useEffect(() => {
+    const fetchWidget = async () => {
+      try {
+        const response = await widgetService.getWidget();
+        if (!response) {
+          router.push("/dashboard/widget/configuration");
+          return;
+        }
+
+        setEmbedCode(
+          `<script src="https://selfai.io/widget.js" data-widget-id="${response.id}"></script>`
+        );
+      } catch (error) {
+        toast.error("No Widget exists", {
+          description: "Please create a widget to continue",
+        });
+        router.push("/dashboard/widget/configuration");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWidget();
+  }, [router]);
 
   const handleCopyCode = () => {
     setCopied(true);
@@ -49,7 +76,15 @@ export default function AddToWebsitePage() {
 
           <div className="bg-white rounded-lg p-4 font-mono text-sm overflow-x-auto">
             <pre className="p-4 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
-              {embedCode || "Testing"}
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                </div>
+              ) : (
+                embedCode || "Testing"
+              )}
             </pre>
           </div>
         </div>
