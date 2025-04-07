@@ -8,40 +8,30 @@ from pinecone import Vector
 
 INDEX_NAME = "selfai"
 pc = Pinecone(api_key=Config.PINECONE_API_KEY)
+index = pc.Index(INDEX_NAME)
 
 class EmbeddingDict(TypedDict):
     id: str
     values: list[float]
     metadata: dict[str, Any]
 
-def get_pinecone_index():
-    """Ensures the index exists and returns a Pinecone index instance."""
+def create_index_if_not_exists():
     if not pc.has_index(INDEX_NAME):
         pc.create_index(
             name=INDEX_NAME,
             dimension=768,
             metric="cosine",
-            spec=ServerlessSpec(
-            cloud="aws",
-            region="us-east-1"
-        ),
-        deletion_protection="disabled",
-        tags={
-            "environment": "development"
-        }
-    )
-
+            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+            deletion_protection="disabled",
+            tags={"environment": "development"},
+        )
         print(f"Index {INDEX_NAME} has been created.")
     else:
         print(f"Index {INDEX_NAME} already exists.")
 
-    # Return the index instance
-    return pc.Index(INDEX_NAME)
-
 
 async def upsert_to_pinecone(embeddings: List[EmbeddingDict], namespace: str) -> dict[str, Any]:
     try:
-        index = get_pinecone_index()
         inserted_ids = [vector["id"] for vector in embeddings]
         
         pinecone_vectors = [
@@ -52,7 +42,7 @@ async def upsert_to_pinecone(embeddings: List[EmbeddingDict], namespace: str) ->
             )
             for vector in embeddings
         ]
-        index.upsert(vectors=pinecone_vectors, namespace=namespace)
+        await asyncio.to_thread(index.upsert, vectors=pinecone_vectors, namespace=namespace)
         return {"status": "success", "inserted_ids": inserted_ids, "namespace": namespace}
 
     except Exception as e:
@@ -66,32 +56,36 @@ async def upsert_to_pinecone(embeddings: List[EmbeddingDict], namespace: str) ->
 
 async def get_query_pinecone(query_embedding, namespace: str):
     try:
-        index = get_pinecone_index()
-        result = index.query(vector=query_embedding["values"], namespace=namespace, top_k=3, include_metadata=True, include_values=False)
+        result = await asyncio.to_thread(
+            index.query,
+            vector=query_embedding["values"],
+            namespace=namespace,
+            top_k=3,
+            include_metadata=True,
+            include_values=False
+        )
         return result
-
     except Exception as e:
         print(f"Error while Quering to Pinecone: {e}")
         
 
 async def delete_vectors(vector_ids: list, namespace: str):
     try:
-        # Initialize Pinecone client
-        print(vector_ids, namespace)
-        index = get_pinecone_index()
-        
-        # Delete vectors
-        index.delete(ids=vector_ids, namespace=namespace)
+        if not vector_ids:
+            return True
+
+        await asyncio.to_thread(index.delete, ids=vector_ids, namespace=namespace)
+        return True
     except Exception as e:
         print(f"Failed to delete vectors: {e}")
+        raise Exception(f"Failed to delete vectors: {e}")
 
 
 async def check_namespace_exists(namespace: str) -> bool:
     try:
-        index = get_pinecone_index()
         result = await asyncio.to_thread(
             index.query,
-            vector=[float(0)] * 768,
+            vector=[0.0] * 768,
             namespace=namespace,
             top_k=1,
             include_metadata=False
