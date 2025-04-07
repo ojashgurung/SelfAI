@@ -243,7 +243,7 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
         
         return JSONResponse(
             status_code = status.HTTP_200_OK,
-            content = {"vaild": True,
+            content = {"valid": True,
                         "user" : {
                             "id": str(user.uuid),
                             "fullname": user.fullname,
@@ -290,3 +290,25 @@ async def logout():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during logout"
         )
+
+@auth_router.post("/refresh-token")
+async def refresh_token(refresh_token: str = Cookie(None)):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token provided")
+    
+    payload = decode_token(refresh_token)
+    if not payload or not payload.get("refresh"):
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    new_access_token = create_access_token(user_data=payload["user"])
+
+    response = JSONResponse(content={"message": "Token refreshed"})
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        samesite="lax",
+        secure=False,  # True in prod
+        max_age=36000,
+    )
+    return response
