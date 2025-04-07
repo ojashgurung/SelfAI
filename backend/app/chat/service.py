@@ -18,48 +18,45 @@ class ChatService:
         rag_service: RagService,
         db_session: AsyncSession,
     ):
-        if not current_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required to create a session"
-            ) 
+        try:
+            if not current_user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Authentication required to create a session"
+                ) 
 
-        user_id = current_user["user"]["id"]
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid user credentials"
+            user_id = current_user["user"]["id"]
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid user credentials"
+                )
+
+            share_token = secrets.token_urlsafe(16) if session_data.is_public else None
+
+            chat_session = ChatSessions(
+                user_id=user_id,
+                share_token=share_token,
+                namespace=session_data.namespace,
+                title=session_data.title,
+                is_public=session_data.is_public,
+                visitor_id=None,
+                parent_id=None
             )
+            
+            db_session.add(chat_session)
+            await db_session.flush()  
+            await db_session.commit()
+            await db_session.refresh(chat_session, ['messages'])
 
-        share_token = secrets.token_urlsafe(16) if session_data.is_public else None
+            return chat_session
 
-        chat_session = ChatSessions(
-            user_id=user_id,
-            share_token=share_token,
-            namespace=session_data.namespace,
-            title=session_data.title,
-            is_public=session_data.is_public,
-            visitor_id= None,
-            parent_id= None
-        )
-        
-        db_session.add(chat_session)
-        await db_session.commit()  # ✅ Commit before returning
-        await db_session.refresh(chat_session, ['messages']) # ✅ Ensure it's refreshed
-
-        return chat_session 
-
-    # async def get_user_sessions(
-    #     self,
-    #     user_id: UUID,
-    #     db: AsyncSession
-    # ) -> List[ChatSessions]:
-    #     statement = select(ChatSessions).where(
-    #         (ChatSessions.user_id == user_id) | 
-    #         (ChatSessions.visitor_id == user_id)
-    #     )
-    #     result = await self.db.execute(statement)
-    #     return result.scalars().all()
+        except Exception as e:
+            await db_session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create session +++: {str(e)}"
+            )
 
     async def get_session(
         self,
