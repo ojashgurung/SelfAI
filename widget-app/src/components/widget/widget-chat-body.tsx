@@ -38,7 +38,7 @@ export function WidgetChatBody({
   }, [messages]);
   return (
     <div
-      className="lex-1 overflow-y-auto p-3 space-y-3 bg-gradient-to-t from-purple-50/90 to-white/0 scrollbar-thin scrollbar-thumb-rounded-md hover:scrollbar-thumb-gray-300 scrollbar-track-transparent"
+      className="lex-1 w-full h-full overflow-y-auto p-3 space-y-3 bg-gradient-to-t from-purple-50/90 to-white/0 scrollbar-thin scrollbar-thumb-rounded-md hover:scrollbar-thumb-gray-300 scrollbar-track-transparent"
       style={
         {
           backgroundImage: `linear-gradient(to top, ${color}1A, #ffffff00)`,

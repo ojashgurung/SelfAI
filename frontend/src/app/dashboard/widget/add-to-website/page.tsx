@@ -22,7 +22,7 @@ export default function AddToWebsitePage() {
         }
 
         setEmbedCode(
-          `<script src="https://selfai.io/widget.js" data-widget-id="${response.id}"></script>`
+          `<script src="https://selfai.io/widget.js" data-user-id="${response.user_id}"></script>`
         );
       } catch (error) {
         toast.error("No Widget exists", {

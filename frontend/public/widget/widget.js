@@ -15,24 +15,24 @@
 
   // Initialize widget
   const initWidget = async () => {
-    const script = document.querySelector("script[data-widget-id]");
-    const widgetId = script?.getAttribute("data-widget-id");
+    const script = document.querySelector("script[data-user-id]");
+    const userId = script?.getAttribute("data-user-id");
 
-    if (!widgetId) {
-      console.error("Widget ID is required");
+    if (!userId) {
+      console.error("User ID is not provided.");
       return;
     }
 
     try {
       // Fetch widget config
       const response = await fetch(
-        `http://localhost:8000/api/v1/widget/public/${widgetId}`
+        `http://localhost:8000/api/v1/widget/public/user/${userId}`
       );
       const widgetConfig = await response.json();
 
       const container = createWidgetContainer();
       const iframe = document.createElement("iframe");
-      iframe.src = `http://localhost:3001/chat/${widgetId}`;
+      iframe.src = `http://localhost:3001/chat/${widgetConfig.id}`;
       iframe.style.border = "none";
       iframe.style.backgroundColor = "transparent";
       iframe.style.backdropFilter = "none";

@@ -26,7 +26,6 @@ class WidgetUpdate(BaseModel):
 class WidgetRead(WidgetBase):
     id: UUID
     user_id: UUID
-    session_id: UUID
     share_token: str
     created_at: datetime
     expires_at: Optional[datetime]
