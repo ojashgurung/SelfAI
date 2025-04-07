@@ -22,7 +22,7 @@ export const useAuth = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       setUser: (user) => set({ user, isAuthenticated: true }),
 
       logout: async () => {
@@ -55,24 +55,26 @@ export const useAuth = create<AuthStore>()(
           );
 
           if (!response.ok) {
-            set({ user: null, isAuthenticated: false });
+            set({ user: null, isAuthenticated: false, isLoading: false });
             return false;
           }
 
           const data = await response.json();
-          if (data.valid && data.user) {
-            set({
-              user: {
-                id: data.user.user_id,
-                email: data.user.email,
-                fullname: data.user.fullname,
-                role: data.user.role,
-              },
-              isAuthenticated: true,
-            });
-            return true;
+          if (!data.valid || !data.user) {
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            return false;
           }
-          return false;
+
+          set({
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              fullname: data.user.fullname,
+              role: data.user.role,
+            },
+            isAuthenticated: true,
+          });
+          return true;
         } catch (error) {
           console.error("Auth check failed:", error);
 
