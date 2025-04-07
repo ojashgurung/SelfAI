@@ -32,7 +32,7 @@ export default function WidgetPage() {
         }
         setWidgetId(response.id);
         setEmbedCode(
-          `<script src="https://selfai.io/widget.js" data-widget-id="${response.id}"></script>`
+          `<script src="https://selfai.io/widget.js" data-user-id="${response.user_id}"></script>`
         );
       } catch (error) {
         toast.error("No Widget exists", {

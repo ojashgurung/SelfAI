@@ -3,7 +3,6 @@ import { WidgetPromptProps } from "@/types/widget";
 export interface WidgetResponse {
   id: string;
   user_id: string;
-  session_id: string;
   share_token: string;
   theme: string;
   color: string;

@@ -60,6 +60,26 @@ async def get_user_widget(
             detail=str(e)
         )
 
+@widget_router.get("/public/user/{user_id}", response_model=WidgetRead)
+async def get_user_public_widget(
+    user_id: UUID,
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Get active widget for a user"""
+    try:
+        widgets = await widget_service.get_user_widgets(user_id, db_session)
+        if not widgets:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No widget found for this user"
+            )
+        return widgets[0]  # Return the most recent widget
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
 @widget_router.get("/public/{widget_id}", response_model=WidgetRead)
 async def get_public_widget(
     widget_id: UUID,
