@@ -1,4 +1,3 @@
-
 import os
 import uuid
 from typing import Any
@@ -50,8 +49,9 @@ class RagService:
         secure_name = f"{uuid.uuid4().hex}_{file.filename}"
         file_path = os.path.join(user_dir, secure_name)
         
+        content = await file.read() 
+
         async with aiofiles.open(file_path, 'wb') as out_file:
-            content = await file.read()
             await out_file.write(content)
         try:
             if file_extension == '.pdf':
@@ -62,7 +62,8 @@ class RagService:
                 text = extract_text_from_md_html(file_path)
             else:
                 raise UnsupportedFileType()
-            
+                
+            await file.seek(0)
 
             result: dict = await self.clean_and_chunk_text(text, secure_name, file.content_type, user_id)
             result['file_path'] = file_path
@@ -94,26 +95,43 @@ class RagService:
         return "\n\n".join(extracted_texts)
     
     async def query_llm(self, retrieved_text: str, user_query: str): 
-        PROMPT_TEMPLATE = f"""
-            Use the following context to answer the user's question:
+        PROMPT_TEMPLATE = """
+        You are an AI assistant designed to answer questions about a specific person, based on the documents and data they've provided.
 
-            Context:
-            {retrieved_text}
+        Speak in a professional, third-person tone — for example: "They are currently pursuing a Master's degree..." or "This person has worked on...".
 
-            User Question:
-            {user_query}
+        Use the context below to answer the user's question truthfully. If the context does not contain enough information, politely say so. Do not guess or make up information.
 
-            Provide a concise and accurate response.
-            """
-        
+        You can infer lightly based on what is available, but always prioritize accuracy. Be friendly and clear in your tone.
+
+        ---
+
+        Context:
+        {context}
+
+        User's Question:
+        {question}
+
+        Answer:
+        """
+
+        # Create the prompt template
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-        prompt = prompt_template.format(context=retrieved_text, question=user_query)
-        # print(prompt)
 
-        model = OllamaLLM(model="mistral")
-        response_text = model.invoke(prompt)
+        # Format as list of messages
+        messages = prompt_template.format_messages(
+            context=retrieved_text,
+            question=user_query
+        )
+
+        # Use Ollama model
+        model = OllamaLLM(model="mistral", temperature=0.7)
+
+        # Call the model with formatted messages
+        print(messages)
+        response_text = model.invoke(messages)
+
         return response_text
-
     
     async def check_namespace_exists(self, namespace: str) -> bool:
         return await check_namespace_exists(namespace)
