@@ -74,7 +74,6 @@ class ChatSessions(SQLModel, table=True):
     messages: List["ChatMessages"] = Relationship(back_populates="session")
     parent_session: Optional["ChatSessions"] = Relationship(back_populates="child_sessions", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id", "remote_side": "ChatSessions.id"})
     child_sessions: List["ChatSessions"] = Relationship(back_populates="parent_session", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id"})
-    widgets: List["Widgets"] = Relationship(back_populates="session")
 
 class ChatMessages(SQLModel, table=True):
     id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
@@ -100,7 +99,5 @@ class Widgets(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
     expires_at: Optional[datetime] = Field(default=None)
     is_active: bool = Field(default=True)
-    session_id: uuid_pkg.UUID = Field(foreign_key="chatsessions.id")
 
     owner: "Users" = Relationship(back_populates="widgets", sa_relationship_kwargs={"foreign_keys": "Widgets.user_id"})
-    session: "ChatSessions" = Relationship(back_populates="widgets")
