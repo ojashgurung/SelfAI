@@ -1,12 +1,18 @@
 "use client";
-import { HeroSection } from "@/components/hero/hero-section";
-import { IntegrationSection } from "@/components/hero/integration-section";
+import AnalyticsSection from "@/components/landing-page/analytics-section/analytics-section";
+import { Footer } from "@/components/landing-page/footer/footer";
+import { HeroSection } from "@/components/landing-page/hero/hero-section";
+import { IntegrationSection } from "@/components/landing-page/hero/integration-section";
+import { HowItWorks } from "@/components/landing-page/how-it-works/how-it-works";
 
 export default function Hero() {
   return (
     <>
       <HeroSection />
-      <IntegrationSection />
+      <HowItWorks />
+      {/* <IntegrationSection /> */}
+      <AnalyticsSection />
+      <Footer />
     </>
   );
 }

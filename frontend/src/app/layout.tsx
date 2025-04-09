@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { NavigationWrapper } from "@/components/navigation-wrapper/navigarion-wrapper";
+import { NavigationWrapper } from "@/components/landing-page/navigation-wrapper/navigarion-wrapper";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
