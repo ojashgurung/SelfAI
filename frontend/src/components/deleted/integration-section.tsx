@@ -44,7 +44,7 @@ export function IntegrationSection() {
                 key={integration.name}
                 className="bg-zinc-900 border-zinc-800 p-4 flex flex-col items-center justify-center hover:bg-zinc-800 transition-colors cursor-pointer"
               >
-                <IconComponent size={32} className="w-8 h-8 mb-2" />
+                {/* <IconComponent size={32} className="w-8 h-8 mb-2" /> */}
                 <span className="text-sm text-gray-300">
                   {integration.name}
                 </span>
