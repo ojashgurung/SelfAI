@@ -22,7 +22,10 @@ export function HeroSection() {
             <span className="text-muted-foreground">
               New version Self AI is out!
             </span>
-            <Link href="/signin" className="flex items-center gap-1">
+            <Link
+              href="/signup"
+              className="flex text-indigo-600 items-center gap-1"
+            >
               Get started
               <ArrowRightIcon className="h-3 w-3" />
             </Link>
@@ -37,25 +40,31 @@ export function HeroSection() {
             into your portfolio, website, or business card to boost your
             professional presence.
           </p>
-          <div className="flex gap-4 mt-8">
-            <div className="z-10 flex animate-appear justify-center gap-4 opacity-0 delay-300">
-              <Button size="lg" className="bg-indigo-600">
-                <Link href="/signup"> Get Started </Link>
+          <div className="flex gap-4 mt-8 z-12">
+            <Link href="/signup">
+              <Button
+                size="lg"
+                className="animate-appear opacity-0 delay-300 bg-indigo-600 hover:bg-indigo-700"
+              >
+                Get Started
               </Button>
-            </div>
-            <div className="z-10 flex animate-appear justify-center gap-4 opacity-0 delay-300">
-              <Button variant="ghost" size="lg" asChild>
-                <Link href="/">
-                  <Github className="mr-2 h-4 w-4" /> Github
-                </Link>
+            </Link>
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="lg"
+                className="animate-appear opacity-0 delay-300 flex items-center"
+              >
+                <Github className="mr-2 h-4 w-4" />
+                Github
               </Button>
-            </div>
+            </Link>
           </div>
 
-          <div className="relative w-full max-w-[1400px] mx-auto">
+          <div className="relative w-full max-w-[1400px] mx-auto mt-12 z-[1]">
             {/* Main Dashboard Mockup */}
-            <div className="relative z-10">
-              <MockupFrame size="small">
+            <div className="relative z-[2]">
+              <MockupFrame size="small" className="bg-indigo-600/70">
                 <Mockup type="responsive">
                   <Image
                     src="/images/Dashboard.png"
@@ -70,22 +79,26 @@ export function HeroSection() {
                   />
                 </Mockup>
               </MockupFrame>
-              <Glow variant="top" />
+              <Glow variant="top" className="pointer-events-none" />
             </div>
 
             {/* Chat Overlay Mockup */}
-            <div className="absolute -bottom-12 left-0 w-[70%] transform -translate-x-20 z-10">
-              <Image
-                src="/images/Chat_I.png"
-                alt="SelfAI Chat Interface"
-                width={1000}
-                height={1000}
-                priority
-                loading="eager"
-                quality={100}
-                className="w-full h-auto rounded-lg shadow-2xl"
-                unoptimized
-              />
+            <div className="absolute -bottom-12 left-0 w-[70%] transform -translate-x-20 z-[2]">
+              <MockupFrame size="small" className="bg-indigo-400/70">
+                <Mockup type="responsive">
+                  <Image
+                    src="/images/Chat_I.png"
+                    alt="SelfAI Chat Interface"
+                    width={1000}
+                    height={1000}
+                    priority
+                    loading="eager"
+                    quality={100}
+                    className="w-full h-auto rounded-lg shadow-2xl"
+                    unoptimized
+                  />
+                </Mockup>
+              </MockupFrame>
             </div>
           </div>
         </div>
