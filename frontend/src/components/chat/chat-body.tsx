@@ -77,7 +77,7 @@ export default function ChatBody({
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">
                   Hi there,{" "}
-                  <span className="text-purple-600">
+                  <span className="text-indigo-600">
                     {session?.title === "Owner"
                       ? session?.owner?.fullname?.split(" ")[0]
                       : `I am ${session?.owner?.fullname?.split(" ")[0]} SelfAI`}
@@ -86,12 +86,12 @@ export default function ChatBody({
                 {session?.title === "Owner" ? (
                   <h2 className="text-2xl">
                     Curious about what{" "}
-                    <span className="text-purple-700">I know about you?</span>
+                    <span className="text-indigo-700">I know about you?</span>
                   </h2>
                 ) : (
                   <h2 className="text-2xl">
                     Curious about my work or thoughts?{" "}
-                    <span className="text-purple-700">Just ask.</span>
+                    <span className="text-indigo-700">Just ask.</span>
                   </h2>
                 )}
 
@@ -106,12 +106,12 @@ export default function ChatBody({
                   <Card
                     key={prompt.title}
                     onClick={() => onPromptClick?.(prompt.title)}
-                    className="p-6 hover:bg-purple-50 cursor-pointer transition-colors bg-white/95 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm"
+                    className="p-6 hover:bg-indigo-50 cursor-pointer transition-colors bg-white/95 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm"
                   >
                     <div className="space-y-3">
-                      <div className="w-10 h-10 bg-purple-200 rounded-2xl flex items-center justify-center">
+                      <div className="w-10 h-10 bg-indigo-200 rounded-2xl flex items-center justify-center">
                         <span className="text-base text-white">
-                          <prompt.icon className="w-5 h-5 text-purple-600" />
+                          <prompt.icon className="w-5 h-5 text-indigo-600" />
                         </span>
                       </div>
                       <div>
@@ -168,7 +168,7 @@ export default function ChatBody({
                     </div>
                   ) : (
                     /* AI Response */
-                    <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-purple-200 transition rounded-xl mb-4">
+                    <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-indigo-200 transition rounded-xl mb-4">
                       <div className="flex items-start gap-3">
                         <Avatar>
                           <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
