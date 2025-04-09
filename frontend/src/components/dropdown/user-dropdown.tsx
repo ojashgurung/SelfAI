@@ -19,8 +19,8 @@ export function UserDropdown({ user, onLogout }: UserDropdownProps) {
       <DropdownMenu>
         <div className="w-full">
           <div className="flex items-center gap-3 p-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center">
-              <span className="text-indigo-700 font-medium">
+            <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center">
+              <span className="text-white font-medium">
                 {user?.fullname
                   ? user.fullname
                       .split(" ")

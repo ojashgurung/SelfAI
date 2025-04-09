@@ -29,15 +29,34 @@ export function WidgetChatBody({
   selectedPrompts,
 }: WidgetChatBodyProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const isUserNearBottom = () => {
+    if (!containerRef.current) return false;
+
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    return scrollHeight - scrollTop - clientHeight < 100;
+  };
+
   useEffect(() => {
-    scrollToBottom();
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+
+    // Decide scroll behavior
+    messagesEndRef.current?.scrollIntoView({
+      behavior: isNearBottom ? "smooth" : "auto", // 🔥 key fix
+    });
   }, [messages]);
   return (
     <div
+      ref={containerRef}
       className="lex-1 w-full h-full overflow-y-auto p-3 space-y-3 bg-gradient-to-t from-purple-50/90 to-white/0 scrollbar-thin scrollbar-thumb-rounded-md hover:scrollbar-thumb-gray-300 scrollbar-track-transparent"
       style={
         {
