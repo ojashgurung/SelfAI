@@ -3,8 +3,8 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <Section className="border-t border-border/10">
-      <div className="mx-auto max-w-container py-6 flex flex-col gap-12 justify-between">
+    <Section className="border-t border-border/10 bg-white ">
+      <div className="mx-auto max-w-container flex flex-col gap-12 justify-between mt-36">
         <div className="grid grid-cols-6 gap-2 flex-grow">
           {/* Logo and tagline */}
           <div className="col-span-2">
@@ -54,7 +54,7 @@ export function Footer() {
 
           {/* Early access */}
           <div className="col-span-2 flex flex-col gap-6">
-            <div className="flex items-center gap-6 rounded-3xl bg-white border border-border/50 bg-background p-4 w-[90%]">
+            <div className="flex items-center gap-6 rounded-3xl bg-indigo-50 border border-border/50 bg-background p-4 w-[90%]">
               <div className="flex items-center text-indigo-600">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -76,7 +76,9 @@ export function Footer() {
                 <h1 className="text-xl font-semibold">selfAI.</h1>
               </div>
 
-              <h3 className="font-bold text-2xl">Apply for early access</h3>
+              <h3 className="font-bold text-2xl text-indigo-600">
+                Apply for early access
+              </h3>
             </div>
             <p className="text-sm text-muted-foreground">
               We are still fine tuning the product and would love your help.
@@ -85,7 +87,7 @@ export function Footer() {
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Built remotely by students & dreamers 🌍
+          Built remotely by a student & a dreamer 🌍
         </p>
       </div>
     </Section>
