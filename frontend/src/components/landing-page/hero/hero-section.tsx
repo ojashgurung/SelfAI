@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRightIcon } from "lucide-react";
@@ -7,15 +5,15 @@ import { Section } from "@/components/ui/section";
 import { Mockup, MockupFrame } from "@/components/ui/mockup";
 import Glow from "@/components/ui/glow";
 import Image from "next/image";
-import { useTheme } from "next-themes";
 import Github from "@/components/logos/github";
 import Link from "next/link";
 
 export function HeroSection() {
-  const { resolvedTheme } = useTheme();
-
   return (
-    <Section className="fade-bottom overflow-hidden pb-0 sm:pb-0 md:pb-0">
+    <Section
+      className="fade-bottom overflow-hidden pb-0 sm:pb-0 md:pb-0"
+      id="hero"
+    >
       <div className="mx-auto flex max-w-container flex-col gap-12 pt-16 sm:gap-24">
         <div className="flex flex-col items-center gap-6 text-center sm:gap-4">
           <Badge variant="outline" className="animate-appear">
@@ -61,23 +59,21 @@ export function HeroSection() {
             </Link>
           </div>
 
-          <div className="relative w-full max-w-[1400px] mx-auto mt-12 z-[1]">
+          <div className="relative w-full max-w-[1400px] mx-auto mt-12 ">
             {/* Main Dashboard Mockup */}
             <div className="relative z-[2]">
               <MockupFrame size="small" className="bg-indigo-600/70">
-                <Mockup type="responsive">
-                  <Image
-                    src="/images/Dashboard.png"
-                    alt="SelfAI Dashboard"
-                    width={1920}
-                    height={1080}
-                    priority
-                    loading="eager"
-                    quality={100}
-                    className="w-full h-auto rounded-lg shadow-2xl"
-                    unoptimized
-                  />
-                </Mockup>
+                <Image
+                  src="/images/Dashboard.png"
+                  alt="SelfAI Dashboard"
+                  width={1920}
+                  height={1080}
+                  priority
+                  loading="eager"
+                  quality={100}
+                  className="w-full h-auto rounded-lg shadow-2xl"
+                  unoptimized
+                />
               </MockupFrame>
               <Glow variant="top" className="pointer-events-none" />
             </div>
@@ -85,19 +81,17 @@ export function HeroSection() {
             {/* Chat Overlay Mockup */}
             <div className="absolute -bottom-12 left-0 w-[70%] transform -translate-x-20 z-[2]">
               <MockupFrame size="small" className="bg-indigo-400/70">
-                <Mockup type="responsive">
-                  <Image
-                    src="/images/Chat_I.png"
-                    alt="SelfAI Chat Interface"
-                    width={1000}
-                    height={1000}
-                    priority
-                    loading="eager"
-                    quality={100}
-                    className="w-full h-auto rounded-lg shadow-2xl"
-                    unoptimized
-                  />
-                </Mockup>
+                <Image
+                  src="/images/Chat_I.png"
+                  alt="SelfAI Chat Interface"
+                  width={1000}
+                  height={1000}
+                  priority
+                  loading="eager"
+                  quality={100}
+                  className="w-full h-auto rounded-lg shadow-2xl"
+                  unoptimized
+                />
               </MockupFrame>
             </div>
           </div>
