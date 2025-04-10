@@ -21,8 +21,8 @@ export default function ChatInfoSidebar({
       <div className="space-y-6">
         {/* Model Info */}
         <div className="flex flex-col items-center justify-center gap-2">
-          <div className="w-14 h-14 rounded-full bg-purple-200 flex items-center justify-center">
-            <span className="text-purple-600 font-medium">{initials}</span>
+          <div className="w-14 h-14 rounded-full bg-indigo-200 flex items-center justify-center">
+            <span className="text-indigo-600 font-medium">{initials}</span>
           </div>
           <h3 className="font-medium text-lg mb-1">
             {session?.owner?.fullname || "AI Assistant"}
@@ -63,9 +63,9 @@ export default function ChatInfoSidebar({
         </div>
 
         {/* Current Search Context */}
-        <div className="p-3 bg-purple-50 rounded-lg">
+        <div className="p-3 bg-indigo-50 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <BrainCircuit className="w-4 h-4 text-purple-600" />
+            <BrainCircuit className="w-4 h-4 text-indigo-600" />
             <h4 className="text-sm font-medium">Current Context</h4>
           </div>
           <p className="text-sm text-gray-600">
@@ -79,7 +79,7 @@ export default function ChatInfoSidebar({
         {/* Source References */}
         <div>
           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <Link className="w-4 h-4 text-purple-600" />
+            <Link className="w-4 h-4 text-indigo-600" />
             Referenced Sources
           </h4>
           <div className="space-y-2">

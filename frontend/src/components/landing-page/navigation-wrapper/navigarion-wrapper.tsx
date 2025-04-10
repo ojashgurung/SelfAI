@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Header1 } from "@/components/ui/header";
+import { Header } from "@/components/landing-page/header/header";
 
 export function NavigationWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -10,7 +10,7 @@ export function NavigationWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isDashboard && !isPublicChat && <Header1 />}
+      {!isDashboard && !isPublicChat && <Header />}
       {children}
     </>
   );

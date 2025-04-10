@@ -7,14 +7,14 @@ const chartData = [
     id: "Views",
     color: "hsl(252, 100%, 67%)", // Purple-ish
     data: [
-      { x: "9 Jan", y: 20 },
-      { x: "10 Jan", y: 45 },
-      { x: "19 Jan", y: 10 },
-      { x: "20 Jan", y: 45 },
-      { x: "21 Jan", y: 20 },
+      { x: "9 Jan", y: 3 },
+      { x: "10 Jan", y: 12 },
+      { x: "19 Jan", y: 45 },
+      { x: "20 Jan", y: 34 },
+      { x: "21 Jan", y: 74 },
       { x: "22 Jan", y: 45 },
-      { x: "27 Jan", y: 20 },
-      { x: "30 Jan", y: 45 },
+      { x: "27 Jan", y: 123 },
+      { x: "30 Jan", y: 97 },
     ],
   },
 ];
