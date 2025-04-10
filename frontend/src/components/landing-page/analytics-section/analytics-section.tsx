@@ -1,11 +1,12 @@
 import { Section } from "@/components/ui/section";
-import { FileText, Globe2, AppWindow, Languages } from "lucide-react";
+
+import { MockupFrame } from "@/components/ui/mockup";
 import Image from "next/image";
 import Glow from "@/components/ui/glow";
 
 export default function AnalyticsSection() {
   return (
-    <Section className="py-20 bg-white">
+    <Section className="py-20 bg-white" id="analytics">
       <div className="mx-auto flex max-w-container flex-col gap-12 sm:gap-24">
         <div className="flex flex-col text-center gap-4">
           <h2 className="text-4xl font-semibold">
@@ -75,30 +76,11 @@ export default function AnalyticsSection() {
           <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-transparent via-pink-500/20 to-transparent hidden md:block -translate-x-1/2" />
 
           {/* Right Side */}
-          <div className="flex justify-end w-full">
+          <div className="flex justify-end w-full z-10">
             <div className="max-w-2xl">
-              <Image
-                src="/images/Profile-progress-bar.png"
-                alt="SelfAI Dashboard"
-                width={400}
-                height={300}
-                priority
-                loading="eager"
-                quality={75}
-                className="w-full h-full object-contain rounded-lg"
-                unoptimized
-              />
-              <Glow variant="top" />
-            </div>
-          </div>
-
-          {/* 3rd */}
-          {/* Left Side */}
-          <div className="space-y-4">
-            <div className="flex justify-end w-full">
-              <div className="max-w-sm">
+              <MockupFrame size="extra_small" className="bg-indigo-300/70">
                 <Image
-                  src="/images/Connect-with-link.png"
+                  src="/images/Profile-progress-bar.png"
                   alt="SelfAI Dashboard"
                   width={400}
                   height={300}
@@ -108,6 +90,29 @@ export default function AnalyticsSection() {
                   className="w-full h-full object-contain rounded-lg"
                   unoptimized
                 />
+              </MockupFrame>
+              <Glow variant="top" />
+            </div>
+          </div>
+
+          {/* 3rd */}
+          {/* Left Side */}
+          <div className="space-y-4">
+            <div className="flex justify-end w-full">
+              <div className="max-w-sm">
+                <MockupFrame size="extra_small" className="bg-indigo-300/70">
+                  <Image
+                    src="/images/Connect-with-link.png"
+                    alt="SelfAI Dashboard"
+                    width={400}
+                    height={300}
+                    priority
+                    loading="eager"
+                    quality={75}
+                    className="w-full h-full object-contain rounded-lg"
+                    unoptimized
+                  />
+                </MockupFrame>
                 <Glow variant="bottom" />
               </div>
             </div>
@@ -148,19 +153,21 @@ export default function AnalyticsSection() {
           <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-transparent via-pink-500/20 to-transparent hidden md:block -translate-x-1/2" />
 
           {/* Right Side */}
-          <div className="flex justify-end w-full">
+          <div className="flex justify-end w-full z-10">
             <div className="max-w-3xl">
-              <Image
-                src="/images/Analytics.png"
-                alt="SelfAI Dashboard"
-                width={800}
-                height={800}
-                priority
-                loading="eager"
-                quality={75}
-                className="w-full h-full object-contain rounded-lg"
-                unoptimized
-              />
+              <MockupFrame size="extra_small" className="bg-indigo-300/50">
+                <Image
+                  src="/images/Analytics.png"
+                  alt="SelfAI Dashboard"
+                  width={800}
+                  height={800}
+                  priority
+                  loading="eager"
+                  quality={75}
+                  className="w-full h-full object-contain rounded-lg"
+                  unoptimized
+                />
+              </MockupFrame>
               <Glow variant="top" />
             </div>
           </div>
