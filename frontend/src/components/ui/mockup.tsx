@@ -37,6 +37,7 @@ const frameVariants = cva(
   {
     variants: {
       size: {
+        extra_small: "p-1",
         small: "p-2",
         large: "p-4",
       },
