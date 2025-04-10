@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { widgetService } from "@/lib/service/widget.service";
 import { useWidgetStore } from "@/context/use-widget-context";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function WidgetPage() {
   const router = useRouter();
@@ -69,13 +70,54 @@ export default function WidgetPage() {
       </p>
 
       <div className="space-y-4">
-        <div className="bg-gray-100 rounded-xl p-8 mb-8">
-          <Button
-            onClick={handleCopyCode}
-            className="bg-black text-white hover:bg-black/90 mb-4"
-          >
-            {copied ? "Copied!" : "Copy code"}
-          </Button>
+        <div className="bg-gray-100 rounded-xl p-8">
+          <div className="flex justify-between mb-4">
+            <Button
+              onClick={handleCopyCode}
+              className="bg-black text-white hover:bg-black/90 mb-4"
+            >
+              {copied ? "Copied!" : "Copy code"}
+            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={() =>
+                  router.push(`/dashboard/widget/configuration?id=${widgetId}`)
+                }
+                size="icon"
+                className="h-10 w-10 bg-purple-600 text-white hover:bg-purple-700"
+                title="Edit Widget"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-10 w-10"
+                title="Delete Widget"
+                onClick={async () => {
+                  try {
+                    await widgetService.deleteWidget(widgetId);
+                    setTheme("light");
+                    setHeading("");
+                    setTitle("");
+                    setSubTitle("");
+                    setColor("#6366F1");
+                    setSelectedPrompts([]);
+                    toast("Widget deleted successfully!", {
+                      description:
+                        "Widget deleted please create new one to make it live again.",
+                    });
+                    router.push("/dashboard/widget/configuration");
+                  } catch (error) {
+                    toast.error("Failed to delete widget");
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
           <p className="text-gray-600 mb-4">
             and paste it before the closing{" "}
@@ -89,40 +131,6 @@ export default function WidgetPage() {
             </pre>
           </div>
         </div>
-      </div>
-      <div className="flex gap-4">
-        <Button
-          onClick={() =>
-            router.push(`/dashboard/widget/configuration?id=${widgetId}`)
-          }
-          className="bg-purple-600 text-white hover:bg-purple-700"
-        >
-          Edit Widget
-        </Button>
-
-        <Button
-          variant="destructive"
-          onClick={async () => {
-            try {
-              await widgetService.deleteWidget(widgetId);
-              setTheme("light");
-              setHeading("");
-              setTitle("");
-              setSubTitle("");
-              setColor("#6366F1");
-              setSelectedPrompts([]);
-              toast("Widget deleted successfully!", {
-                description:
-                  "Widget deleted please create new one to make it live again.",
-              });
-              router.push("/dashboard/widget/configuration");
-            } catch (error) {
-              toast.error("Failed to delete widget");
-            }
-          }}
-        >
-          Delete
-        </Button>
       </div>
     </div>
   );
