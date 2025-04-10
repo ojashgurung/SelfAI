@@ -1,16 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Section } from "@/components/ui/section";
-import {
-  UploadCloud,
-  BrainCog,
-  Send,
-} from "lucide-react";
+import { UploadCloud, BrainCog, Send } from "lucide-react";
 import { Mockup, MockupFrame } from "@/components/ui/mockup";
 import Image from "next/image";
 
 export function HowItWorks() {
   return (
-    <Section>
+    <Section id="how-it-works">
       <div className="mx-auto max-w-container text-center flex flex-col items-center">
         <div className="bg-indigo-50/50 h-full p-24 rounded-xl relative">
           <div className="flex flex-col items-center gap-4 mb-16">
@@ -73,10 +69,10 @@ export function HowItWorks() {
           </div>
         </div>
         <div className="mx-auto max-w-[982px] -mt-32 relative z-10">
-          <MockupFrame size="small">
+          <MockupFrame size="small" className="bg-indigo-400/70">
             <Mockup type="responsive">
               <Image
-                src="/images/Embed.png"
+                src="/images/How-it-work.png"
                 alt="SelfAI Dashboard"
                 width={982}
                 height={982}
