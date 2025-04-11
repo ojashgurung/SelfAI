@@ -11,25 +11,25 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout, checkAuth, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/signin");
-      return;
-    }
+    if (isLoading) return; // Wait for checkAuth to finish
 
-    const preventAuthNavigation = () => {
-      router.replace("/dashboard");
+    const verifySession = async () => {
+      const isValid = await checkAuth();
+      if (!isValid) {
+        await logout();
+        router.replace("/signin");
+      }
     };
-
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", preventAuthNavigation);
+    verifySession();
+    const interval = setInterval(verifySession, 300000);
 
     return () => {
-      window.removeEventListener("popstate", preventAuthNavigation);
+      clearInterval(interval);
     };
-  }, [router, isAuthenticated]);
+  }, [router, checkAuth, logout, isLoading]);
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />

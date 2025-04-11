@@ -58,7 +58,7 @@ export function WidgetPreview() {
       }}
     >
       <div className="absolute bottom-4 right-4">
-        <ChatWidget embedded={false} />
+        <ChatWidget />
       </div>
     </div>
   );
