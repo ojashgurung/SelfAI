@@ -25,7 +25,7 @@ export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
 
   const handleShareClick = async () => {
     if (!user) {
-      router.push("/signin");
+      router.push("/auth/signin");
       return;
     }
     try {

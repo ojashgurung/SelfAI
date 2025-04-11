@@ -63,7 +63,7 @@ export function Sidebar() {
 
   const handleLogoutConfirm = () => {
     logout();
-    router.push("/signin");
+    router.push("/auth/signin");
     setShowLogoutDialog(false);
   };
 
