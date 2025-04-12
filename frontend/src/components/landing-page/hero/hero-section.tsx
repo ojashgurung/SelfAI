@@ -39,7 +39,7 @@ export function HeroSection() {
             professional presence.
           </p>
           <div className="flex gap-4 mt-8 z-12">
-            <Link href="/signup">
+            <Link href="/auth/signup">
               <Button
                 size="lg"
                 className="animate-appear opacity-0 delay-300 bg-indigo-600 hover:bg-indigo-700"

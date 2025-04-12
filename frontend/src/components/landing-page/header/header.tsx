@@ -102,7 +102,7 @@ export function Header() {
           </div>
         </div>
         <div className="flex justify-end w-full gap-4">
-          <Button
+          {/* <Button
             variant="outline"
             className="hidden md:inline"
             onClick={(e) => {
@@ -114,12 +114,18 @@ export function Header() {
             }}
           >
             Join Waitlist
-          </Button>
+          </Button> */}
           <div className="border-r hidden md:inline"></div>
-          {/* <Link href="/signin" className="flex justify-between items-center">
+          <Link
+            href="/auth/signin"
+            className="flex justify-between items-center"
+          >
             <Button variant="outline">Sign in</Button>
-          </Link> */}
-          <Link href="/signup" className="flex justify-between items-center ">
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="flex justify-between items-center "
+          >
             <Button className="bg-indigo-600 hover:bg-indigo-700">
               Get Started
             </Button>

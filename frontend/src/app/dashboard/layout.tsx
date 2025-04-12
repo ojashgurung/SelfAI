@@ -20,7 +20,7 @@ export default function DashboardLayout({
       const isValid = await checkAuth();
       if (!isValid) {
         await logout();
-        router.replace("/signin");
+        router.replace("/auth/signin");
       }
     };
     verifySession();
