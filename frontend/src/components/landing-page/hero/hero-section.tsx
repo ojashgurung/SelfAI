@@ -21,7 +21,7 @@ export function HeroSection() {
               New version Self AI is out!
             </span>
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="flex text-indigo-600 items-center gap-1"
             >
               Get started
