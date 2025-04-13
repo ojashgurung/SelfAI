@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from ..config import Config
 
 from fastapi import APIRouter, Depends, status, BackgroundTasks, Cookie
 from fastapi.exceptions import HTTPException
@@ -78,7 +79,7 @@ async def create_user_Account(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=False,
+            secure= Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=36000,
         )
@@ -87,7 +88,7 @@ async def create_user_Account(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=False,
+            secure= Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=172800,
         )
@@ -151,7 +152,7 @@ async def login_users(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=False,
+            secure=Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=36000,
         )
@@ -160,7 +161,7 @@ async def login_users(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=False,
+            secure=Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=172800,
         )
