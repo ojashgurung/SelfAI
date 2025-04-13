@@ -41,8 +41,10 @@ export default function DocumentPage() {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   useEffect(() => {
-    loadDocuments();
-  }, []);
+    if (user) {
+      loadDocuments();
+    }
+  }, [user]);
 
   const loadDocuments = async () => {
     try {

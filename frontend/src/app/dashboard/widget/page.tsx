@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { widgetService } from "@/lib/service/widget.service";
 import { useWidgetStore } from "@/context/use-widget-context";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function WidgetPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const {
     setTheme,
     setHeading,
@@ -24,29 +26,45 @@ export default function WidgetPage() {
   const [embedCode, setEmbedCode] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
     const fetchWidget = async () => {
+      if (!user) return;
+
       try {
         const response = await widgetService.getWidget();
         if (!response) {
-          router.push("/dashboard/widget/configuration");
+          if (isMounted) {
+            toast.error("No Widget exists", {
+              description: "Please create a widget to continue",
+            });
+            router.push("/dashboard/widget/configuration");
+          }
           return;
         }
-        setWidgetId(response.id);
-        setEmbedCode(
-          `<script src="https://selfai.io/widget.js" data-user-id="${response.user_id}"></script>`
-        );
+
+        if (isMounted) {
+          setWidgetId(response.id);
+          setEmbedCode(
+            `<script src="https://selfai.io/widget.js" data-user-id="${response.user_id}"></script>`
+          );
+        }
       } catch (error) {
-        toast.error("No Widget exists", {
-          description: "Please create a widget to continue",
-        });
-        router.push("/dashboard/widget/configuration");
+        if (isMounted) {
+          toast.error("Failed to load widget");
+          router.push("/dashboard/widget/configuration");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchWidget();
-  }, [router]);
+    return () => {
+      isMounted = false;
+    };
+  }, [router, user]);
 
   if (loading) {
     return <div>Loading...</div>;
