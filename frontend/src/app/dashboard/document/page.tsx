@@ -18,7 +18,6 @@ import {
   Filter,
   ArrowUpDown,
   Search,
-  Share2,
 } from "lucide-react";
 
 import {

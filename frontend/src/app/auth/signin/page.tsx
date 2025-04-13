@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/service/auth.service";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
+interface AuthError {
+  message: string;
+}
+
 export default function SigninPage() {
-  const id = useId();
   const router = useRouter();
   const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -45,9 +48,10 @@ export default function SigninPage() {
       } else {
         setError("Authentication failed. Please try again.");
       }
-    } catch (err: any) {
-      console.log(err.message);
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err as AuthError;
+      console.log(error.message);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +156,7 @@ export default function SigninPage() {
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground animate-appear">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link
           href="/auth/signup"
           className="text-indigo-600 hover:text-indigo-500"

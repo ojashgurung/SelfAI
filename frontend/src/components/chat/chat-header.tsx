@@ -15,7 +15,7 @@ interface ChatHeaderProps {
   session?: ChatSession;
 }
 
-export default function ChatHeader({ isPublic, session }: ChatHeaderProps) {
+export default function ChatHeader({ session }: ChatHeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);

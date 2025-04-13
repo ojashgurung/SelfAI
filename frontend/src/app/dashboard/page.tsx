@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 
 import {
   BellIcon,
-  ShareIcon,
   MoreHorizontal,
   CopyIcon,
   UserIcon,

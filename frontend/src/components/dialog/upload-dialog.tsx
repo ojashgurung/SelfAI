@@ -49,7 +49,7 @@ export function UploadDialog({
     setIsUploading(true);
     try {
       setUploadStatus("uploading");
-      const response = await DocumentService.uploadDocument(uploadedFile);
+      await DocumentService.uploadDocument(uploadedFile);
 
       setUploadStatus("training");
       toast.info("Document uploaded, waiting for training to complete...");
