@@ -36,7 +36,9 @@ export default function SigninPage() {
     }
 
     try {
+      console.log("Starting signin process");
       const response = await authService.signin({ email, password });
+      console.log("Signin response:", response);
       if (response.user) {
         setUser({
           id: response.user.id,
@@ -45,7 +47,14 @@ export default function SigninPage() {
           role: response.user.role,
         });
         console.log("User set in state");
-        window.location.href = "/dashboard";
+
+        console.log("Attempting navigation to dashboard");
+        try {
+          window.location.href = "/dashboard";
+          console.log("Navigation initiated");
+        } catch (navError) {
+          console.error("Navigation error:", navError);
+        }
       } else {
         setError("Authentication failed. Please try again.");
       }
