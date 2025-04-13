@@ -65,7 +65,7 @@ export const useAuth = create<AuthStore>()(
           if (data.valid && data.user) {
             set({
               user: {
-                id: data.user.user_id,
+                id: data.user.id,
                 email: data.user.email,
                 fullname: data.user.fullname,
                 role: data.user.role,
