@@ -33,7 +33,7 @@ export default function ChatHeader({ session }: ChatHeaderProps) {
       const session = await ChatService.getMasterSession();
 
       setCurrentShareUrl(
-        `${process.env.NEXT_PUBLIC_URL}/chat/public/${session.share_token}`
+        `${process.env.NEXT_PUBLIC_URL}/chat/public/${session?.share_token}`
       );
       setShareDialogOpen(true);
     } catch (error) {

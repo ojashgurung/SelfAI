@@ -64,7 +64,7 @@ export default function DocumentPage() {
       const session = await ChatService.getMasterSession();
 
       setCurrentShareUrl(
-        `${window.location.origin}/chat/public/${session.share_token}`
+        `${window.location.origin}/chat/public/${session?.share_token}`
       );
       setShareDialogOpen(true);
     } catch (error) {

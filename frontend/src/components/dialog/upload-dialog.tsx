@@ -57,9 +57,9 @@ export function UploadDialog({
       const masterSession = await ChatService.getMasterSession();
       toast.success("Document uploaded and trained successfully");
       setUploadedFile(null);
-      onSuccess?.({ session_id: masterSession.id });
+      masterSession && onSuccess?.({ session_id: masterSession.id });
       onOpenChange(false);
-      router.push(`/dashboard/chat/${masterSession.id}`);
+      masterSession && onSuccess?.({ session_id: masterSession.id });
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error("Failed to upload or train document");
