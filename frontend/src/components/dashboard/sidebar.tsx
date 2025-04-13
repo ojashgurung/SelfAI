@@ -55,8 +55,7 @@ export function Sidebar() {
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [isFetchingMaster, setIsFetchingMaster] = useState(false);
-  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   const handleLogoutClick = () => {
@@ -86,55 +85,46 @@ export function Sidebar() {
   };
 
   useEffect(() => {
-    const fetchMasterSession = async () => {
-      if (!user || isFetchingMaster || hasError) return;
-      setIsFetchingMaster(true);
+    let isMounted = true;
+
+    const fetchData = async () => {
+      if (!user || !user.id || isLoading) return;
+      setIsLoading(true);
 
       try {
-        console.log("Attempting to fetch master session...");
-        const session = await ChatService.getMasterSession();
-        console.log("Master session result:", session);
+        // Fetch both in parallel
+        const [masterResult, historyResult] = await Promise.all([
+          ChatService.getMasterSession(),
+          ChatService.getChatHistory(),
+        ]);
 
-        if (session) {
-          setMasterSession(session);
-        } else {
-          console.log("No master session available");
+        if (isMounted) {
+          setMasterSession(masterResult);
+          setChatHistory(historyResult || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        if (error instanceof Error && error.message.includes("Unauthorized")) {
+          router.push("/auth/signin");
+          return;
+        }
+        if (isMounted) {
           setMasterSession(null);
-        }
-      } catch (error) {
-        console.error("Failed to fetch master session:", error);
-        if (error instanceof Error && error.message.includes("Unauthorized")) {
-          router.push("/auth/signin");
+          setChatHistory([]);
         }
       } finally {
-        setIsFetchingMaster(false);
-      }
-    };
-    fetchMasterSession();
-  }, [user, router, isFetchingMaster, hasError]);
-
-  useEffect(() => {
-    const fetchChatHistory = async () => {
-      if (!user || isFetchingHistory) return;
-      setIsFetchingHistory(true);
-      try {
-        console.log("Fetching chat history...");
-        const data = await ChatService.getChatHistory();
-        console.log("Chat history received:", data?.length || 0, "sessions");
-        setChatHistory(data || []);
-      } catch (error) {
-        console.error("Failed to fetch chat history:", error);
-        if (error instanceof Error && error.message.includes("Unauthorized")) {
-          router.push("/auth/signin");
+        if (isMounted) {
+          setIsLoading(false);
         }
-        setChatHistory([]);
-      } finally {
-        setIsFetchingHistory(false);
       }
     };
 
-    fetchChatHistory();
-  }, [user, router, isFetchingHistory]);
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, router]);
 
   const menuItems = [
     { title: "Overview", icon: HomeIcon, href: "/dashboard" },
