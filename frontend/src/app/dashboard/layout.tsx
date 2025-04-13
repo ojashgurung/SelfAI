@@ -14,48 +14,48 @@ export default function DashboardLayout({
   const { logout, checkAuth, isLoading, authReady } = useAuth();
   const [isVerifying, setIsVerifying] = useState(true);
 
-  useEffect(() => {
-    if (!authReady) {
-      console.log("Auth not ready, waiting...");
-      return;
-    }
+  // useEffect(() => {
+  //   if (!authReady) {
+  //     console.log("Auth not ready, waiting...");
+  //     return;
+  //   }
 
-    const verifySession = async () => {
-      try {
-        setIsVerifying(true);
-        console.log("Verifying session");
-        const isValid = await checkAuth();
-        console.log("Session valid:", isValid);
+  //   const verifySession = async () => {
+  //     try {
+  //       setIsVerifying(true);
+  //       console.log("Verifying session");
+  //       const isValid = await checkAuth();
+  //       console.log("Session valid:", isValid);
 
-        if (!isValid) {
-          console.log("Session invalid, redirecting to signin");
-          await logout();
-          router.replace("/auth/signin");
-        } else {
-          console.log("Session valid, staying on dashboard");
-          setIsVerifying(false);
-        }
-      } catch (error) {
-        console.error("Session verification error:", error);
-        router.replace("/auth/signin");
-      }
-    };
+  //       if (!isValid) {
+  //         console.log("Session invalid, redirecting to signin");
+  //         await logout();
+  //         router.replace("/auth/signin");
+  //       } else {
+  //         console.log("Session valid, staying on dashboard");
+  //         setIsVerifying(false);
+  //       }
+  //     } catch (error) {
+  //       console.error("Session verification error:", error);
+  //       router.replace("/auth/signin");
+  //     }
+  //   };
 
-    // Initial check with delay
-    const initialCheck = setTimeout(verifySession, 100);
+  //   // Initial check with delay
+  //   const initialCheck = setTimeout(verifySession, 100);
 
-    // Periodic check
-    const interval = setInterval(verifySession, 300000);
+  //   // Periodic check
+  //   const interval = setInterval(verifySession, 300000);
 
-    return () => {
-      clearTimeout(initialCheck);
-      clearInterval(interval);
-    };
-  }, [router, checkAuth, logout, authReady]);
+  //   return () => {
+  //     clearTimeout(initialCheck);
+  //     clearInterval(interval);
+  //   };
+  // }, [router, checkAuth, logout, authReady]);
 
-  if (isVerifying) {
-    return <div>Verifying session...</div>;
-  }
+  // if (isVerifying) {
+  //   return <div>Verifying session...</div>;
+  // }
 
   return (
     <div className="flex h-screen bg-gray-50">
