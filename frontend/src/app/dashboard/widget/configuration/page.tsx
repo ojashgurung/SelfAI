@@ -13,6 +13,7 @@ import { getIconComponent } from "@/lib/utils/icon-mapping";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 function WidgetConfiguration() {
   const {
@@ -32,6 +33,7 @@ function WidgetConfiguration() {
     setSelectedPrompts,
   } = useWidgetStore();
 
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const widgetId = searchParams.get("id");
@@ -89,28 +91,34 @@ function WidgetConfiguration() {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const checkOrFetchWidget = async () => {
+      if (!user) return;
+
       try {
         if (widgetId) {
           const widget = await widgetService.getWidget();
 
-          if (!widget) {
+          if (!widget && isMounted) {
             toast.error("Widget not found", {
               description: "The widget you're trying to edit doesn't exist.",
             });
             router.push("/dashboard/widget/configuration");
             return;
           }
-          setTheme(widget?.theme as "light" | "dark");
-          setHeading(widget.heading);
-          setTitle(widget.title);
-          setSubTitle(widget.subtitle);
-          setColor(widget.color);
-          setSelectedPrompts(widget.prompts);
+
+          if (isMounted && widget) {
+            setTheme(widget.theme as "light" | "dark");
+            setHeading(widget.heading);
+            setTitle(widget.title);
+            setSubTitle(widget.subtitle);
+            setColor(widget.color);
+            setSelectedPrompts(widget.prompts);
+          }
         } else {
           // Create mode - check if widget exists
           const widget = await widgetService.getWidget();
-          if (widget) {
+          if (widget && isMounted) {
             toast.error("Widget exists", {
               description:
                 "You already have a live widget. Redirecting to your widget.",
@@ -119,14 +127,21 @@ function WidgetConfiguration() {
           }
         }
       } catch (error) {
-        // Handle error
+        if (isMounted) {
+          toast.error("Failed to load widget configuration");
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     checkOrFetchWidget();
-  }, [router, widgetId]);
+    return () => {
+      isMounted = false;
+    };
+  }, [router, widgetId, user]);
 
   if (isLoading) {
     return <div>Loading...</div>;

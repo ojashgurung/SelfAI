@@ -5,37 +5,52 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { widgetService } from "@/lib/service/widget.service";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AddToWebsitePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [embedCode, setEmbedCode] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
     const fetchWidget = async () => {
+      if (!user) return;
+
       try {
         const response = await widgetService.getWidget();
-        if (!response) {
+        if (!response && isMounted) {
+          toast.error("No Widget exists", {
+            description: "Please create a widget to continue",
+          });
           router.push("/dashboard/widget/configuration");
           return;
         }
 
-        setEmbedCode(
-          `<script src="https://selfai.io/widget.js" data-user-id="${response.user_id}"></script>`
-        );
+        if (isMounted) {
+          setEmbedCode(
+            `<script src="https://selfai.io/widget.js" data-user-id="${response?.user_id}"></script>`
+          );
+        }
       } catch (error) {
-        toast.error("No Widget exists", {
-          description: "Please create a widget to continue",
-        });
-        router.push("/dashboard/widget/configuration");
+        if (isMounted) {
+          toast.error("Failed to load widget");
+          router.push("/dashboard/widget/configuration");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchWidget();
-  }, [router]);
+    return () => {
+      isMounted = false;
+    };
+  }, [router, user]);
 
   const handleCopyCode = () => {
     setCopied(true);

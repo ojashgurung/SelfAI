@@ -16,6 +16,7 @@ export default function ChatInbox({
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm rounded-full border border-purple-100 shadow-lg p-2">
+
         <input
           value={inputMessage}
           onChange={(e) => onInputChange(e.target.value)}
