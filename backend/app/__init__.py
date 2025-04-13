@@ -1,4 +1,4 @@
-import os
+from .config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -48,9 +48,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    [
-        os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
-    ], 
+    allow_origins=Config.FRONTEND_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"], 
