@@ -1,7 +1,7 @@
 "use client";
 
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -11,51 +11,25 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { logout, checkAuth, isLoading, authReady } = useAuth();
-  const [isVerifying, setIsVerifying] = useState(true);
+  const { logout, checkAuth, isLoading } = useAuth();
 
-  // useEffect(() => {
-  //   if (!authReady) {
-  //     console.log("Auth not ready, waiting...");
-  //     return;
-  //   }
+  useEffect(() => {
+    if (isLoading) return;
 
-  //   const verifySession = async () => {
-  //     try {
-  //       setIsVerifying(true);
-  //       console.log("Verifying session");
-  //       const isValid = await checkAuth();
-  //       console.log("Session valid:", isValid);
+    const verifySession = async () => {
+      const isValid = await checkAuth();
+      if (!isValid) {
+        await logout();
+        router.replace("/signin");
+      }
+    };
+    verifySession();
+    const interval = setInterval(verifySession, 300000);
 
-  //       if (!isValid) {
-  //         console.log("Session invalid, redirecting to signin");
-  //         await logout();
-  //         router.replace("/auth/signin");
-  //       } else {
-  //         console.log("Session valid, staying on dashboard");
-  //         setIsVerifying(false);
-  //       }
-  //     } catch (error) {
-  //       console.error("Session verification error:", error);
-  //       router.replace("/auth/signin");
-  //     }
-  //   };
-
-  //   // Initial check with delay
-  //   const initialCheck = setTimeout(verifySession, 100);
-
-  //   // Periodic check
-  //   const interval = setInterval(verifySession, 300000);
-
-  //   return () => {
-  //     clearTimeout(initialCheck);
-  //     clearInterval(interval);
-  //   };
-  // }, [router, checkAuth, logout, authReady]);
-
-  // if (isVerifying) {
-  //   return <div>Verifying session...</div>;
-  // }
+    return () => {
+      clearInterval(interval);
+    };
+  }, [router, checkAuth, logout, isLoading]);
 
   return (
     <div className="flex h-screen bg-gray-50">

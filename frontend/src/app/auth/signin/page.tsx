@@ -10,10 +10,6 @@ import { authService } from "@/lib/service/auth.service";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
-interface AuthError {
-  message: string;
-}
-
 export default function SigninPage() {
   const router = useRouter();
   const { setUser } = useAuth();
@@ -36,9 +32,7 @@ export default function SigninPage() {
     }
 
     try {
-      console.log("Starting signin process");
       const response = await authService.signin({ email, password });
-      console.log("Signin response:", response);
       if (response.user) {
         setUser({
           id: response.user.id,
@@ -46,22 +40,13 @@ export default function SigninPage() {
           email: response.user.email,
           role: response.user.role,
         });
-        console.log("User set in state");
-
-        console.log("Attempting navigation to dashboard");
-        try {
-          window.location.href = "/dashboard";
-          console.log("Navigation initiated");
-        } catch (navError) {
-          console.error("Navigation error:", navError);
-        }
+        router.push("/dashboard");
       } else {
         setError("Authentication failed. Please try again.");
       }
-    } catch (err: unknown) {
-      console.error("Signin error:", err);
-      const error = err as AuthError;
-      setError(error.message);
+    } catch (err: any) {
+      console.log(err.message);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
