@@ -81,7 +81,7 @@ async def create_user_Account(
             httponly=True,
             secure=Config.ENVIRONMENT == "prod",
             samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
-            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            domain= None,
             max_age=36000,
         )
 
@@ -91,7 +91,7 @@ async def create_user_Account(
             httponly=True,
             secure=Config.ENVIRONMENT == "prod",
             samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
-            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            domain=None,
             max_age=172800,
         )
 
@@ -156,7 +156,7 @@ async def login_users(
             httponly=True,
             secure=Config.ENVIRONMENT == "prod",
             samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
-            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            domain= None,
             max_age=36000,
         )
 
@@ -166,7 +166,7 @@ async def login_users(
             httponly=True,
             secure=Config.ENVIRONMENT == "prod",
             samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
-            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            domain= None,
             max_age=172800,
         )
 
