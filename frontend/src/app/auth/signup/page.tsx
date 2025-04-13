@@ -53,7 +53,10 @@ export default function SignupPage() {
           email: response.user.email,
           role: response.user.role,
         });
-        router.push("/dashboard");
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 100);
       } else {
         setError("Registration failed. Please try again.");
       }

@@ -44,7 +44,10 @@ export default function SigninPage() {
           email: response.user.email,
           role: response.user.role,
         });
-        router.push("/dashboard");
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 100);
       } else {
         setError("Authentication failed. Please try again.");
       }

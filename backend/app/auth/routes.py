@@ -82,6 +82,7 @@ async def create_user_Account(
             secure= Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=36000,
+            domain=None
         )
 
         response.set_cookie(
@@ -91,6 +92,7 @@ async def create_user_Account(
             secure= Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=172800,
+            domain=None
         )
 
         return response
@@ -155,6 +157,7 @@ async def login_users(
             secure=Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=36000,
+            domain=None
         )
 
         response.set_cookie(
@@ -164,6 +167,7 @@ async def login_users(
             secure=Config.ENVIRONMENT == "prod",
             samesite="lax",
             max_age=172800,
+            domain=None
         )
 
 

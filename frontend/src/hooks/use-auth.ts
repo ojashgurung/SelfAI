@@ -56,6 +56,8 @@ export const useAuth = create<AuthStore>()(
             }
           );
 
+          console.log("Auth check response:", response.status);
+
           if (!response.ok) {
             set({
               user: null,
