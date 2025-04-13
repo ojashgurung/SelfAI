@@ -1,4 +1,5 @@
 import os
+from io import BytesIO
 import uuid
 from typing import Any
 import shutil
@@ -43,37 +44,37 @@ class RagService:
             raise UnsupportedFileType()
         
         # Create user directory
-        user_dir = os.path.join(self.upload_dir, user_id)
-        os.makedirs(user_dir, exist_ok=True)
+        # user_dir = os.path.join(self.upload_dir, user_id)
+        # os.makedirs(user_dir, exist_ok=True)
 
-        # # Save file permanently
-        secure_name = f"{uuid.uuid4().hex}_{file.filename}"
-        file_path = os.path.join(user_dir, secure_name)
+        # # # Save file permanently
+        # secure_name = f"{uuid.uuid4().hex}_{file.filename}"
+        # file_path = os.path.join(user_dir, secure_name)
         
-        content = await file.read() 
-
-        async with aiofiles.open(file_path, 'wb') as out_file:
-            await out_file.write(content)
         try:
+            content = await file.read()
+            
+            # Create a temporary BytesIO object
+            buffer = BytesIO(content)
+        # async with aiofiles.open(file_path, 'wb') as out_file:
+        #     await out_file.write(content)
+        
             if file_extension == '.pdf':
-                text = extract_text_from_pdf(file_path)
+                text = extract_text_from_pdf(buffer)
             elif file_extension == '.docx':
-                text = extract_text_from_docx(file_path)
+                text = extract_text_from_docx(buffer)
             elif file_extension in ['.md', '.html']:
-                text = extract_text_from_md_html(file_path)
+                text = extract_text_from_md_html(buffer)
             else:
                 raise UnsupportedFileType()
                 
-            await file.seek(0)
 
-            result: dict = await self.clean_and_chunk_text(text, secure_name, file.content_type, user_id)
-            result['file_path'] = file_path
+            result: dict = await self.clean_and_chunk_text(text, file.filename, file.content_type, user_id)
+            result['file_path'] = "in_memory"
             result['original_filename'] = file.filename
             return result
 
         except Exception as e:
-            if os.path.exists(file_path):
-                os.remove(file_path)
             raise e
             
 
