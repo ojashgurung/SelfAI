@@ -79,9 +79,10 @@ async def create_user_Account(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            secure=True,
+            samesite="none",
             domain= None,
+            path="/",
             max_age=36000,
         )
 
@@ -89,9 +90,10 @@ async def create_user_Account(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            secure=True,
+            samesite="none",
             domain=None,
+            path="/",
             max_age=172800,
         )
 
@@ -154,9 +156,10 @@ async def login_users(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            secure=True,
+            samesite="none",
             domain= None,
+            path="/",
             max_age=36000,
         )
 
@@ -164,9 +167,10 @@ async def login_users(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            secure=True,
+            samesite="none",
             domain= None,
+            path="/",
             max_age=172800,
         )
 
