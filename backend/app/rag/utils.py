@@ -7,7 +7,7 @@ from pdfminer.high_level import extract_text
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
 
 
 def extract_text_from_pdf(file_path: str) -> str:
@@ -71,23 +71,21 @@ def split_document(text, filename : str, file_type: str, user_id: str):
     
 
 def get_embedding(documents: List[Document]) -> List[dict]:
-    # Create embeddings for the document chunks
     embeddings = []
-    model = OllamaEmbeddings(model="nomic-embed-text")
+    model = OpenAIEmbeddings(model="text-embedding-3-small")
     for document in documents:
-        embedding = model.embed_documents(document.page_content)
+        vector = model.embed_documents([document.page_content])[0]
         embeddings.append({
             "id": document.metadata["chunk_id"],
-            "values": embedding[0],
+            "values": vector,
             "metadata": document.metadata
         })
     return embeddings
 
 def query_embedding(query: str):
-    # Create embeddings for the Query chunks
-    model = OllamaEmbeddings(model="nomic-embed-text")
+    model = OpenAIEmbeddings(model="text-embedding-3-small")
     query_embedding = {
-        "values": model.embed_query(query),
+        "values": model.embed_query(query)
     }
         
     return query_embedding
