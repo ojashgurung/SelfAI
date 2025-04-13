@@ -12,6 +12,7 @@ interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  authReady: boolean;
   setUser: (user: User) => void;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
@@ -23,6 +24,7 @@ export const useAuth = create<AuthStore>()(
       user: null,
       isAuthenticated: false,
       isLoading: true,
+      authReady: false,
       setUser: (user) => set({ user, isAuthenticated: true }),
 
       logout: async () => {
@@ -55,13 +57,23 @@ export const useAuth = create<AuthStore>()(
           );
 
           if (!response.ok) {
-            set({ user: null, isAuthenticated: false, isLoading: false });
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              authReady: true,
+            });
             return false;
           }
 
           const data = await response.json();
           if (!data.valid || !data.user) {
-            set({ user: null, isAuthenticated: false, isLoading: false });
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              authReady: true,
+            });
             return false;
           }
 
@@ -73,15 +85,17 @@ export const useAuth = create<AuthStore>()(
               role: data.user.role,
             },
             isAuthenticated: true,
+            isLoading: false,
+            authReady: true,
           });
           return true;
         } catch (error) {
           console.error("Auth check failed:", error);
 
-          set({ user: null, isAuthenticated: false });
+          set({ user: null, isAuthenticated: false, authReady: true });
           return false;
         } finally {
-          set({ isLoading: false });
+          set({ isLoading: false, authReady: true });
         }
       },
     }),
@@ -90,6 +104,7 @@ export const useAuth = create<AuthStore>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        authReady: state.authReady,
       }),
     }
   )

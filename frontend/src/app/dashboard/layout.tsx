@@ -11,15 +11,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { logout, checkAuth, isLoading } = useAuth();
+  const { logout, checkAuth, isLoading, authReady } = useAuth();
 
   useEffect(() => {
-    if (isLoading) return; // Wait for checkAuth to finish
+    if (!authReady) return;
 
     const verifySession = async () => {
       const isValid = await checkAuth();
       if (!isValid) {
-        await logout();
+        logout();
         router.replace("/auth/signin");
       }
     };
@@ -29,7 +29,7 @@ export default function DashboardLayout({
     return () => {
       clearInterval(interval);
     };
-  }, [router, checkAuth, logout, isLoading]);
+  }, [router, checkAuth, logout, isLoading, authReady]);
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
