@@ -12,8 +12,9 @@ import { toast } from "sonner";
 import { getIconComponent } from "@/lib/utils/icon-mapping";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function ConfigurationPage() {
+function WidgetConfiguration() {
   const {
     theme,
     heading,
@@ -349,5 +350,13 @@ export default function ConfigurationPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ConfigurationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <WidgetConfiguration />
+    </Suspense>
   );
 }

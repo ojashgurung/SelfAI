@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NavigationWrapper } from "@/components/landing-page/navigation-wrapper/navigarion-wrapper";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -14,13 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#4f46e5", // Tailwind's indigo-600
+};
+
 export const metadata: Metadata = {
   title: "SelfAI — Your AI-Powered Identity",
   description: "Create, share, and network with your personal AI.",
   icons: {
     icon: "/favicon.svg",
   },
-  themeColor: "#4f46e5", // Tailwind's indigo-600
 };
 
 export default function RootLayout({
