@@ -95,7 +95,7 @@ class RagService:
             
         extracted_texts = [
             match["metadata"].get("content", "") for match in answer["matches"]
-            if match.get("metadata") and match["metadata"].get("content")
+            if match.get("metadata") and match["metadata"].get("content")]
         
         
         if not extracted_texts:
