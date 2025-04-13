@@ -19,12 +19,6 @@ interface ChatSession {
   is_public: boolean;
 }
 
-interface ChatSessionData {
-  namespace: string;
-  title: string;
-  is_public: boolean;
-}
-
 export const ChatService = {
   async getMasterSession(): Promise<ChatSession> {
     const response = await fetch(`${CHAT_BASE_URL}/sessions/master`, {

@@ -11,7 +11,6 @@ import {
   GlobeIcon,
   UsersIcon,
   FileTextIcon,
-  FileIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   Search,
@@ -67,7 +66,7 @@ export function Sidebar() {
     setShowLogoutDialog(false);
   };
 
-  const handleJoinChat = async (shareToken: string) => {
+  const handleJoinChat = async () => {
     try {
       setShowShareDialog(false);
     } catch (error) {

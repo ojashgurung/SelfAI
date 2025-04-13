@@ -37,31 +37,30 @@ interface ChatBodyProps {
   onPromptClick?: (prompt: string) => void;
 }
 
-const useTypewriter = (text: string, speed: number = 40) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(true);
+// const useTypewriter = (text: string, speed: number = 40) => {
+//   const [displayedText, setDisplayedText] = useState("");
+//   const [isTyping, setIsTyping] = useState(true);
 
-  useEffect(() => {
-    let i = 0;
-    setIsTyping(true);
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText(text.substring(0, i + 1));
-        i++;
-      } else {
-        setIsTyping(false);
-        clearInterval(timer);
-      }
-    }, speed);
+//   useEffect(() => {
+//     let i = 0;
+//     setIsTyping(true);
+//     const timer = setInterval(() => {
+//       if (i < text.length) {
+//         setDisplayedText(text.substring(0, i + 1));
+//         i++;
+//       } else {
+//         setIsTyping(false);
+//         clearInterval(timer);
+//       }
+//     }, speed);
 
-    return () => clearInterval(timer);
-  }, [text, speed]);
+//     return () => clearInterval(timer);
+//   }, [text, speed]);
 
-  return { displayedText, isTyping };
-};
+//   return { displayedText, isTyping };
+// };
 
 export default function ChatBody({
-  isPublic,
   session,
   messages,
   isLoading,

@@ -9,6 +9,15 @@ import { authService } from "@/lib/service/auth.service";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
+interface AuthError {
+  response?: {
+    data?: {
+      detail?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const { setUser } = useAuth();
@@ -49,8 +58,11 @@ export default function SignupPage() {
         setError("Registration failed. Please try again.");
       }
     } catch (err: any) {
+      const error = err as AuthError;
       const errorMessage =
-        err.response?.data?.detail || err.message || "Failed to create account";
+        error.response?.data?.detail ||
+        error.message ||
+        "Failed to create account";
       setError(errorMessage);
     } finally {
       setIsLoading(false);

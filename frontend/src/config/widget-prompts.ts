@@ -1,12 +1,3 @@
-import {
-  GraduationCap,
-  Mail,
-  FileCode,
-  Briefcase,
-  Code,
-  FolderGit2,
-} from "lucide-react";
-
 import { WidgetPromptProps } from "@/types/widget";
 
 export const widgetPrompts: WidgetPromptProps[] = [

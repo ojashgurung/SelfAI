@@ -5,7 +5,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, X } from "lucide-react";
 import { useState } from "react";
 
 interface ShareDialogProps {
