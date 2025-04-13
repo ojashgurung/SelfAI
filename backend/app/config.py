@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
     JWT_SECRET: str
     JWT_ALGORITHM: str
     PINECONE_API_KEY : str
-    FRONTEND_ORIGIN: str
+    FRONTEND_ORIGINS: List[str]
     OPENAI_API_KEY: str
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
