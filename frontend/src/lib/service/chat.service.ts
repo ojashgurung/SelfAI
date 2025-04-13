@@ -20,39 +20,79 @@ interface ChatSession {
 }
 
 export const ChatService = {
-  async getMasterSession(): Promise<ChatSession> {
-    const response = await fetch(`${CHAT_BASE_URL}/sessions/master`, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  async getMasterSession(): Promise<ChatSession | null> {
+    try {
+      const response = await fetch(`${CHAT_BASE_URL}/sessions/master`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error("Unauthorized. Please login again.");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Master session error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
+
+        if (response.status === 401) {
+          throw new Error("Unauthorized. Please login again.");
+        }
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(
+          `Failed to fetch master session: ${response.statusText}`
+        );
       }
-      throw new Error("Failed to fetch master session");
-    }
 
-    return response.json();
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Master session fetch error:", error);
+      throw error;
+    }
   },
 
   async getChatHistory(): Promise<ChatSession[]> {
-    const response = await fetch(`${CHAT_BASE_URL}/sessions/history`, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+      const response = await fetch(`${CHAT_BASE_URL}/sessions/history`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error("Unauthorized. Please login again.");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Chat history error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
+
+        if (response.status === 401) {
+          throw new Error("Unauthorized. Please login again.");
+        }
+        if (response.status === 404) {
+          return [];
+        }
+        throw new Error(
+          `Failed to fetch chat history: ${errorText || response.statusText}`
+        );
       }
-      throw new Error("Failed to fetch chat history");
-    }
 
-    return response.json();
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Chat history fetch error:", error);
+      throw error;
+    }
   },
 };

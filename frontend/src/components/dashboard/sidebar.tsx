@@ -84,32 +84,53 @@ export function Sidebar() {
 
   useEffect(() => {
     const fetchMasterSession = async () => {
+      if (!user) return;
       if (user) {
         try {
+          console.log("Attempting to fetch master session...");
           const session = await ChatService.getMasterSession();
-          setMasterSession(session);
+          console.log("Master session result:", session);
+
+          if (session) {
+            setMasterSession(session);
+          } else {
+            console.log("No master session available");
+            setMasterSession(null);
+          }
         } catch (error) {
           console.error("Failed to fetch master session:", error);
+          if (
+            error instanceof Error &&
+            error.message.includes("Unauthorized")
+          ) {
+            router.push("/auth/signin");
+          }
         }
       }
     };
     fetchMasterSession();
-  }, [user]);
+  }, [user, router]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
-      try {
-        const data = await ChatService.getChatHistory();
+      if (!user) return;
 
-        setChatHistory(data);
+      try {
+        console.log("Fetching chat history...");
+        const data = await ChatService.getChatHistory();
+        console.log("Chat history received:", data?.length || 0, "sessions");
+        setChatHistory(data || []);
       } catch (error) {
         console.error("Failed to fetch chat history:", error);
+        if (error instanceof Error && error.message.includes("Unauthorized")) {
+          router.push("/auth/signin");
+        }
+        setChatHistory([]);
       }
     };
-    if (user) {
-      fetchChatHistory();
-    }
-  }, [user]);
+
+    fetchChatHistory();
+  }, [user, router]);
 
   const menuItems = [
     { title: "Overview", icon: HomeIcon, href: "/dashboard" },
@@ -131,24 +152,32 @@ export function Sidebar() {
       title: "Create Widget",
       icon: LayoutTemplate,
       href: masterSession?.id ? "/dashboard/widget" : "/dashboard/document",
-      onClick: () => {
+      onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!masterSession?.id) {
+          e.preventDefault();
           toast.error(
             "Please upload and train a document before creating a widget"
           );
+          return;
         }
+        e.preventDefault(); // Prevent default even for valid navigation
+        router.push("/dashboard/widget");
       },
     },
     {
       title: "Own Trained Chat",
       icon: UsersIcon,
       href: masterSession?.id
-        ? `/dashboard/chat/${masterSession?.id}`
+        ? `/dashboard/chat/${masterSession.id}`
         : "/dashboard/document",
-      onClick: () => {
+      onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!masterSession?.id) {
+          e.preventDefault();
           toast.error("Please upload and train a document first");
+          return;
         }
+        e.preventDefault();
+        router.push(`/dashboard/chat/${masterSession.id}`);
       },
     },
   ];
@@ -225,17 +254,28 @@ export function Sidebar() {
                   ) : (
                     <Link
                       href={item.href}
+                      onClick={item.onClick}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 transition-all duration-200 ease-in-out",
-                        pathname === item.href &&
+                        (pathname === item.href ||
+                          (!masterSession?.id &&
+                            item.href === "/dashboard/document" &&
+                            ["/dashboard/widget", "/dashboard/chat"].some((p) =>
+                              pathname.startsWith(p)
+                            ))) &&
                           "p-3 bg-indigo-50 text-indigo-600 font-bold"
                       )}
                     >
                       <item.icon
                         className={cn(
                           "w-5 h-5 transition duration-200",
-                          pathname === item.href &&
-                            "w-6 h-6 text-indigo-600 font-bold "
+                          (pathname === item.href ||
+                            (!masterSession?.id &&
+                              item.href === "/dashboard/document" &&
+                              ["/dashboard/widget", "/dashboard/chat"].some(
+                                (p) => pathname.startsWith(p)
+                              ))) &&
+                            "w-6 h-6 text-indigo-600 font-bold"
                         )}
                       />
                       {item.title}
