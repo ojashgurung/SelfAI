@@ -5,7 +5,8 @@ import shutil
 import aiofiles
 from fastapi import UploadFile
 from langchain.prompts import ChatPromptTemplate
-from langchain_ollama.llms import OllamaLLM
+from langchain_openai import ChatOpenAI
+
 
 from .utils import (
     clean_text,
@@ -89,9 +90,17 @@ class RagService:
         return await get_query_pinecone(query_embeddings, namespace)
     
     async def handle_answer(self, answer):
+        if not answer or not answer.get("matches"):
+            return "No relevant information found in the documents."
+            
         extracted_texts = [
             match["metadata"].get("content", "") for match in answer["matches"]
-        ]
+            if match.get("metadata") and match["metadata"].get("content")
+        
+        
+        if not extracted_texts:
+            return "No readable content found in the matched documents."
+            
         return "\n\n".join(extracted_texts)
     
     async def query_llm(self, retrieved_text: str, user_query: str): 
@@ -124,14 +133,10 @@ class RagService:
             question=user_query
         )
 
-        # Use Ollama model
-        model = OllamaLLM(model="mistral", temperature=0.7)
+        model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
 
-        # Call the model with formatted messages
-        print(messages)
-        response_text = model.invoke(messages)
-
-        return response_text
+        response = model.invoke(messages)
+        return response.content
     
     async def check_namespace_exists(self, namespace: str) -> bool:
         return await check_namespace_exists(namespace)

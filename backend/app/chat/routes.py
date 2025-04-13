@@ -5,16 +5,14 @@ from typing import List, Optional
 from uuid import UUID
 from qrcode import QRCode
 from fastapi.responses import StreamingResponse
+from langchain_core.messages import AIMessage
+from app.database.models import ChatMessages
 from io import BytesIO
 
 from ..database.db import get_session
-from ..auth.dependencies import get_current_user
 from ..database.models import Users
 from .service import ChatService
 from .schemas import (
-    ChatSessionCreate,
-    ChatSessionRead,
-    ChatSessionUpdate,
     ChatSessionWithMessages,
     MessageCreate,
     MessageRead
@@ -31,28 +29,6 @@ access_token_bearer = AccessTokenBearer(auto_error=False)
 async def get_rag_service():
     return RagService()
 
-# @chat_router.post("/sessions", response_model=ChatSessionRead)
-# async def create_chat_session(
-#     session_data: ChatSessionCreate,
-#     current_user: dict = Depends(strict_token_bearer),
-#     rag_service: RagService = Depends(get_rag_service),
-#     db_session: AsyncSession = Depends(get_session),
-# ):
-#     if not current_user:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Authentication required to create a chat session"
-#         )
-    
-#     namespace_exists = await rag_service.check_namespace_exists(session_data.namespace)
-#     if not namespace_exists:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="No documents found in this namespace. Please upload documents first."
-#         )
-
-#     return await chat_service.create_session(session_data, current_user, rag_service, db_session)
-
 @chat_router.post("/sessions/{session_id}/messages", response_model=MessageRead)
 async def send_message(
     session_id: UUID,
@@ -61,33 +37,44 @@ async def send_message(
     rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session)
 ):  
-    user_id = current_user["user"]["id"] if current_user else None
+    try:
+        user_id = current_user["user"]["id"] if current_user else None
 
-    session = await chat_service.get_session(session_id, db_session)
-    if not session:
-        raise HTTPException(status_code=404, detail="Chat session not found")
-        
-    # Handle authenticated access
-    if not current_user:
-        if not message.share_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Share token is required for public access"
-            )
-        template_session = await chat_service.get_session_by_token(message.share_token, db_session)
-        if not template_session or not template_session.is_public:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid share token or unauthorized access"
-            )
+        session = await chat_service.get_session(session_id, db_session)
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+            
+        # Handle authenticated access
+        if not current_user:
+            if not message.share_token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Share token is required for public access"
+                )
+            template_session = await chat_service.get_session_by_token(message.share_token, db_session)
+            if not template_session or not template_session.is_public:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Invalid share token or unauthorized access"
+                )
 
-    return await chat_service.process_message(
-        session_id,
-        message,
-        user_id,
-        rag_service,
-        db_session
-    )
+
+        # Get AI response
+        ai_msg = await chat_service.process_message(
+            session_id,
+            message,
+            user_id,
+            rag_service,
+            db_session
+        )
+        return MessageRead.model_validate(ai_msg)
+
+    except Exception as e:
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 @chat_router.get("/public/{share_token}", response_model=ChatSessionWithMessages)
 async def get_public_chat_session(

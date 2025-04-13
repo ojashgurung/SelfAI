@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..database.models import Documents, ChatSessions, ChatMessages
 from ..database.db import get_session
-from ..errors import NoSourceProvided, NoQueryProvided
+from ..errors import NoSourceProvided
 from .service import RagService
 from ..chat.service import ChatService
 from ..auth.dependencies import AccessTokenBearer
@@ -12,10 +12,6 @@ from sqlmodel import select, delete
 from ..vector_store.vector_db import (
     delete_vectors
 ) 
-
-from .schemas import (
-    QueryRequest
-)
 
 from ..chat.schemas import (
     ChatSessionCreate
@@ -234,28 +230,3 @@ async def delete_document(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete vectors: {str(e)}"
         )
-
-
-@rag_router.post("/query", status_code=status.HTTP_201_CREATED)
-async def query_rag(
-    query: QueryRequest,
-    current_user: dict = Depends(access_token_bearer)
-    # Later: Upload Chat history in Postgresql DB
-): 
-    user_id = current_user["user"]["id"]
-    user_query = query.question
-    
-    if not user_query:
-        raise NoQueryProvided()
-    
-    if user_query:
-        response = await rag_service.handle_query(user_query, user_id)
-
-        if response:
-            retrieve_text = await rag_service.handle_answer(response)
-            answer = await rag_service.query_llm(retrieve_text, user_query)
-
-    return {
-        "message": "Response back successfully", 
-        "response" : answer
-    } 
