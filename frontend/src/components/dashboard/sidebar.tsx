@@ -55,7 +55,8 @@ export function Sidebar() {
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingMaster, setIsFetchingMaster] = useState(false);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   const handleLogoutClick = () => {
@@ -86,8 +87,8 @@ export function Sidebar() {
 
   useEffect(() => {
     const fetchMasterSession = async () => {
-      if (!user || isLoading || hasError) return;
-      setIsLoading(true);
+      if (!user || isFetchingMaster || hasError) return;
+      setIsFetchingMaster(true);
 
       try {
         console.log("Attempting to fetch master session...");
@@ -106,16 +107,16 @@ export function Sidebar() {
           router.push("/auth/signin");
         }
       } finally {
-        setIsLoading(false);
+        setIsFetchingMaster(false);
       }
     };
     fetchMasterSession();
-  }, [user, router, isLoading, hasError]);
+  }, [user, router, isFetchingMaster, hasError]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
-      if (!user || isLoading) return;
-      setIsLoading(true);
+      if (!user || isFetchingHistory) return;
+      setIsFetchingHistory(true);
       try {
         console.log("Fetching chat history...");
         const data = await ChatService.getChatHistory();
@@ -128,12 +129,12 @@ export function Sidebar() {
         }
         setChatHistory([]);
       } finally {
-        setIsLoading(false);
+        setIsFetchingHistory(false);
       }
     };
 
     fetchChatHistory();
-  }, [user, router, isLoading]);
+  }, [user, router, isFetchingHistory]);
 
   const menuItems = [
     { title: "Overview", icon: HomeIcon, href: "/dashboard" },
