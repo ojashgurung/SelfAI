@@ -11,49 +11,32 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isVerifying, setIsVerifying] = useState(true);
+  const [verified, setVerified] = useState(false);
   const { logout, checkAuth, isLoading } = useAuth();
 
   useEffect(() => {
-    let isMounted = true;
-
-    if (isLoading) return;
-
-    const verifySession = async () => {
-      try {
-        if (!isMounted) return;
-
-        const isValid = await checkAuth();
-
-        if (!isValid && isMounted) {
-          await logout();
-          router.replace("/auth/signin");
-          return;
-        }
-
-        if (isMounted) {
-          setIsVerifying(false);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error("Session verification failed:", error);
-          router.replace("/auth/signin");
-        }
+    const verify = async () => {
+      const isValid = await checkAuth();
+      if (!isValid) {
+        await logout();
+        router.replace("/auth/signin");
+      } else {
+        setVerified(true);
       }
     };
 
-    verifySession();
+    verify();
 
-    const interval = setInterval(verifySession, 5 * 60 * 1000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    const interval = setInterval(verify, 5 * 60 * 1000); // 5 mins
+    return () => clearInterval(interval);
   }, [checkAuth, logout, router]);
 
-  if (isVerifying) {
-    return <div>Loading...</div>;
+  if (!verified && isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading dashboard...
+      </div>
+    );
   }
   return (
     <div className="flex h-screen bg-gray-50">

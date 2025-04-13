@@ -34,9 +34,6 @@ export const useAuth = create<AuthStore>()(
               credentials: "include",
             }
           );
-          if (!response.ok) {
-            throw new Error("Logout failed");
-          }
         } catch (error) {
           console.error("Logout failed:", error);
         } finally {
@@ -44,9 +41,8 @@ export const useAuth = create<AuthStore>()(
         }
       },
       checkAuth: async () => {
-        if (get().isLoading === false) {
-          set({ isLoading: true });
-        }
+        set({ isLoading: true });
+
         try {
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-token`,
@@ -55,13 +51,10 @@ export const useAuth = create<AuthStore>()(
             }
           );
 
-          if (!response.ok) {
-            set({ user: null, isAuthenticated: false, isLoading: false });
-            return false;
-          }
+          if (!response.ok) throw new Error("Unauthorized");
 
           const data = await response.json();
-          set({ isLoading: false });
+
           if (data.valid && data.user) {
             set({
               user: {
@@ -71,6 +64,7 @@ export const useAuth = create<AuthStore>()(
                 role: data.user.role,
               },
               isAuthenticated: true,
+              isLoading: false,
             });
             return true;
           }
