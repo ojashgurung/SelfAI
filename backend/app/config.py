@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     PINECONE_API_KEY : str
     FRONTEND_ORIGINS: List[str]
     OPENAI_API_KEY: str
-    ENVIRONMENT: str
+    ENVIRONMENT: str = "dev"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

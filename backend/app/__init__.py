@@ -48,7 +48,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://selfai.tech", "https://www.selfai.tech", "http://localhost:3000"],
+    allow_origins=Config.FRONTEND_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"], 
