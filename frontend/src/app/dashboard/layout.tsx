@@ -15,40 +15,42 @@ export default function DashboardLayout({
   const { logout, checkAuth, isLoading } = useAuth();
 
   useEffect(() => {
-    if (isLoading) {
-      console.log("Loading auth state...");
-      return;
-    }
+    let isMounted = true;
+
+    if (isLoading) return;
 
     const verifySession = async () => {
       try {
-        setIsVerifying(true);
+        if (!isMounted) return;
+
         const isValid = await checkAuth();
 
-        if (!isValid) {
-          console.log("Invalid session, redirecting to signin");
+        if (!isValid && isMounted) {
           await logout();
           router.replace("/auth/signin");
-        } else {
+          return;
+        }
+
+        if (isMounted) {
           setIsVerifying(false);
         }
       } catch (error) {
-        console.error("Session verification failed:", error);
-        router.replace("/auth/signin");
+        if (isMounted) {
+          console.error("Session verification failed:", error);
+          router.replace("/auth/signin");
+        }
       }
     };
 
-    // Initial verification with delay
-    const initialCheck = setTimeout(verifySession, 500);
+    verifySession();
 
-    // Periodic verification
-    const interval = setInterval(verifySession, 300000);
+    const interval = setInterval(verifySession, 5 * 60 * 1000);
 
     return () => {
-      clearTimeout(initialCheck);
+      isMounted = false;
       clearInterval(interval);
     };
-  }, [router, checkAuth, logout, isLoading]);
+  }, [checkAuth, logout, router, isLoading]);
 
   if (isVerifying) {
     return <div>Loading...</div>;
