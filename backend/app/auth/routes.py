@@ -79,20 +79,20 @@ async def create_user_Account(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure= Config.ENVIRONMENT == "prod",
-            samesite="lax",
+            secure=Config.ENVIRONMENT == "prod",
+            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
             max_age=36000,
-            domain="selfai.tech"
         )
 
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure= Config.ENVIRONMENT == "prod",
-            samesite="lax",
+            secure=Config.ENVIRONMENT == "prod",
+            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
             max_age=172800,
-            domain="selfai.tech"
         )
 
         return response
@@ -155,9 +155,9 @@ async def login_users(
             value=access_token,
             httponly=True,
             secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
+            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
             max_age=36000,
-            domain="selfai.tech"
         )
 
         response.set_cookie(
@@ -165,9 +165,9 @@ async def login_users(
             value=refresh_token,
             httponly=True,
             secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
+            samesite="none" if Config.ENVIRONMENT == "prod" else "lax",
+            domain="selfai.tech" if Config.ENVIRONMENT == "prod" else None,
             max_age=172800,
-            domain="selfai.tech"
         )
 
 
