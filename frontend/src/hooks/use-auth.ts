@@ -25,7 +25,8 @@ export const useAuth = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: true,
       authReady: false,
-      setUser: (user) => set({ user, isAuthenticated: true }),
+      setUser: (user) =>
+        set({ user, isAuthenticated: true, authReady: true, isLoading: false }),
 
       logout: async () => {
         try {
@@ -34,42 +35,46 @@ export const useAuth = create<AuthStore>()(
             {
               method: "POST",
               credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
             }
           );
           if (!response.ok) {
             throw new Error("Logout failed");
           }
-
-          set({ user: null, isAuthenticated: false });
         } catch (error) {
           console.error("Logout failed:", error);
-          set({ user: null, isAuthenticated: false });
+        } finally {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            authReady: true,
+          });
         }
       },
       checkAuth: async () => {
+        if (get().isLoading) {
+          console.log("Already checking auth, skipping");
+          return get().isAuthenticated;
+        }
         try {
           set({ isLoading: true });
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-token`,
             {
               credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
             }
           );
 
           console.log("Auth check response:", response.status);
-
-          if (!response.ok) {
-            set({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false,
-              authReady: true,
-            });
-            return false;
-          }
-
           const data = await response.json();
-          if (!data.valid || !data.user) {
+
+          if (!response.ok || !data.valid || !data.user) {
             set({
               user: null,
               isAuthenticated: false,
@@ -80,12 +85,7 @@ export const useAuth = create<AuthStore>()(
           }
 
           set({
-            user: {
-              id: data.user.id,
-              email: data.user.email,
-              fullname: data.user.fullname,
-              role: data.user.role,
-            },
+            user: data.user,
             isAuthenticated: true,
             isLoading: false,
             authReady: true,
@@ -94,10 +94,13 @@ export const useAuth = create<AuthStore>()(
         } catch (error) {
           console.error("Auth check failed:", error);
 
-          set({ user: null, isAuthenticated: false, authReady: true });
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            authReady: true,
+          });
           return false;
-        } finally {
-          set({ isLoading: false, authReady: true });
         }
       },
     }),
@@ -106,7 +109,6 @@ export const useAuth = create<AuthStore>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-        authReady: state.authReady,
       }),
     }
   )
