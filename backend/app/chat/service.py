@@ -137,7 +137,7 @@ class ChatService:
         user_id : Optional[UUID],
         rag_service: RagService,
         db_session: AsyncSession
-    ) -> ChatMessages:
+    ) -> dict:
         # Get chat session
         session = await self.get_session(session_id, db_session)
         if not session:
@@ -149,35 +149,50 @@ class ChatService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to access this chat"
             )
-        # Save user message
-        user_message = ChatMessages(
+
+        user_msg = ChatMessages(
             session_id=session_id,
             role="user",
             user_id=user_id,
             content=message_data.content
         )
-        db_session.add(user_message)
+        db_session.add(user_msg)
+        await db_session.commit()
 
         # Get AI response using RAG
         response = await rag_service.handle_query(message_data.content, session.namespace)
         if response:
             retrieve_text = await rag_service.handle_answer(response)
             ai_response = await rag_service.query_llm(retrieve_text, message_data.content)
+            
+            if hasattr(ai_response, 'content'):
+                response_content = ai_response.content
+            elif isinstance(ai_response, dict) and 'content' in ai_response:
+                response_content = ai_response['content']
+            elif hasattr(ai_response, 'message'):
+                response_content = ai_response.message.content
+            else:
+                response_content = str(ai_response)
         else:
-            ai_response = "I couldn't find relevant information to answer your question."
-        
-        # Create AI response
+            response_content = "I couldn't find relevant information to answer your question."
+
         ai_message = ChatMessages(
             session_id=session_id,
             role="assistant",
             user_id=user_id,
-            content=ai_response
+            content=response_content
         )
         db_session.add(ai_message)
-
         await db_session.commit()
         await db_session.refresh(ai_message)
-        return ai_message
+        return {
+            "id": ai_message.id,
+            "session_id": ai_message.session_id,
+            "user_id": ai_message.user_id,
+            "role": ai_message.role,
+            "content": ai_message.content,
+            "created_at": ai_message.created_at
+        }
 
     async def get_master_session(
         self,
