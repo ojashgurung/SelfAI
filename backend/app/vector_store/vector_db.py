@@ -8,18 +8,12 @@ from pinecone import Vector
 
 INDEX_NAME = "selfai"
 pc = Pinecone(api_key=Config.PINECONE_API_KEY)
-index = pc.Index(INDEX_NAME)
-
-class EmbeddingDict(TypedDict):
-    id: str
-    values: list[float]
-    metadata: dict[str, Any]
 
 def create_index_if_not_exists():
     if not pc.has_index(INDEX_NAME):
         pc.create_index(
             name=INDEX_NAME,
-            dimension=768,
+            dimension=1536,
             metric="cosine",
             spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             deletion_protection="disabled",
@@ -28,6 +22,17 @@ def create_index_if_not_exists():
         print(f"Index {INDEX_NAME} has been created.")
     else:
         print(f"Index {INDEX_NAME} already exists.")
+
+
+create_index_if_not_exists()
+
+index = pc.Index(INDEX_NAME)
+
+class EmbeddingDict(TypedDict):
+    id: str
+    values: list[float]
+    metadata: dict[str, Any]
+
 
 
 async def upsert_to_pinecone(embeddings: List[EmbeddingDict], namespace: str) -> dict[str, Any]:
@@ -85,7 +90,7 @@ async def check_namespace_exists(namespace: str) -> bool:
     try:
         result = await asyncio.to_thread(
             index.query,
-            vector=[0.0] * 768,
+            vector=[0.0] * 1536,
             namespace=namespace,
             top_k=1,
             include_metadata=False
