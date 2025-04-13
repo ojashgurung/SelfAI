@@ -53,19 +53,13 @@ export default function SignupPage() {
           email: response.user.email,
           role: response.user.role,
         });
-        setTimeout(() => {
-          router.push("/dashboard");
-          router.refresh();
-        }, 100);
+        router.push("/dashboard");
       } else {
         setError("Registration failed. Please try again.");
       }
     } catch (err: any) {
-      const error = err as AuthError;
       const errorMessage =
-        error.response?.data?.detail ||
-        error.message ||
-        "Failed to create account";
+        err.response?.data?.detail || err.message || "Failed to create account";
       setError(errorMessage);
     } finally {
       setIsLoading(false);

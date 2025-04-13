@@ -12,7 +12,6 @@ interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  authReady: boolean;
   setUser: (user: User) => void;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
@@ -23,10 +22,8 @@ export const useAuth = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isLoading: true,
-      authReady: false,
-      setUser: (user) =>
-        set({ user, isAuthenticated: true, authReady: true, isLoading: false }),
+      isLoading: false,
+      setUser: (user) => set({ user, isAuthenticated: true }),
 
       logout: async () => {
         try {
@@ -35,72 +32,54 @@ export const useAuth = create<AuthStore>()(
             {
               method: "POST",
               credentials: "include",
-              headers: {
-                Accept: "application/json",
-              },
             }
           );
           if (!response.ok) {
             throw new Error("Logout failed");
           }
+
+          set({ user: null, isAuthenticated: false });
         } catch (error) {
           console.error("Logout failed:", error);
-        } finally {
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            authReady: true,
-          });
+          set({ user: null, isAuthenticated: false });
         }
       },
       checkAuth: async () => {
-        if (get().isLoading) {
-          console.log("Already checking auth, skipping");
-          return get().isAuthenticated;
-        }
         try {
           set({ isLoading: true });
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-token`,
             {
               credentials: "include",
-              headers: {
-                Accept: "application/json",
-              },
             }
           );
 
-          console.log("Auth check response:", response.status);
-          const data = await response.json();
-
-          if (!response.ok || !data.valid || !data.user) {
-            set({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false,
-              authReady: true,
-            });
+          if (!response.ok) {
+            set({ user: null, isAuthenticated: false });
             return false;
           }
 
-          set({
-            user: data.user,
-            isAuthenticated: true,
-            isLoading: false,
-            authReady: true,
-          });
-          return true;
+          const data = await response.json();
+          if (data.valid && data.user) {
+            set({
+              user: {
+                id: data.user.user_id,
+                email: data.user.email,
+                fullname: data.user.fullname,
+                role: data.user.role,
+              },
+              isAuthenticated: true,
+            });
+            return true;
+          }
+          return false;
         } catch (error) {
           console.error("Auth check failed:", error);
 
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            authReady: true,
-          });
+          set({ user: null, isAuthenticated: false });
           return false;
+        } finally {
+          set({ isLoading: false });
         }
       },
     }),
