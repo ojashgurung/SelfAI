@@ -44,16 +44,14 @@ export default function SigninPage() {
           email: response.user.email,
           role: response.user.role,
         });
-        setTimeout(() => {
-          router.push("/dashboard");
-          router.refresh();
-        }, 100);
+        console.log("User set in state");
+        window.location.href = "/dashboard";
       } else {
         setError("Authentication failed. Please try again.");
       }
     } catch (err: unknown) {
+      console.error("Signin error:", err);
       const error = err as AuthError;
-      console.log(error.message);
       setError(error.message);
     } finally {
       setIsLoading(false);

@@ -17,10 +17,13 @@ export default function DashboardLayout({
     if (!authReady) return;
 
     const verifySession = async () => {
+      console.log("Verifying session");
       const isValid = await checkAuth();
+      console.log("Session valid:", isValid);
       if (!isValid) {
+        console.log("Session invalid, redirecting to signin");
         logout();
-        router.replace("/auth/signin");
+        window.location.href = "/auth/signin";
       }
     };
     verifySession();
