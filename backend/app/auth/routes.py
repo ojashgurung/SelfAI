@@ -282,13 +282,19 @@ async def logout():
         response.delete_cookie(
             key="access_token",
             httponly=True,
-            samesite="lax"
+            secure=Config.ENVIRONMENT == "prod",
+            samesite="lax",
+            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            path="/",
         )
         
         response.delete_cookie(
             key="refresh_token",
             httponly=True,
-            samesite="lax"
+            secure=Config.ENVIRONMENT == "prod",
+            samesite="lax",
+            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            path="/",
         )
         
         return response
