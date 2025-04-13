@@ -50,7 +50,7 @@ export default function DashboardLayout({
       isMounted = false;
       clearInterval(interval);
     };
-  }, [checkAuth, logout, router, isLoading]);
+  }, [checkAuth, logout, router]);
 
   if (isVerifying) {
     return <div>Loading...</div>;

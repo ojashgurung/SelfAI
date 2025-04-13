@@ -22,7 +22,7 @@ export const useAuth = create<AuthStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       setUser: (user) => set({ user, isAuthenticated: true }),
 
       logout: async () => {
@@ -37,16 +37,17 @@ export const useAuth = create<AuthStore>()(
           if (!response.ok) {
             throw new Error("Logout failed");
           }
-
-          set({ user: null, isAuthenticated: false });
         } catch (error) {
           console.error("Logout failed:", error);
-          set({ user: null, isAuthenticated: false });
+        } finally {
+          set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
       checkAuth: async () => {
-        try {
+        if (get().isLoading === false) {
           set({ isLoading: true });
+        }
+        try {
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-token`,
             {
@@ -55,11 +56,12 @@ export const useAuth = create<AuthStore>()(
           );
 
           if (!response.ok) {
-            set({ user: null, isAuthenticated: false });
+            set({ user: null, isAuthenticated: false, isLoading: false });
             return false;
           }
 
           const data = await response.json();
+          set({ isLoading: false });
           if (data.valid && data.user) {
             set({
               user: {
@@ -76,10 +78,8 @@ export const useAuth = create<AuthStore>()(
         } catch (error) {
           console.error("Auth check failed:", error);
 
-          set({ user: null, isAuthenticated: false });
+          set({ user: null, isAuthenticated: false, isLoading: false });
           return false;
-        } finally {
-          set({ isLoading: false });
         }
       },
     }),
