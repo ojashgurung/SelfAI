@@ -9,6 +9,10 @@ from ..auth.dependencies import AccessTokenBearer
 user_router = APIRouter()
 access_token_bearer = AccessTokenBearer()
 
+@user_router.get("/health-check", status_code=status.HTTP_200_OK)
+async def health_check():
+    return {"message": "OK"}
+
 @user_router.get("/me", status_code=status.HTTP_200_OK,  response_model=UserResponse)
 async def get_current_user_info(
     current_user: dict = Depends(access_token_bearer),
