@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface LogoutDialogProps {
   isOpen: boolean;
@@ -21,6 +22,16 @@ export function LogoutDialog({
   onConfirm,
   email,
 }: LogoutDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    try {
+      setIsLoading(true);
+      await onConfirm();
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -36,10 +47,11 @@ export function LogoutDialog({
             Cancel
           </Button>
           <Button
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="bg-red-700 text-white hover:bg-red-800"
+            disabled={isLoading}
           >
-            Log out
+            {isLoading ? "Logging out..." : "Log out"}
           </Button>
         </DialogFooter>
       </DialogContent>
