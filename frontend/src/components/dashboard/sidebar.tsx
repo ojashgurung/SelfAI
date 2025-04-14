@@ -62,10 +62,14 @@ export function Sidebar() {
     setShowLogoutDialog(true);
   };
 
-  const handleLogoutConfirm = () => {
-    logout();
-    router.push("/auth/signin");
-    setShowLogoutDialog(false);
+  const handleLogoutConfirm = async () => {
+    try {
+      await logout();
+      setShowLogoutDialog(false);
+      router.replace("/auth/signin");
+    } catch (error) {
+      toast.error("Failed to logout. Please try again.");
+    }
   };
 
   const handleJoinChat = async () => {
