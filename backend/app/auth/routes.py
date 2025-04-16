@@ -355,24 +355,16 @@ oauth.register(
     client_kwargs={'scope': 'user:email'},
 )
 
-oauth.register(
-    name='linkedin',
-    client_id=Config.LINKEDIN_CLIENT_ID,
-    client_secret=Config.LINKEDIN_CLIENT_SECRET,
-    access_token_url='https://www.linkedin.com/oauth/v2/accessToken',
-    authorize_url='https://www.linkedin.com/oauth/v2/authorization',
-    client_kwargs={'scope': 'r_liteprofile r_emailaddress'},
-)
-
 @auth_router.get('/login/{provider}')
 async def oauth_login(provider: str, request: Request):
     if provider not in ['google', 'github', 'linkedin']:
         raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
     redirect_uri = f"{Config.BACKEND_URL}/api/v1/auth/{provider}/callback"
+    
     return await oauth.create_client(provider).authorize_redirect(
-        request, 
+        request,
         redirect_uri,
-        prompt='select_account'
+        prompt='select_account',
     )
 
 @auth_router.get('/google/callback')
@@ -436,28 +428,6 @@ async def github_callback(request: Request, session: AsyncSession = Depends(get_
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@auth_router.get('/linkedin/callback')
-async def linkedin_callback(request: Request, session: AsyncSession = Depends(get_session)):
-    try:
-        token = await oauth.linkedin.authorize_access_token(request)
-        resp = await oauth.linkedin.get('v2/me', token=token)
-        profile = resp.json()
-        email_resp = await oauth.linkedin.get('v2/emailAddress', token=token)
-        email_info = email_resp.json()
-
-        user = await user_service.get_user_by_email(email_info['emailAddress'], session)
-        if not user:
-            user = await user_service.create_user({
-                'email': email_info['emailAddress'],
-                'fullname': f"{profile['localizedFirstName']} {profile['localizedLastName']}",
-                'linkedin_id': profile['id'],
-                'auth_provider': 'linkedin',
-                'password_hash': 'linkedin_oauth'
-            }, session)
-
-        return await create_oauth_response(user)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 async def create_oauth_response(user):
     access_token = create_access_token(
