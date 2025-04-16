@@ -1,4 +1,5 @@
 from sqlmodel import select
+from typing import Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database.models import Users
@@ -43,3 +44,35 @@ class UserService:
         await session.refresh(user)
         
         return user
+    
+    async def get_user_by_google_id(self, google_id: str, session: AsyncSession) -> Optional[Users]:
+        query = select(Users).where(Users.google_id == google_id)
+        result = await session.exec(query)
+        return result.first()
+    
+
+    async def get_or_create_google_user(self, user_info: dict, session: AsyncSession) -> Users:
+        """Get existing user or create new one from Google OAuth data"""
+        try:
+            user = await self.get_user_by_google_id(user_info['sub'], session)
+            if user:
+                return user
+
+            user = await self.get_user_by_email(user_info['email'], session)
+            if user:
+                return await self.update_user(user, {
+                    "google_id": user_info['sub'],
+                    "auth_provider": "google"
+                }, session)
+
+            user_data = UserCreateModel(
+                email=user_info['email'],
+                fullname=user_info.get('name', 'Google User'),
+                password='google_oauth',
+                google_id=user_info['sub'],
+                auth_provider='google'
+            )
+            return await self.create_user(user_data, session)
+        except Exception as e:
+            print(f"Error in get_or_create_google_user: {str(e)}")
+            raise

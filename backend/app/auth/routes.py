@@ -3,7 +3,7 @@ from ..config import Config
 
 from fastapi import APIRouter, Depends, status, BackgroundTasks, Cookie, Request
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from google.oauth2 import id_token
@@ -368,28 +368,49 @@ oauth.register(
 async def oauth_login(provider: str, request: Request):
     if provider not in ['google', 'github', 'linkedin']:
         raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
-    redirect_uri = f"{Config.FRONTEND_URL}/auth/{provider}/callback"
-    return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
+    redirect_uri = f"{Config.BACKEND_URL}/api/v1/auth/{provider}/callback"
+    return await oauth.create_client(provider).authorize_redirect(
+        request, 
+        redirect_uri,
+        prompt='select_account'
+    )
 
 @auth_router.get('/google/callback')
 async def google_callback(request: Request, session: AsyncSession = Depends(get_session)):
     try:
-        token = await oauth.google.authorize_access_token(request)
-        user_info = await oauth.google.parse_id_token(request, token)
-        
-        user = await user_service.get_user_by_email(user_info['email'], session)
-        if not user:
-            user = await user_service.create_user({
-                'email': user_info['email'],
-                'fullname': user_info['name'],
-                'google_id': user_info['sub'],
-                'auth_provider': 'google',
-                'password_hash': 'google_oauth'
-            }, session)
+        # Get authorization token
+        try:
+            token = await oauth.google.authorize_access_token(request)
+        except Exception as token_error:
+            print(f"Token error: {str(token_error)}")
+            raise HTTPException(status_code=400, detail="Failed to obtain access token")
 
-        return await create_oauth_response(user)
+        try:
+            resp = await oauth.google.get('https://www.googleapis.com/oauth2/v3/userinfo', token=token)
+            user_info = resp.json()
+        except Exception as parse_error:
+            print(f"Parse error: {str(parse_error)}")
+            raise HTTPException(status_code=400, detail="Failed to get user info")
+
+        user = await user_service.get_or_create_google_user(user_info, session)
+        
+        response = await create_oauth_response(user)
+        response.headers['Location'] = f"{Config.FRONTEND_URL}/dashboard"
+        response.status_code = status.HTTP_302_FOUND
+        return response
+
+    except HTTPException as he:
+        print(f"HTTP Exception: {str(he)}")
+        return RedirectResponse(
+            url=f"{Config.FRONTEND_URL}/auth/signin?error={str(he.detail)}",
+            status_code=status.HTTP_302_FOUND
+        )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"Unexpected error in OAuth callback: {str(e)}")
+        return RedirectResponse(
+            url=f"{Config.FRONTEND_URL}/auth/signin?error=Authentication failed",
+            status_code=status.HTTP_302_FOUND
+        )
 
 @auth_router.get('/github/callback')
 async def github_callback(request: Request, session: AsyncSession = Depends(get_session)):
