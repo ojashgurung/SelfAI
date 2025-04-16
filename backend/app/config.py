@@ -10,8 +10,17 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     PINECONE_API_KEY : str
     FRONTEND_ORIGINS: List[str]
+    FRONTEND_URL: str
+    BACKEND_URL: str
     OPENAI_API_KEY: str
     ENVIRONMENT: str = "dev"
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GITHUB_CLIENT_ID: str
+    GITHUB_CLIENT_SECRET: str
+    LINKEDIN_CLIENT_ID: str
+    LINKEDIN_CLIENT_SECRET: str
+    SESSION_SECRET_KEY: str
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
