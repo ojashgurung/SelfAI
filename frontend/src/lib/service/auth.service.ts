@@ -46,4 +46,8 @@ export const authService = {
     }
     return result;
   },
+
+  async handleOAuthLogin(provider: "google" | "github" | "linkedin") {
+    window.location.href = `${AUTH_BASE_URL}/login/${provider}`;
+  },
 };

@@ -65,6 +65,16 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  const handleGoogleLogin = () => {
+    setIsLoading(true);
+    try {
+      authService.handleOAuthLogin("google");
+    } catch (error) {
+      setIsLoading(false);
+      setError("Failed to initiate Google login");
+    }
+  };
   return (
     <div className="w-full max-w-md p-4">
       <div className="flex flex-col mb-4 animate-appear">
@@ -75,7 +85,13 @@ export default function SignupPage() {
       </div>
 
       <div className="flex  gap-4 mb-4 animate-appear">
-        <Button variant="outline" className="flex-1 gap-2">
+        {/* Google */}
+        <Button
+          variant="outline"
+          className="flex-1 gap-2"
+          onClick={handleGoogleLogin}
+          disabled={isLoading}
+        >
           <svg viewBox="0 0 24 24" className="w-5 h-5">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
