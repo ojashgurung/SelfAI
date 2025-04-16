@@ -343,17 +343,17 @@ oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
-oauth.register(
-    name='github',
-    client_id=Config.GITHUB_CLIENT_ID,
-    client_secret=Config.GITHUB_CLIENT_SECRET,
-    access_token_url='https://github.com/login/oauth/access_token',
-    access_token_params=None,
-    authorize_url='https://github.com/login/oauth/authorize',
-    authorize_params=None,
-    api_base_url='https://api.github.com/',
-    client_kwargs={'scope': 'user:email'},
-)
+# oauth.register(
+#     name='github',
+#     client_id=Config.GITHUB_CLIENT_ID,
+#     client_secret=Config.GITHUB_CLIENT_SECRET,
+#     access_token_url='https://github.com/login/oauth/access_token',
+#     access_token_params=None,
+#     authorize_url='https://github.com/login/oauth/authorize',
+#     authorize_params=None,
+#     api_base_url='https://api.github.com/',
+#     client_kwargs={'scope': 'user:email'},
+# )
 
 @auth_router.get('/login/{provider}')
 async def oauth_login(provider: str, request: Request):
@@ -404,29 +404,29 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
             status_code=status.HTTP_302_FOUND
         )
 
-@auth_router.get('/github/callback')
-async def github_callback(request: Request, session: AsyncSession = Depends(get_session)):
-    try:
-        token = await oauth.github.authorize_access_token(request)
-        resp = await oauth.github.get('user', token=token)
-        user_info = resp.json()
-        emails_resp = await oauth.github.get('user/emails', token=token)
-        emails = emails_resp.json()
-        primary_email = next(email['email'] for email in emails if email['primary'])
+# @auth_router.get('/github/callback')
+# async def github_callback(request: Request, session: AsyncSession = Depends(get_session)):
+#     try:
+#         token = await oauth.github.authorize_access_token(request)
+#         resp = await oauth.github.get('user', token=token)
+#         user_info = resp.json()
+#         emails_resp = await oauth.github.get('user/emails', token=token)
+#         emails = emails_resp.json()
+#         primary_email = next(email['email'] for email in emails if email['primary'])
 
-        user = await user_service.get_user_by_email(primary_email, session)
-        if not user:
-            user = await user_service.create_user({
-                'email': primary_email,
-                'fullname': user_info['name'] or user_info['login'],
-                'github_id': str(user_info['id']),
-                'auth_provider': 'github',
-                'password_hash': 'github_oauth'
-            }, session)
+#         user = await user_service.get_user_by_email(primary_email, session)
+#         if not user:
+#             user = await user_service.create_user({
+#                 'email': primary_email,
+#                 'fullname': user_info['name'] or user_info['login'],
+#                 'github_id': str(user_info['id']),
+#                 'auth_provider': 'github',
+#                 'password_hash': 'github_oauth'
+#             }, session)
 
-        return await create_oauth_response(user)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+#         return await create_oauth_response(user)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
 
 
 async def create_oauth_response(user):
