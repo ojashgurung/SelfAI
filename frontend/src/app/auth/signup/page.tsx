@@ -3,28 +3,30 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { authService } from "@/lib/service/auth.service";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
 export default function SignupPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const errorParam = searchParams.get("error");
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const errorParam = params.get("error");
 
-    if (errorParam) {
-      const decodedError = decodeURIComponent(errorParam);
-      setError(decodedError || "Authentication failed. Please try again.");
+      if (errorParam) {
+        const decodedError = decodeURIComponent(errorParam);
+        setError(decodedError || "Authentication failed. Please try again.");
 
-      router.replace("/auth/signup");
+        router.replace("/auth/signup");
+      }
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
