@@ -263,6 +263,7 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
                             "fullname": user.fullname,
                             "email": user.email,
                             "role": user.role,
+                            "profile_image": user.profile_image 
                         }
                     }
             )
@@ -335,6 +336,7 @@ async def refresh_token(refresh_token: str = Cookie(None)):
 
 
 oauth = OAuth()
+
 oauth.register(
     name='google',
     client_id=Config.GOOGLE_CLIENT_ID,
@@ -343,17 +345,20 @@ oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
-# oauth.register(
-#     name='github',
-#     client_id=Config.GITHUB_CLIENT_ID,
-#     client_secret=Config.GITHUB_CLIENT_SECRET,
-#     access_token_url='https://github.com/login/oauth/access_token',
-#     access_token_params=None,
-#     authorize_url='https://github.com/login/oauth/authorize',
-#     authorize_params=None,
-#     api_base_url='https://api.github.com/',
-#     client_kwargs={'scope': 'user:email'},
-# )
+oauth.register(
+    name='github',
+    client_id=Config.GITHUB_CLIENT_ID,
+    client_secret=Config.GITHUB_CLIENT_SECRET,
+    access_token_url='https://github.com/login/oauth/access_token',
+    access_token_params=None,
+    authorize_url='https://github.com/login/oauth/authorize',
+    authorize_params=None,
+    api_base_url='https://api.github.com/',
+    client_kwargs={
+        'scope': 'user:email',
+        'token_endpoint_auth_method': 'client_secret_basic'
+    }
+)
 
 @auth_router.get('/login/{provider}')
 async def oauth_login(provider: str, request: Request):
@@ -380,6 +385,7 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
         try:
             resp = await oauth.google.get('https://www.googleapis.com/oauth2/v3/userinfo', token=token)
             user_info = resp.json()
+            user_info['profile_image'] = user_info.get('picture')
         except Exception as parse_error:
             print(f"Parse error: {str(parse_error)}")
             raise HTTPException(status_code=400, detail="Failed to get user info")
@@ -404,29 +410,41 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
             status_code=status.HTTP_302_FOUND
         )
 
-# @auth_router.get('/github/callback')
-# async def github_callback(request: Request, session: AsyncSession = Depends(get_session)):
-#     try:
-#         token = await oauth.github.authorize_access_token(request)
-#         resp = await oauth.github.get('user', token=token)
-#         user_info = resp.json()
-#         emails_resp = await oauth.github.get('user/emails', token=token)
-#         emails = emails_resp.json()
-#         primary_email = next(email['email'] for email in emails if email['primary'])
+@auth_router.get('/github/callback')
+async def github_callback(request: Request, session: AsyncSession = Depends(get_session)):
+    try:
+        try:
 
-#         user = await user_service.get_user_by_email(primary_email, session)
-#         if not user:
-#             user = await user_service.create_user({
-#                 'email': primary_email,
-#                 'fullname': user_info['name'] or user_info['login'],
-#                 'github_id': str(user_info['id']),
-#                 'auth_provider': 'github',
-#                 'password_hash': 'github_oauth'
-#             }, session)
+            token = await oauth.github.authorize_access_token(request)
+        except Exception as token_error:
+            print(f"Token error: {str(token_error)}")
+            raise HTTPException(status_code=400, detail="Failed to obtain access token")
 
-#         return await create_oauth_response(user)
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
+        try:
+            resp = await oauth.github.get('user', token=token)
+            user_info = resp.json()
+            user_info['profile_image'] = user_info.get('avatar_url')
+            emails_resp = await oauth.github.get('user/emails', token=token)
+            emails = emails_resp.json()
+            primary_email = next(email['email'] for email in emails if email['primary'])
+
+            user = await user_service.get_or_create_github_user(user_info, primary_email, session)
+            
+            response = await create_oauth_response(user)
+            response.headers['Location'] = f"{Config.FRONTEND_URL}/dashboard"
+            response.status_code = status.HTTP_302_FOUND
+            return response
+
+        except Exception as parse_error:
+            print(f"Parse error: {str(parse_error)}")
+            raise HTTPException(status_code=400, detail="Failed to get user info")
+
+    except HTTPException as he:
+        print(f"HTTP Exception: {str(he)}")
+        return RedirectResponse(
+            url=f"{Config.FRONTEND_URL}/auth/signin?error={str(he.detail)}",
+            status_code=status.HTTP_302_FOUND
+        )
 
 
 async def create_oauth_response(user):
@@ -452,6 +470,7 @@ async def create_oauth_response(user):
                 "fullname": user.fullname,
                 "email": user.email,
                 "role": user.role,
+                "profile_image": user.profile_image 
             }
         }
     )
