@@ -34,8 +34,8 @@ export default function WidgetPage() {
         const response = await widgetService.getWidget();
         if (!response) {
           if (isMounted) {
-            toast.error("No Widget exists", {
-              description: "Please create a widget to continue",
+            toast.error("No widget yet", {
+              description: "You need to create a widget before continuing.",
             });
             router.push("/dashboard/widget/configuration");
           }
