@@ -20,15 +20,23 @@ export function UserDropdown({ user, onLogout }: UserDropdownProps) {
         <div className="w-full">
           <div className="flex items-center gap-3 p-2 rounded-lg">
             <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center">
-              <span className="text-white font-medium">
-                {user?.fullname
-                  ? user.fullname
-                      .split(" ")
-                      .map((name) => name[0])
-                      .join("")
-                      .toUpperCase()
-                  : "..."}
-              </span>
+              {user?.profile_image ? (
+                <img
+                  src={user.profile_image}
+                  alt={user.fullname}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="text-white font-medium">
+                  {user?.fullname
+                    ? user.fullname
+                        .split(" ")
+                        .map((name) => name[0])
+                        .join("")
+                        .toUpperCase()
+                    : "..."}
+                </span>
+              )}
             </div>
             <div className="flex-1 text-left">
               <p className="text-sm font-medium text-left">
