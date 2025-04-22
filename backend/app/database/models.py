@@ -15,6 +15,7 @@ class Users(SQLModel, table = True):
     fullname: str = Field(nullable=False)
     email: str = Field(unique=True, nullable=False)
     password_hash: str = Field(nullable=False, exclude=True)
+    profile_image: Optional[str] = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=datetime.now)
     update_at: datetime = Field(default_factory=datetime.now)
     personal_bio: Optional[str] = Field(default=None, nullable=True) 
