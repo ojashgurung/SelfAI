@@ -161,6 +161,7 @@ export function Sidebar() {
       icon: LayoutTemplate,
       disabled: !masterSession?.id,
       href: "/dashboard/widget",
+      matchPaths: ["/dashboard/widget", "/dashboard/widget/configuration"],
     },
     {
       title: "Own Trained Chat",
@@ -249,6 +250,9 @@ export function Sidebar() {
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 transition-all duration-200 ease-in-out",
                         (pathname === item.href ||
+                          item.matchPaths?.some((p) =>
+                            pathname.startsWith(p)
+                          ) ||
                           (!masterSession?.id &&
                             item.href === "/dashboard/document" &&
                             ["/dashboard/widget", "/dashboard/chat"].some((p) =>
@@ -261,6 +265,9 @@ export function Sidebar() {
                         className={cn(
                           "w-5 h-5 transition duration-200",
                           (pathname === item.href ||
+                            item.matchPaths?.some((p) =>
+                              pathname.startsWith(p)
+                            ) ||
                             (!masterSession?.id &&
                               item.href === "/dashboard/document" &&
                               ["/dashboard/widget", "/dashboard/chat"].some(
