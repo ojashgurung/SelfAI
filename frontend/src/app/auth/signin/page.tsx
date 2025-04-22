@@ -4,17 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/lib/service/auth.service";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
 export default function SigninPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+
+    if (errorParam) {
+      const decodedError = decodeURIComponent(errorParam);
+      setError(decodedError || "Authentication failed. Please try again.");
+
+      // Clean up the URL
+      router.replace("/auth/signin");
+    }
+  }, [searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,6 +75,16 @@ export default function SigninPage() {
     }
   };
 
+  const handleGitHubLogin = () => {
+    setIsLoading(true);
+    try {
+      authService.handleOAuthLogin("github");
+    } catch (error) {
+      setIsLoading(false);
+      setError("Failed to initiate GitHub login");
+    }
+  };
+
   return (
     <div className="w-full max-w-md p-4">
       <div className="flex flex-col mb-4 animate-appear">
@@ -98,7 +121,12 @@ export default function SigninPage() {
           </svg>
           <p>Sign-in with Google</p>
         </Button>
-        <Button variant="outline" className="flex-1 gap-2">
+        <Button
+          variant="outline"
+          className="flex-1 gap-2"
+          onClick={handleGitHubLogin}
+          disabled={isLoading}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
