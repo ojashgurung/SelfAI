@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#4f46e5", // Tailwind's indigo-600
+  themeColor: "#4f46e5",
 };
 
 export const metadata: Metadata = {

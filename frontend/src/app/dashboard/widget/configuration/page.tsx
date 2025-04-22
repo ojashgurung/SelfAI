@@ -149,11 +149,18 @@ function WidgetConfiguration() {
 
   return (
     <>
-      <h1 className="text-4xl font-bold mb-4">
-        {widgetId ? "Update Widget Configuration" : "Widget Configuration"}
-      </h1>
+      <div className="flex flex-col gap-4 mb-4">
+        <h1 className="text-4xl font-bold">
+          {widgetId ? "Update Widget Configuration" : "Widget Configuration"}
+        </h1>
+        <p className="text-base 2xl:text-lg">
+          {widgetId
+            ? "You’re updating your current widget. Changes will be saved instantly."
+            : "Create your personalized AI widget by selecting a theme, color, and adding your message. You can preview changes on the right."}
+        </p>
+      </div>
 
-      <div className="rounded-lg p-8 xl:max-h-[700px] 2xl:max-h-[800px] overflow-y-auto">
+      <div className="rounded-lg py-6 pr-6 xl:max-h-[640px] 2xl:max-h-[740px] overflow-y-auto">
         <h2 className="mb-6 text-2xl font-semibold">
           {widgetId ? "Update theme and color" : "Pick theme and color"}
         </h2>

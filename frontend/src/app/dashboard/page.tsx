@@ -38,15 +38,23 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center">
-              <span className="text-white font-medium">
-                {user?.fullname
-                  ? user.fullname
-                      .split(" ")
-                      .map((name) => name[0])
-                      .join("")
-                      .toUpperCase()
-                  : "..."}
-              </span>
+              {user?.profile_image ? (
+                <img
+                  src={user.profile_image}
+                  alt={user.fullname}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-medium">
+                  {user?.fullname
+                    ? user.fullname
+                        .split(" ")
+                        .map((name) => name[0])
+                        .join("")
+                        .toUpperCase()
+                    : "..."}
+                </span>
+              )}
             </div>
           </div>
         </div>

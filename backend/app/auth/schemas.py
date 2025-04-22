@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -8,6 +8,10 @@ class UserCreateModel(BaseModel):
     fullname: str = Field(max_length=40)
     email: str = Field(max_length=40)
     password: str = Field(min_length=8)
+    google_id: Optional[str] = None
+    github_id: Optional[str] = None
+    auth_provider: Optional[str] = None
+    profile_image: Optional[str] = None
 
     model_config = {
         "json_schema_extra": {

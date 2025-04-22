@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, HelpCircle, X } from "lucide-react";
+import { Download, HelpCircle, X, Loader2 } from "lucide-react";
 
 interface UploadDialogProps {
   open: boolean;
@@ -49,20 +49,41 @@ export function UploadDialog({
     setIsUploading(true);
     try {
       setUploadStatus("uploading");
+      toast.info("Uploading your document...", {
+        description:
+          "This may take a few moments. Please don’t close the page.",
+      });
+
       await DocumentService.uploadDocument(uploadedFile);
 
       setUploadStatus("training");
-      toast.info("Document uploaded, waiting for training to complete...");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      const masterSession = await ChatService.getMasterSession();
-      toast.success("Document uploaded and trained successfully");
+      toast.info("Document uploaded and Training started!", {
+        description: "Hang tight — we’re preparing your AI now.",
+      });
+
       setUploadedFile(null);
-      masterSession && onSuccess?.({ session_id: masterSession.id });
-      onOpenChange(false);
-      masterSession && onSuccess?.({ session_id: masterSession.id });
+      const masterSession = await ChatService.getMasterSession();
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      if (masterSession) {
+        onSuccess?.({ session_id: masterSession.id });
+        onOpenChange(false);
+        toast.info("Training complete and Redirecting to chat!", {
+          description:
+            "Your document is now ready to chat with. Redirecting...",
+        });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      window.location.href = `/dashboard/chat/${masterSession?.id}`;
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error("Failed to upload or train document");
+      toast("Upload failed", {
+        description: "Something went wrong. Please try uploading again.",
+      });
+      toast("Training failed", {
+        description: "We couldn’t train your document. Please retry shortly.",
+      });
     } finally {
       setUploadStatus("idle");
       setIsUploading(false);
@@ -152,6 +173,10 @@ export function UploadDialog({
                 onClick={handleUpload}
                 disabled={!uploadedFile || isUploading}
               >
+                {(uploadStatus === "uploading" ||
+                  uploadStatus === "training") && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
                 {uploadStatus === "uploading"
                   ? "Uploading..."
                   : uploadStatus === "training"
