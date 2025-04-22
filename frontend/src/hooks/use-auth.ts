@@ -6,6 +6,7 @@ interface User {
   email: string;
   fullname: string;
   role: string;
+  profile_image?: string;
 }
 
 interface AuthStore {
@@ -62,6 +63,7 @@ export const useAuth = create<AuthStore>()(
                 email: data.user.email,
                 fullname: data.user.fullname,
                 role: data.user.role,
+                profile_image: data.user.profile_image,
               },
               isAuthenticated: true,
               isLoading: false,
