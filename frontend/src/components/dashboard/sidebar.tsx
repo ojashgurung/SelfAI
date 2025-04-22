@@ -25,6 +25,7 @@ import { LogoutDialog } from "@/components/dialog/logout-dialog";
 import { ShareLinkDialog } from "@/components/dialog/share-link-dialog";
 import { UserDropdown } from "@/components/dropdown/user-dropdown";
 import { ChatService } from "@/lib/service/chat.service";
+import { Logo } from "../logo/Logo";
 
 interface ChatSession {
   id: string;
@@ -133,12 +134,21 @@ export function Sidebar() {
   const menuItems = [
     { title: "Overview", icon: HomeIcon, href: "/dashboard" },
     {
-      title: "Connections",
+      title: "Connect & Train",
       icon: GlobeIcon,
       href: "/dashboard/connections",
+      disabled: true,
       subItems: [
-        { title: "Connect LinkedIn", href: "/dashboard/connections/linkedin" },
-        { title: "Comment GitHub", href: "/dashboard/connections/github" },
+        {
+          title: "Connect LinkedIn",
+          href: "/dashboard/connections/linkedin",
+          disabled: true,
+        },
+        {
+          title: "Comment GitHub",
+          href: "/dashboard/connections/github",
+          disabled: true,
+        },
       ],
     },
     {
@@ -149,34 +159,14 @@ export function Sidebar() {
     {
       title: "Create Widget",
       icon: LayoutTemplate,
-      href: masterSession?.id ? "/dashboard/widget" : "/dashboard/document",
-      onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-        if (!masterSession?.id) {
-          e.preventDefault();
-          toast.error(
-            "Please upload and train a document before creating a widget"
-          );
-          return;
-        }
-        e.preventDefault(); // Prevent default even for valid navigation
-        router.push("/dashboard/widget");
-      },
+      disabled: !masterSession?.id,
+      href: "/dashboard/widget",
     },
     {
       title: "Own Trained Chat",
       icon: UsersIcon,
-      href: masterSession?.id
-        ? `/dashboard/chat/${masterSession.id}`
-        : "/dashboard/document",
-      onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-        if (!masterSession?.id) {
-          e.preventDefault();
-          toast.error("Please upload and train a document first");
-          return;
-        }
-        e.preventDefault();
-        router.push(`/dashboard/chat/${masterSession.id}`);
-      },
+      disabled: !masterSession?.id,
+      href: `/dashboard/chat/${masterSession?.id}`,
     },
   ];
   return (
@@ -185,25 +175,7 @@ export function Sidebar() {
         <div className="flex flex-col h-full">
           <div className="p-4 flex-shrink-0">
             <div className="flex items-center mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="60"
-                height="60"
-                viewBox="0 0 100 120"
-                className="text-indigo-600"
-              >
-                <g transform="translate(10, 10) scale(0.08)">
-                  <path
-                    fill="currentColor"
-                    d="M455 891c-206-95-215-418-16-536 39-23 51-36 51-55 1-48 11-70 35-70 12 0 28 7 35 14 6 8 33 29 59 45 40 26 58 31 108 31 78 0 142 23 195 69 124 109 132 323 17 441-69 71-100 80-284 80-135 0-166-3-200-19zm344-51c192-55 217-349 37-431-27-12-65-19-111-19-63 0-75-3-122-35l-52-35-3 28c-2 21-13 32-48 48-64 30-116 91-136 159-33 116 27 243 132 280 46 17 252 20 303 5z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M630 720c-11-22-38-51-60-65-22-14-40-30-40-35s18-21 40-35c22-14 49-43 60-65 11-22 25-40 30-40s19 18 30 40c11 22 38 51 60 65 22 14 40 30 40 35s-18 21-40 35c-22 14-49 43-60 65-11 22-25 40-30 40s-19-18-30-40z"
-                  />
-                </g>
-              </svg>
-              <h1 className="text-xl font-semibold text-indigo-600">selfAI.</h1>
+              <Logo href="/dashboard" />
             </div>
 
             <div className="relative mb-6">
@@ -227,8 +199,12 @@ export function Sidebar() {
                   {item.subItems ? (
                     <button
                       onClick={() => toggleMenu(item.title)}
+                      disabled={item.disabled}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50",
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md ",
+                        item.disabled
+                          ? "text-gray-400 cursor-not-allowed hover:bg-transparent"
+                          : "text-gray-600 hover:bg-gray-50",
                         pathname.startsWith(item.href) &&
                           "bg-indigo-50 text-indigo-600 font-extrabold"
                       )}
@@ -243,6 +219,11 @@ export function Sidebar() {
                         />
                         {item.title}
                       </div>
+                      {item.disabled && (
+                        <span className="text-xs bg-amber-500  text-white px-2 py-0.5 rounded">
+                          Soon
+                        </span>
+                      )}
                       {openMenus.includes(item.title) ? (
                         <ChevronDownIcon className="w-4 h-4" />
                       ) : (
@@ -252,7 +233,19 @@ export function Sidebar() {
                   ) : (
                     <Link
                       href={item.href}
-                      onClick={item.onClick}
+                      onClick={(e) => {
+                        if (
+                          !masterSession?.id &&
+                          !item.href.includes("document")
+                        ) {
+                          e.preventDefault();
+                          router.push("/dashboard/document");
+                          toast.error("Please upload a document first", {
+                            description:
+                              "You need to upload and train a document before accessing this feature.",
+                          });
+                        }
+                      }}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 transition-all duration-200 ease-in-out",
                         (pathname === item.href ||
