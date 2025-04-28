@@ -237,7 +237,8 @@ export function Sidebar() {
                       onClick={(e) => {
                         if (
                           !masterSession?.id &&
-                          !item.href.includes("document")
+                          !item.href.includes("document") &&
+                          item.href !== "/dashboard"
                         ) {
                           e.preventDefault();
                           router.push("/dashboard/document");
