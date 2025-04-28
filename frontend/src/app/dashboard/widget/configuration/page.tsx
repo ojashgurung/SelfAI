@@ -153,7 +153,7 @@ function WidgetConfiguration() {
         <h1 className="text-4xl font-bold">
           {widgetId ? "Update Widget Configuration" : "Widget Configuration"}
         </h1>
-        <p className="text-base 2xl:text-lg">
+        <p className="text-base 2xl:text-lg text-black/60">
           {widgetId
             ? "You’re updating your current widget. Changes will be saved instantly."
             : "Create your personalized AI widget by selecting a theme, color, and adding your message. You can preview changes on the right."}

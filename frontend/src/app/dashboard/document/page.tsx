@@ -105,11 +105,11 @@ export default function DocumentPage() {
   return (
     <div className="max-h-full overflow-hidden ">
       <div className="p-8 mx-auto">
-        <h1 className="text-4xl font-bold mb-2">
+        <h1 className="text-4xl font-bold mb-4">
           Upload and Train Your Documents
         </h1>
         <div className="flex items-center justify-between mb-4">
-          <p className="w-4/6 text-black/70">
+          <p className="w-4/6 text-black/60">
             Upload your personal bios, resumes, articles, or notes. SelfAI will
             become an extension of your knowledge—ready to engage and respond.
           </p>
@@ -246,18 +246,23 @@ export default function DocumentPage() {
                 </div>
               ))}
               <button
-                className="border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-6 rounded-xl cursor-pointer hover:bg-indigo-50 transition-colors"
+                className="border-2 border-dashed border-indigo-200 p-6 rounded-xl cursor-pointer w-52 transition-all group relative overflow-hidden"
                 onClick={() => setUploadOpen(true)}
               >
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <Plus className="w-8 h-8 text-indigo-500" />
+                <div className="flex flex-col items-center justify-center gap-3 group-hover:blur-sm transition-all">
+                  <Plus className="w-6 h-6 text-indigo-500" />
                   <div className="text-center">
-                    <h3 className="font-medium text-sm text-gray-700">
-                      Add new File
+                    <h3 className="font-semibold text-sm text-gray-700">
+                      Add new file
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Click to upload new file
-                    </p>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-indigo-50/30">
+                  <div className="flex flex-col gap-2 items-center text-indigo-700">
+                    <div className="rounded-full bg-indigo-700 p-2">
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="font-bold text-sm">Upload File</span>
                   </div>
                 </div>
               </button>
