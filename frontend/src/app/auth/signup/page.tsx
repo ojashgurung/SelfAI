@@ -6,13 +6,16 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/service/auth.service";
 import { useAuth } from "@/hooks/use-auth";
+import { EyeOff, Eye } from "lucide-react";
 import Link from "next/link";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SignupPage() {
   const router = useRouter();
   const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -176,17 +179,34 @@ export default function SignupPage() {
         </div>
         <div className="animate-appear">
           <label className="block text-sm font-medium mb-2">Password</label>
-          <Input
-            name="password"
-            placeholder="min 8 chars"
-            type="password"
-            required
-            disabled={isLoading}
-          />
+          <div className="relative">
+            <Input
+              name="password"
+              placeholder="Password (min. 8 characters)"
+              type={showPassword ? "text" : "password"}
+              required
+              disabled={isLoading}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={(e) => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              {showPassword ? (
+                <Eye className="w-5 h-5 text-gray-500" />
+              ) : (
+                <EyeOff className="w-5 h-5 text-gray-500" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 animate-appear">
-          <input type="checkbox" className="rounded border-gray-300" required />
+          <Checkbox
+            id="terms&privacy"
+            className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+          />
           <label className="text-sm text-muted-foreground">
             I agree to the{" "}
             <Link href="#" className="text-indigo-600 hover:text-indigo-500">
