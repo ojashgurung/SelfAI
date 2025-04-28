@@ -15,9 +15,11 @@ import {
   Folder,
   FileText,
   Plus,
-  Filter,
+  BrainCircuit,
   ArrowUpDown,
   Search,
+  FilePlus,
+  Share,
 } from "lucide-react";
 
 import {
@@ -102,38 +104,15 @@ export default function DocumentPage() {
 
   return (
     <div className="max-h-full overflow-hidden ">
-      <div className="p-8 space-y-8 mx-auto">
-        <UploadDialog
-          open={uploadOpen}
-          onOpenChange={setUploadOpen}
-          onSuccess={handleUploadSuccess}
-        />
-        <ShareDialog
-          open={shareDialogOpen}
-          onOpenChange={setShareDialogOpen}
-          shareUrl={currentShareUrl}
-        />
-        <h1 className="text-4xl font-bold">Upload and Train Your Documents</h1>
-
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700"
-              onClick={() => setUploadOpen(true)}
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              New
-            </Button>
-            <Button size="sm" variant="outline" className="gap-1">
-              <Filter className="w-3 h-3" />
-              Filters
-            </Button>
-            <Button size="sm" variant="outline" className="gap-1">
-              <ArrowUpDown className="w-3 h-3" />
-              Sort By: Latest
-            </Button>
-          </div>
+      <div className="p-8 mx-auto">
+        <h1 className="text-4xl font-bold mb-2">
+          Upload and Train Your Documents
+        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <p className="w-4/6 text-black/70">
+            Upload your personal bios, resumes, articles, or notes. SelfAI will
+            become an extension of your knowledge—ready to engage and respond.
+          </p>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -146,33 +125,113 @@ export default function DocumentPage() {
           </div>
         </div>
 
-        <div>
-          <h2 className="text-lg font-semibold mb-4">Uploaded Files</h2>
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-4">How it works</h2>
           {!documents || documents.length === 0 ? (
-            <button
-              className="border-2 border-dashed border-purple-200 bg-purple-50/50 p-8 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors"
-              onClick={() => setUploadOpen(true)}
-            >
-              <div className="flex flex-col items-center justify-center gap-3">
-                <Plus className="w-8 h-8 text-purple-500" />
-                <div className="text-center">
-                  <h3 className="font-medium text-sm text-gray-700">
-                    No files uploaded yet
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Click to upload your first file
-                  </p>
+            <div className="flex gap-4">
+              <button
+                className="border-2 border-dashed border-indigo-200 p-6 rounded-xl cursor-pointer w-60 transition-all group relative overflow-hidden"
+                onClick={() => setUploadOpen(true)}
+              >
+                <div className="flex flex-col items-center justify-center gap-3 group-hover:blur-sm transition-all">
+                  <FilePlus className="w-12 h-12 text-indigo-500" />
+                  <div className="text-center">
+                    <h3 className="font-semibold text-sm text-gray-700">
+                      Upload a document
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Start by uploading a file <br /> to train your SelfAI
+                      chatbot.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </button>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-indigo-50/30">
+                  <div className="flex flex-col gap-2 items-center text-indigo-700">
+                    <div className="rounded-full bg-indigo-700 p-2">
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="font-bold text-lg">Upload File</span>
+                  </div>
+                </div>
+              </button>
+              <button
+                className="border-2 border-dashed border-indigo-200 p-6 rounded-xl cursor-pointer w-60 transition-all group relative overflow-hidden"
+                onClick={() => setUploadOpen(true)}
+              >
+                <div className="flex flex-col items-center justify-center gap-3 group-hover:blur-sm transition-all">
+                  <BrainCircuit className="w-10 h-10 text-indigo-500" />
+                  <div className="text-center">
+                    <h3 className="font-semibold text-sm text-gray-700">
+                      SelfAI trains on your documents
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Upload files to teach your chatbot.
+                    </p>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-indigo-50/30">
+                  <div className="flex flex-col gap-2 items-center text-indigo-700">
+                    <div className="rounded-full bg-indigo-700 p-2">
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="font-bold text-lg">Upload File</span>
+                  </div>
+                </div>
+              </button>
+              <button
+                className="border-2 border-dashed border-indigo-200 p-6 rounded-xl cursor-pointer w-60 transition-all group relative overflow-hidden"
+                onClick={() => setUploadOpen(true)}
+              >
+                <div className="flex flex-col items-center justify-center gap-3 group-hover:blur-sm transition-all">
+                  <Share className="w-10 h-10 text-indigo-500" />
+                  <div className="text-center">
+                    <h3 className="font-semibold text-sm text-gray-700">
+                      Share Your Chatbot
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Let others chat and learn about you.
+                    </p>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-indigo-50/30">
+                  <div className="flex flex-col gap-2 items-center text-indigo-700">
+                    <div className="rounded-full bg-indigo-700 p-2">
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="font-bold text-lg">Upload File</span>
+                  </div>
+                </div>
+              </button>
+              <button
+                className="border-2 border-dashed border-indigo-200 p-6 rounded-xl cursor-pointer w-60 transition-all group relative overflow-hidden"
+                onClick={() => setUploadOpen(true)}
+              >
+                <div className="flex flex-col items-center justify-center gap-3 group-hover:blur-sm transition-all">
+                  <Plus className="w-6 h-6 text-indigo-500" />
+                  <div className="text-center">
+                    <h3 className="font-semibold text-sm text-gray-700">
+                      Add new file
+                    </h3>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-indigo-50/30">
+                  <div className="flex flex-col gap-2 items-center text-indigo-700">
+                    <div className="rounded-full bg-indigo-700 p-2">
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="font-bold text-lg">Upload File</span>
+                  </div>
+                </div>
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-5 gap-4">
               {documents.slice(0, 4).map((doc) => (
                 <div
                   key={doc.id}
-                  className="bg-purple-50 p-6 w-52 rounded-xl space-y-2 cursor-pointer"
+                  className="bg-indigo-50 p-6 w-52 rounded-xl space-y-2 cursor-pointer"
                 >
-                  <Folder className="w-6 h-6 text-purple-500" />
+                  <Folder className="w-6 h-6 text-indigo-500" />
                   <div>
                     <h3 className="font-medium text-sm">{doc.filename}</h3>
                     <p className="text-sm text-gray-500">
@@ -187,11 +246,11 @@ export default function DocumentPage() {
                 </div>
               ))}
               <button
-                className="border-2 border-dashed border-purple-200 bg-purple-50/50 p-6 rounded-xl cursor-pointer hover:bg-purple-50 transition-colors"
+                className="border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-6 rounded-xl cursor-pointer hover:bg-indigo-50 transition-colors"
                 onClick={() => setUploadOpen(true)}
               >
                 <div className="flex flex-col items-center justify-center gap-3">
-                  <Plus className="w-8 h-8 text-purple-500" />
+                  <Plus className="w-8 h-8 text-indigo-500" />
                   <div className="text-center">
                     <h3 className="font-medium text-sm text-gray-700">
                       Add new File
@@ -206,6 +265,22 @@ export default function DocumentPage() {
           )}
         </div>
 
+        <div className="flex gap-2 mb-4">
+          <Button
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-700"
+            onClick={() => setUploadOpen(true)}
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            New File
+          </Button>
+
+          {/* <Button size="sm" variant="outline" className="gap-1">
+              <ArrowUpDown className="w-3 h-3" />
+              Sort By: Latest
+            </Button> */}
+        </div>
+
         <div>
           <h2 className="text-lg font-semibold mb-3">All Files</h2>
           <div className="flex items-center justify-between mb-4">
@@ -214,8 +289,8 @@ export default function DocumentPage() {
                 onClick={() => setActiveTab("all")}
                 className={`px-3 py-2 text-sm font-medium transition-colors relative ${
                   activeTab === "all"
-                    ? "text-purple-600 border-b-2 border-purple-600"
-                    : "text-gray-600 hover:text-purple-600"
+                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    : "text-gray-600 hover:text-indigo-600"
                 }`}
               >
                 View all
@@ -224,8 +299,8 @@ export default function DocumentPage() {
                 onClick={() => setActiveTab("documents")}
                 className={`px-3 py-2 text-sm font-medium transition-colors relative ${
                   activeTab === "documents"
-                    ? "text-purple-600 border-b-2 border-purple-600"
-                    : "text-gray-600 hover:text-purple-600"
+                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    : "text-gray-600 hover:text-indigo-600"
                 }`}
               >
                 Documents
@@ -234,8 +309,8 @@ export default function DocumentPage() {
                 onClick={() => setActiveTab("media")}
                 className={`px-3 py-2 text-sm font-medium transition-colors relative ${
                   activeTab === "media"
-                    ? "text-purple-600 border-b-2 border-purple-600"
-                    : "text-gray-600 hover:text-purple-600"
+                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    : "text-gray-600 hover:text-indigo-600"
                 }`}
               >
                 Media files
@@ -244,8 +319,8 @@ export default function DocumentPage() {
                 onClick={() => setActiveTab("pdf")}
                 className={`px-3 py-2 text-sm font-medium transition-colors relative ${
                   activeTab === "pdf"
-                    ? "text-purple-600 border-b-2 border-purple-600"
-                    : "text-gray-600 hover:text-purple-600"
+                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    : "text-gray-600 hover:text-indigo-600"
                 }`}
               >
                 PDFs
@@ -255,10 +330,10 @@ export default function DocumentPage() {
               <input
                 type="text"
                 placeholder="Find document"
-                className="w-full px-4 py-2 text-sm border border-purple-200 rounded-lg bg-gray-50/90 shadow-sm hover:shadow focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-shadow"
+                className="w-full px-4 py-2 text-sm border border-indigo-200 rounded-lg bg-gray-50/90 shadow-sm hover:shadow focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="w-4 h-4 text-purple-600" />
+                <Search className="w-4 h-4 text-indigo-600" />
               </div>
             </div>
           </div>
@@ -363,6 +438,16 @@ export default function DocumentPage() {
           </div>
         </div>
       </div>
+      <UploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onSuccess={handleUploadSuccess}
+      />
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        shareUrl={currentShareUrl}
+      />
     </div>
   );
 }
