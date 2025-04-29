@@ -14,7 +14,7 @@
     container.style.background = "none";
     container.style.backgroundColor = "transparent";
     container.style.backdropFilter = "none";
-    container.style.pointerEvents = "none";
+    container.style.pointerEvents = "auto";
     return container;
   };
 
@@ -43,6 +43,7 @@
       iframe.style.overflow = "hidden";
       iframe.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
       iframe.style.transformOrigin = "bottom right";
+      iframe.style.pointerEvents = "auto";
 
       const updateSize = () => {
         const screenWidth = window.innerWidth;
@@ -78,6 +79,7 @@
           // shrink the iframe
           iframe.style.width = "60px";
           iframe.style.height = "60px";
+          iframe.style.borderRadius = "50%";
           iframe.style.pointerEvents = "auto";
 
           container.style.width = "60px";
@@ -89,6 +91,7 @@
         } else if (type === "maximize") {
           updateSize();
 
+          container.style.borderRadius = "16px";
           container.style.borderRadius = "16px";
           container.style.overflow = "visible";
           container.style.clipPath = "none";
