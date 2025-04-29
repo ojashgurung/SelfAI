@@ -38,7 +38,6 @@ export default function WidgetChatPage() {
         setLoading(false);
       }
     };
-
     fetchWidget();
   }, [widget_id]);
 
