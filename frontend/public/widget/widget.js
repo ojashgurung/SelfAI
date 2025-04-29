@@ -49,9 +49,7 @@
     // size updater for full view
     const updateSize = () => {
       let [w, h] = ["360px", "560px"];
-      const sw = window.innerWidth;
-      if (sw >= 1920) [w, h] = ["400px", "580px"];
-      else if (sw >= 1536) [w, h] = ["400px", "600px"];
+
       requestAnimationFrame(() => {
         iframe.style.width = w;
         iframe.style.height = h;
