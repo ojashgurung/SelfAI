@@ -31,7 +31,7 @@ export default function AddToWebsitePage() {
 
         if (isMounted) {
           setEmbedCode(
-            `<script src="https://selfai.io/widget.js" data-user-id="${response?.user_id}"></script>`
+            `<script src="${process.env.NEXT_PUBLIC_URL}/widget.js" data-user-id="${response?.user_id}"></script>`
           );
         }
       } catch (error) {
