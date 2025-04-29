@@ -26,8 +26,8 @@ export interface SessionResponse {
   visitor_id: string;
 }
 
-const WIDGET_BASE_URL = "http://localhost:8000/api/v1/widget";
-const CHAT_BASE_URL = "http://localhost:8000/api/v1/chat";
+const WIDGET_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/widget`;
+const CHAT_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/chat`;
 
 export const widgetService = {
   async getPublicWidget(widget_id: string) {

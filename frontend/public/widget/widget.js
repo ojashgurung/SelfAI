@@ -1,5 +1,9 @@
 (function () {
-  // Create widget container
+  const CONFIG = {
+    API_URL: "https://api.selfai.tech/api/v1",
+    WIDGET_URL: "https://widget.selfai.tech",
+  };
+
   const createWidgetContainer = () => {
     const container = document.createElement("div");
     container.id = "selfai-widget";
@@ -13,7 +17,6 @@
     return container;
   };
 
-  // Initialize widget
   const initWidget = async () => {
     const script = document.querySelector("script[data-user-id]");
     const userId = script?.getAttribute("data-user-id");
@@ -24,15 +27,14 @@
     }
 
     try {
-      // Fetch widget config
       const response = await fetch(
-        `http://localhost:8000/api/v1/widget/public/user/${userId}`
+        `${CONFIG.API_URL}/widget/public/user/${userId}`
       );
       const widgetConfig = await response.json();
 
       const container = createWidgetContainer();
       const iframe = document.createElement("iframe");
-      iframe.src = `http://localhost:3001/chat/${widgetConfig.id}`;
+      iframe.src = `${CONFIG.WIDGET_URL}/chat/${widgetConfig.id}`;
       iframe.style.border = "none";
       iframe.style.backgroundColor = "transparent";
       iframe.style.backdropFilter = "none";
@@ -41,7 +43,6 @@
       iframe.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
       iframe.style.transformOrigin = "bottom right";
 
-      // Dynamic size logic
       const updateSize = () => {
         const screenWidth = window.innerWidth;
 
@@ -62,17 +63,14 @@
         container.style.height = height;
       };
 
-      // Listen for resize
       window.addEventListener("resize", updateSize);
-      updateSize(); // initial sizing
+      updateSize();
 
-      // Append elements
       container.appendChild(iframe);
       document.body.appendChild(container);
 
-      // Handle iframe messages
       window.addEventListener("message", (event) => {
-        if (event.origin !== "http://localhost:3001") return;
+        if (event.origin !== `${CONFIG.WIDGET_URL}`) return;
 
         const { type } = event.data;
         if (type === "minimize") {
@@ -89,7 +87,6 @@
     }
   };
 
-  // Wait for DOM
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initWidget);
   } else {
