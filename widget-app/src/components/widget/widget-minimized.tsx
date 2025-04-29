@@ -14,10 +14,14 @@ export function WidgetMinimizedPage({
   color,
   theme,
 }: WidgetMinimizedPageProps) {
+  const handleMaximize = () => {
+    window.parent.postMessage({ type: "maximize" }, "*");
+    setIsOpen(true);
+  };
   return (
     <Button
-      onClick={() => setIsOpen(true)}
-      className={`fixed bottom-5 right-5 rounded-full w-16 h-16 text-white shadow-lg transition-colors hover:brightness-90`}
+      onClick={handleMaximize}
+      className={`fixed bottom-0 right-0 rounded-full w-16 h-16 text-white shadow-lg transition-colors hover:brightness-90`}
       style={{
         backgroundColor: color,
       }}
