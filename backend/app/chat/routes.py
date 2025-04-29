@@ -19,6 +19,7 @@ from .schemas import (
 )
 from ..rag.service import RagService
 from ..auth.dependencies import AccessTokenBearer
+from ..config import Config
 
 
 chat_router = APIRouter()
@@ -118,7 +119,7 @@ async def get_session_qr(
     if not session:
         raise HTTPException(status_code=404, detail="Chat session not found")
 
-    url = f"http://localhost:3000/dashboard/chat/public/{share_token}"
+    url = f"{Config.FRONTEND_URL}/dashboard/chat/public/{share_token}"
     
     qr = QRCode(version=1, box_size=10, border=5)
     qr.add_data(url)
