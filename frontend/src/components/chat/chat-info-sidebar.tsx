@@ -6,22 +6,32 @@ interface ChatInfoSidebarProps {
   session?: ChatSession;
 }
 
-export default function ChatInfoSidebar({
-  isPublic,
-  session,
-}: ChatInfoSidebarProps) {
-  const initials =
-    session?.owner?.fullname
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("") || "AI";
+export default function ChatInfoSidebar({ session }: ChatInfoSidebarProps) {
   return (
     <div className="border-l bg-white p-6 overflow-hidden">
       <div className="space-y-6">
         {/* Model Info */}
         <div className="flex flex-col items-center justify-center gap-2">
           <div className="w-14 h-14 rounded-full bg-indigo-200 flex items-center justify-center">
-            <span className="text-indigo-600 font-medium">{initials}</span>
+            <span className="text-indigo-600 font-medium">
+              {session?.owner?.profile_image ? (
+                <img
+                  src={session?.owner?.profile_image}
+                  alt={session?.owner?.fullname}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="font-medium text-indigo-600">
+                  {session?.owner?.fullname
+                    ? session?.owner?.fullname
+                        .split(" ")
+                        .map((name) => name[0])
+                        .join("")
+                        .toUpperCase()
+                    : "..."}
+                </span>
+              )}
+            </span>
           </div>
           <h3 className="font-medium text-lg mb-1">
             {session?.owner?.fullname || "AI Assistant"}

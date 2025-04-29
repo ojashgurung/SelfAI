@@ -16,6 +16,7 @@ export interface Owner {
   personal_bio?: string;
   linkedin_url?: string;
   github_url?: string;
+  profile_image?: string;
   documents: Document[];
 }
 

@@ -47,12 +47,23 @@ export default function ChatHeader({ session }: ChatHeaderProps) {
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-            <span className="text-indigo-600 font-medium">
-              {session?.owner?.fullname
-                ?.split(" ")
-                .map((n) => n[0])
-                .join("") || "AI"}
-            </span>
+            {session?.owner?.profile_image ? (
+              <img
+                src={session?.owner?.profile_image}
+                alt={session?.owner?.fullname}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            ) : (
+              <span className="font-medium text-indigo-600">
+                {session?.owner?.fullname
+                  ? session?.owner?.fullname
+                      .split(" ")
+                      .map((name) => name[0])
+                      .join("")
+                      .toUpperCase()
+                  : "..."}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <h2 className="flex min-w-fit font-medium">
