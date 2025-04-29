@@ -78,13 +78,13 @@
           // shrink the iframe
           iframe.style.width = "60px";
           iframe.style.height = "60px";
+          iframe.style.pointerEvents = "auto";
 
           container.style.width = "60px";
           container.style.height = "60px";
           container.style.borderRadius = "50%";
           container.style.overflow = "hidden";
           container.style.clipPath = "circle(30px at 100% 100%)";
-
           container.style.pointerEvents = "auto";
         } else if (type === "maximize") {
           updateSize();
@@ -94,6 +94,7 @@
           container.style.clipPath = "none";
 
           container.style.pointerEvents = "auto";
+          iframe.style.pointerEvents = "auto";
         }
       });
     } catch (error) {
