@@ -179,7 +179,7 @@ export default function ChatBody({
                     /* AI Response */
                     <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-indigo-200 transition rounded-xl mb-4">
                       <div className="flex items-start gap-3">
-                        <Logo withText={false} />
+                        <Logo withText={false} href="/dashboard" />
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
