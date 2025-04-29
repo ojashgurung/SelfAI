@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,19 +12,21 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { ChatSession, ChatMessage } from "@/types/chat";
+import { Logo } from "../logo/Logo";
 
 const prompts = [
   {
-    title: "Where does he study right now and when does he graduate?",
+    title:
+      "Where is the person currently studying and when is the expected graduation date?",
     icon: GraduationCap,
   },
   {
-    title: "Can I get his portfolio website link and also his email?",
+    title: "Can I get the portfolio website link and email address?",
     icon: Mail,
   },
   {
     title:
-      "Is he proficient in Python? And does he have any recent project in it?",
+      "Is the person proficient in coding, and are there any recent projects available?",
     icon: FileCode,
   },
 ];
@@ -37,41 +39,35 @@ interface ChatBodyProps {
   onPromptClick?: (prompt: string) => void;
 }
 
-// const useTypewriter = (text: string, speed: number = 40) => {
-//   const [displayedText, setDisplayedText] = useState("");
-//   const [isTyping, setIsTyping] = useState(true);
-
-//   useEffect(() => {
-//     let i = 0;
-//     setIsTyping(true);
-//     const timer = setInterval(() => {
-//       if (i < text.length) {
-//         setDisplayedText(text.substring(0, i + 1));
-//         i++;
-//       } else {
-//         setIsTyping(false);
-//         clearInterval(timer);
-//       }
-//     }, speed);
-
-//     return () => clearInterval(timer);
-//   }, [text, speed]);
-
-//   return { displayedText, isTyping };
-// };
-
 export default function ChatBody({
   session,
   messages,
   isLoading,
   onPromptClick,
 }: ChatBodyProps) {
-  // const { displayedText, isTyping } = useTypewriter(response);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+
+    messagesEndRef.current?.scrollIntoView({
+      behavior: isNearBottom ? "smooth" : "auto",
+    });
+  }, [messages]);
+
   return (
-    <div className="h-full flex flex-col overflow-hidden justify-between">
+    <div
+      ref={containerRef}
+      className="h-full flex flex-col overflow-hidden justify-between"
+    >
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
-          <div className="h-full overflow-y-auto">
+          <div className="h-full">
             <div className="max-w-3xl mx-auto p-8 mt-10">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">
@@ -125,7 +121,7 @@ export default function ChatBody({
             </div>
           </div>
         ) : (
-          <div className="overflow-y-auto">
+          <div className="pb-36">
             <div className="max-w-3xl mx-auto px-4">
               {/* Timestamp */}
               {/* Messages */}
@@ -150,9 +146,23 @@ export default function ChatBody({
                     <div className="flex items-start gap-3 mb-6">
                       <Avatar>
                         <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
-                          <span className="text-indigo-600 font-medium text-sm">
-                            U
-                          </span>
+                          {session?.owner?.profile_image ? (
+                            <img
+                              src={session?.owner?.profile_image}
+                              alt={session?.owner?.fullname}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <span className="font-medium text-indigo-600">
+                              {session?.owner?.fullname
+                                ? session?.owner?.fullname
+                                    .split(" ")
+                                    .map((name) => name[0])
+                                    .join("")
+                                    .toUpperCase()
+                                : "..."}
+                            </span>
+                          )}
                         </div>
                       </Avatar>
                       <div>
@@ -169,13 +179,8 @@ export default function ChatBody({
                     /* AI Response */
                     <Card className="p-4 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border hover:border-indigo-200 transition rounded-xl mb-4">
                       <div className="flex items-start gap-3">
-                        <Avatar>
-                          <div className="w-full h-full bg-indigo-100 flex items-center justify-center rounded-full">
-                            <span className="text-indigo-600 font-medium text-sm">
-                              AI
-                            </span>
-                          </div>
-                        </Avatar>
+                        <Logo withText={false} />
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium">SelfAI</span>
@@ -213,6 +218,7 @@ export default function ChatBody({
                 </div>
               ))}
 
+              <div ref={messagesEndRef} />
               {/* Gradient fade at bottom */}
               <div className="h-32 bg-gradient-to-t from-white to-transparent pointer-events-none fixed bottom-0 left-0 right-0" />
             </div>
