@@ -15,4 +15,5 @@ class UserResponse(BaseModel):
     personal_bio: Optional[str] = None
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
+    profile_image: Optional[str] = None
     documents: List[DocumentInfo] = []
