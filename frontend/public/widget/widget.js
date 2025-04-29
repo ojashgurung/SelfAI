@@ -4,110 +4,106 @@
     WIDGET_URL: "https://widget.selfai.tech",
   };
 
+  // Create the fixed container that will hold our iframe
   const createWidgetContainer = () => {
-    const container = document.createElement("div");
-    container.id = "selfai-widget";
-    container.style.position = "fixed";
-    container.style.bottom = "20px";
-    container.style.right = "20px";
-    container.style.zIndex = "9999";
-    container.style.background = "none";
-    container.style.backgroundColor = "transparent";
-    container.style.backdropFilter = "none";
-    container.style.pointerEvents = "auto";
-    return container;
+    const c = document.createElement("div");
+    c.id = "selfai-widget";
+    Object.assign(c.style, {
+      position: "fixed",
+      bottom: "20px",
+      right: "20px",
+      zIndex: "9999",
+      width: "360px",
+      height: "560px",
+      borderRadius: "16px",
+      overflow: "visible",
+      pointerEvents: "auto",
+      background: "none",
+      backgroundColor: "transparent",
+      transition: "all 0.2s ease",
+    });
+    return c;
   };
 
   const initWidget = async () => {
     const script = document.querySelector("script[data-user-id]");
     const userId = script?.getAttribute("data-user-id");
+    if (!userId) return console.error("User ID missing");
 
-    if (!userId) {
-      console.error("User ID is not provided.");
-      return;
-    }
+    const resp = await fetch(`${CONFIG.API_URL}/widget/public/user/${userId}`);
+    const { id: chatId } = await resp.json();
 
-    try {
-      const response = await fetch(
-        `${CONFIG.API_URL}/widget/public/user/${userId}`
-      );
-      const widgetConfig = await response.json();
+    const container = createWidgetContainer();
+    const iframe = document.createElement("iframe");
+    iframe.src = `${CONFIG.WIDGET_URL}/chat/${chatId}`;
+    Object.assign(iframe.style, {
+      width: "100%", // fill container
+      height: "100%",
+      border: "none",
+      borderRadius: "inherit", // match container
+      overflow: "hidden",
+      pointerEvents: "auto",
+      transition: "inherit",
+    });
 
-      const container = createWidgetContainer();
-      const iframe = document.createElement("iframe");
-      iframe.src = `${CONFIG.WIDGET_URL}/chat/${widgetConfig.id}`;
-      iframe.style.border = "none";
-      iframe.style.backgroundColor = "transparent";
-      iframe.style.backdropFilter = "none";
-      iframe.style.borderRadius = "16px";
-      iframe.style.overflow = "hidden";
-      iframe.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
-      iframe.style.transformOrigin = "bottom right";
-      iframe.style.pointerEvents = "auto";
-
-      const updateSize = () => {
-        const screenWidth = window.innerWidth;
-
-        let width = "360px";
-        let height = "560px";
-
-        if (screenWidth >= 1536 && screenWidth < 1920) {
-          width = "400px";
-          height = "600px";
-        } else if (screenWidth >= 1920) {
-          width = "400px";
-          height = "580px";
-        }
-
-        iframe.style.width = width;
-        iframe.style.height = height;
-        container.style.width = width;
-        container.style.height = height;
-      };
-
-      window.addEventListener("resize", updateSize);
-      updateSize();
-
-      container.appendChild(iframe);
-      document.body.appendChild(container);
-
-      window.addEventListener("message", (event) => {
-        if (event.origin !== CONFIG.WIDGET_URL) return;
-        const { type } = event.data;
-
-        if (type === "minimize") {
-          // shrink the iframe
-          iframe.style.width = "60px";
-          iframe.style.height = "60px";
-          iframe.style.borderRadius = "50%";
-          iframe.style.pointerEvents = "auto";
-
-          container.style.width = "60px";
-          container.style.height = "60px";
-          container.style.borderRadius = "50%";
-          container.style.overflow = "hidden";
-          container.style.clipPath = "circle(30px at 100% 100%)";
-          container.style.pointerEvents = "auto";
-        } else if (type === "maximize") {
-          updateSize();
-
-          container.style.borderRadius = "16px";
-          container.style.borderRadius = "16px";
-          container.style.overflow = "visible";
-          container.style.clipPath = "none";
-
-          container.style.pointerEvents = "auto";
-          iframe.style.pointerEvents = "auto";
-        }
+    // size updater for full view
+    const updateSize = () => {
+      let [w, h] = ["360px", "560px"];
+      const sw = window.innerWidth;
+      if (sw >= 1920) [w, h] = ["400px", "580px"];
+      else if (sw >= 1536) [w, h] = ["400px", "600px"];
+      requestAnimationFrame(() => {
+        iframe.style.width = w;
+        iframe.style.height = h;
+        container.style.width = w;
+        container.style.height = h;
       });
-    } catch (error) {
-      console.error("Failed to initialize widget:", error);
-    }
+    };
+
+    window.addEventListener("resize", updateSize);
+    updateSize();
+
+    container.appendChild(iframe);
+    document.body.appendChild(container);
+
+    window.addEventListener("message", ({ origin, data }) => {
+      if (origin !== CONFIG.WIDGET_URL) return;
+      const { type } = data;
+
+      if (type === "minimize") {
+        // shrink down into a circle
+        Object.assign(iframe.style, {
+          width: "64px",
+          height: "64px",
+          borderRadius: "50%",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        });
+        Object.assign(container.style, {
+          width: "64px",
+          height: "64px",
+          borderRadius: "50%",
+          overflow: "hidden",
+          clipPath: "circle(32px at 32px 32px)",
+          bottom: "20px",
+          right: "20px",
+        });
+      } else if (type === "maximize") {
+        updateSize();
+        Object.assign(iframe.style, {
+          borderRadius: "16px",
+        });
+        Object.assign(container.style, {
+          borderRadius: "16px",
+          overflow: "visible",
+          clipPath: "none",
+        });
+      } else if (type === "close") {
+        container.style.display = "none";
+      }
+    });
   };
 
-  if (document.readyState === "loading") {
+  if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", initWidget);
-  } else {
-    initWidget();
-  }
+  else initWidget();
 })();
