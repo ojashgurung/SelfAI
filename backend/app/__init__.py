@@ -55,6 +55,7 @@ app.add_middleware(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=Config.FRONTEND_ORIGINS,
+    allow_origin_regex="https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"], 
