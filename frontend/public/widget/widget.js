@@ -76,10 +76,17 @@
         if (type === "minimize") {
           iframe.style.width = "60px";
           iframe.style.height = "60px";
+          iframe.style.pointerEvents = "auto";
+
           container.style.width = "60px";
           container.style.height = "60px";
+          container.style.overflow = "hidden";
+          container.style.pointerEvents = "auto";
         } else if (type === "maximize") {
           updateSize();
+          container.style.overflow = "visible";
+          iframe.style.pointerEvents = "auto";
+          container.style.pointerEvents = "auto";
         }
       });
     } catch (error) {
