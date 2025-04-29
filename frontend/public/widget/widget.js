@@ -14,6 +14,7 @@
     container.style.background = "none";
     container.style.backgroundColor = "transparent";
     container.style.backdropFilter = "none";
+    container.style.pointerEvents = "none";
     return container;
   };
 
@@ -70,22 +71,28 @@
       document.body.appendChild(container);
 
       window.addEventListener("message", (event) => {
-        if (event.origin !== `${CONFIG.WIDGET_URL}`) return;
-
+        if (event.origin !== CONFIG.WIDGET_URL) return;
         const { type } = event.data;
+
         if (type === "minimize") {
+          // shrink the iframe
           iframe.style.width = "60px";
           iframe.style.height = "60px";
-          iframe.style.pointerEvents = "auto";
 
           container.style.width = "60px";
           container.style.height = "60px";
+          container.style.borderRadius = "50%";
           container.style.overflow = "hidden";
+          container.style.clipPath = "circle(30px at 100% 100%)";
+
           container.style.pointerEvents = "auto";
         } else if (type === "maximize") {
           updateSize();
+
+          container.style.borderRadius = "16px";
           container.style.overflow = "visible";
-          iframe.style.pointerEvents = "auto";
+          container.style.clipPath = "none";
+
           container.style.pointerEvents = "auto";
         }
       });
