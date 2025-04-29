@@ -69,7 +69,7 @@ export default function AddToWebsitePage() {
         and let it shine.
       </h1>
 
-      <p className="text-lg text-gray-700 mb-8">
+      <p className="text-lg text-black/60 mb-8">
         Your SelfAI widget is ready! Drop the code into your site and let the
         conversations begin.
       </p>

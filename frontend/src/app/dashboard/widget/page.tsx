@@ -82,7 +82,7 @@ export default function WidgetPage() {
   return (
     <div className="container max-w-4xl p-8 space-y-8">
       <h1 className="text-4xl font-bold">Your Widget is Live</h1>
-      <p className="text-lg text-gray-700 mb-8">
+      <p className="text-lg text-black/60 mb-8">
         Your SelfAI widget is Live! Drop the code into your site and let the
         conversations begin.
       </p>

@@ -53,8 +53,8 @@ async def get_user_by_id(
 ):
     try:
         statement = select(Users).where(Users.uuid == user_id)
-        result = await session.execute(statement)
-        user = result.scalar_one_or_none()
+        result = await session.exec(statement)
+        user = result.first()
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
@@ -68,6 +68,7 @@ async def get_user_by_id(
             personal_bio=user.personal_bio,
             linkedin_url=user.linkedin_url,
             github_url=user.github_url,
+            profile_image = user.profile_image,
             documents=[{
                 "id": str(doc.id),
                 "namespace": doc.namespace,
