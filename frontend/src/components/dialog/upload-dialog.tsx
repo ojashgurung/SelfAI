@@ -29,9 +29,18 @@ export function UploadDialog({
     "idle" | "uploading" | "training"
   >("idle");
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<String>("");
+
   const handleFileChange = (file: File) => {
-    if (file.size > 25 * 1024 * 1024) {
-      // 25MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size exceeds the limit of 5MB.");
+      toast.error("File size exceeded", {
+        description:
+          "File size exceeded. Please upload a file of size less than 5MB.",
+      });
+      setInterval(() => {
+        setError("");
+      }, 3000);
       return;
     }
     setUploadedFile(file);
@@ -78,10 +87,10 @@ export function UploadDialog({
       window.location.href = `/dashboard/chat/${masterSession?.id}`;
     } catch (error) {
       console.error("Upload failed:", error);
-      toast("Upload failed", {
+      toast.error("Upload failed", {
         description: "Something went wrong. Please try uploading again.",
       });
-      toast("Training failed", {
+      toast.error("Training failed", {
         description: "We couldn’t train your document. Please retry shortly.",
       });
     } finally {
@@ -129,8 +138,11 @@ export function UploadDialog({
 
           <div className="flex justify-between text-xs text-gray-500">
             <span>Supported formats: PDF, DOCX, MD</span>
-            <span>Maximum size: 25MB</span>
+            <span>Maximum size: 5MB</span>
           </div>
+          {error && (
+            <div className="text-sm text-red-500 text-center">{error}</div>
+          )}
 
           {/* Show file that is going to be uploaded just to make user sure about it */}
           {uploadedFile && (
