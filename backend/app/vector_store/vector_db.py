@@ -5,8 +5,9 @@ import asyncio
 from pinecone.grpc import PineconeGRPC as Pinecone
 from pinecone import ServerlessSpec
 from pinecone import Vector
+from ..config import Config
 
-INDEX_NAME = "selfai"
+INDEX_NAME = Config.VECTOR_DB_INDEX_NAME
 pc = Pinecone(api_key=Config.PINECONE_API_KEY)
 
 def create_index_if_not_exists():
