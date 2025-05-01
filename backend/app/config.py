@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: str
     GITHUB_CLIENT_SECRET: str
     SESSION_SECRET_KEY: str
+    VECTOR_DB_INDEX_NAME: str
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

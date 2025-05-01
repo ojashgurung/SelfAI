@@ -76,6 +76,13 @@ async def upload(
 
         if not file or not file.filename:
             raise NoSourceProvided()
+        
+        max_size_bytes = 5 * 1024 * 1024
+        if file.size > max_size_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File size exceeds the limit of 25MB. Current size: {convert_size(file.size)}"
+            )
 
         file_size = convert_size(file.size)
         result = await rag_service.save_and_extract_text(file, user_id)
