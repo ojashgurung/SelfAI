@@ -1,38 +1,87 @@
 import uuid
-from datetime import datetime
-from typing import List, Optional
+from typing import Optional
+import re
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, field_validator
 
 class UserCreateModel(BaseModel):
     fullname: str = Field(max_length=40)
-    email: str = Field(max_length=40)
+    email: EmailStr = Field(max_length=40)
     password: str = Field(min_length=8)
     google_id: Optional[str] = None
     github_id: Optional[str] = None
     auth_provider: Optional[str] = None
-    profile_image: Optional[str] = None
+    profile_image: Optional[HttpUrl] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"[a-z]", v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r"[0-9]", v):
+            raise ValueError("Password must contain at least one digit")
+        if not re.search(r"[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]", v):
+            raise ValueError("Password must contain at least one special character")
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v):
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", v):
+            raise ValueError("Invalid email format")
+        
+        v = v.lower().strip()
+        if v.endswith("."):
+            raise ValueError("Email cannot end with a dot")
+        if not re.search(r"\.(com|org|net|edu)$", v):
+            raise ValueError("Email must end with .com, .org, .net, or .edu")
+        
+        disposable_domains = {
+            "mailinator.com", "10minutemail.com", "guerrillamail.com", "tempmail.com"
+        }
+        domain = v.split("@")[-1]
+        if domain in disposable_domains:
+            raise ValueError("Disposable email addresses are not allowed")
+    
+        return v
+
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "fullname" : "John Doe",
                 "email": "johndoe123@co.com",
-                "password": "testpass123",
+                "password": "Testpass123!",
             }
         }
     }
-
-class UserModel(BaseModel):
-    uid: uuid.UUID
-    email: str
-    password_hash: str = Field(exclude=True)
-    created_at: datetime
-    update_at: datetime
 
 class UserLoginModel(BaseModel):
     email: str = Field(max_length=40)
     password: str = Field(min_length=8)
 
-class EmailModel(BaseModel):
-    addresses: List[str]
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v):
+        return v.strip().lower()
+
+    @field_validator("password")
+    @classmethod
+    def check_not_blank(cls, v):
+        if not v.strip():
+            raise ValueError("Password cannot be blank.")
+        return v
+
+class UserModel(BaseModel):
+    id: uuid.UUID
+    fullname: str
+    email: str
+    role: str
+
+class UserLoginResponseModel(BaseModel):
+    message: str
+    user: UserModel
