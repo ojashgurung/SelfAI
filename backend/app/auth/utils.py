@@ -23,7 +23,7 @@ def generate_passwd_hash(password: str) -> str:
 def verify_password(password: str, hash: str) -> bool:
     return passwd_context.verify(password, hash)
 
-def create_access_token(
+def create_token(
     user_data: dict, expiry: timedelta = None, refresh: bool = False
 ):
     payload = {}
@@ -98,4 +98,19 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         max_age=172800,
     )
 
+    return response
+
+def remove_auth_cookies(response: JSONResponse):
+    response.delete_cookie(
+            key="access_token",
+            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            path="/",
+        )
+        
+    response.delete_cookie(
+        key="refresh_token",
+        domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+        path="/",
+    )
+    
     return response

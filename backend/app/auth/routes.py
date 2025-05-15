@@ -22,9 +22,10 @@ from .schemas import (
 from .utils import (
     verify_password,
     decode_token,
-    create_access_token,
+    create_token,
     decode_url_safe_token,
     set_auth_cookies,
+    remove_auth_cookies
 )
 
 from .service import UserService
@@ -51,7 +52,7 @@ async def create_user_account(
 
         new_user = await user_service.create_user(user_data, session)
 
-        access_token = create_access_token(
+        access_token = create_token(
             user_data={
                 "id": str(new_user.id),
                 "email": new_user.email,
@@ -59,7 +60,7 @@ async def create_user_account(
             }
         )
 
-        refresh_token = create_access_token(
+        refresh_token = create_token(
             user_data={"id": str(new_user.id), "email": new_user.email},
             refresh=True,
             expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
@@ -105,7 +106,7 @@ async def login_user(
         if not password_valid:
             raise InvalidCredentials()
 
-        access_token = create_access_token(
+        access_token = create_token(
             user_data={
                 "id": str(user.id),
                 "email": user.email,
@@ -113,7 +114,7 @@ async def login_user(
             }
         )
 
-        refresh_token = create_access_token(
+        refresh_token = create_token(
             user_data={"email": user.email, "id": str(user.id)},
             refresh=True,
             expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
@@ -236,28 +237,11 @@ async def logout():
             status_code=status.HTTP_200_OK
         )
         
-        response.delete_cookie(
-            key="access_token",
-            httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
-            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-            path="/",
-        )
-        
-        response.delete_cookie(
-            key="refresh_token",
-            httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
-            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-            path="/",
-        )
-        
+        remove_auth_cookies(response)
         return response
         
     except Exception as e:
-        print(f"Logout error: {str(e)}")
+        logger.error(f"Logout error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during logout"
@@ -272,7 +256,7 @@ async def refresh_token(refresh_token: str = Cookie(None)):
     if not payload or not payload.get("refresh"):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    new_access_token = create_access_token(user_data=payload["user"])
+    new_access_token = create_token(user_data=payload["user"])
 
     response = JSONResponse(content={"message": "Token refreshed"})
     response.set_cookie(
@@ -399,7 +383,7 @@ async def github_callback(request: Request, session: AsyncSession = Depends(get_
 
 
 async def create_oauth_response(user):
-    access_token = create_access_token(
+    access_token = create_token(
         user_data={
             "id": str(user.id),
             "email": user.email,
@@ -407,7 +391,7 @@ async def create_oauth_response(user):
         }
     )
 
-    refresh_token = create_access_token(
+    refresh_token = create_token(
         user_data={"id": str(user.id), "email": user.email},
         refresh=True,
         expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
@@ -426,26 +410,6 @@ async def create_oauth_response(user):
         }
     )
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=Config.ENVIRONMENT == "prod",
-        samesite="lax",
-        domain=".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-        path="/",
-        max_age=36000,
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=Config.ENVIRONMENT == "prod",
-        samesite="lax",
-        domain=".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-        path="/",
-        max_age=172800,
-    )
+    set_auth_cookies(response, access_token, refresh_token)
 
     return response
