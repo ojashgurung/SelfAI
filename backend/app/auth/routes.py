@@ -1,29 +1,30 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+import logging
+
+from fastapi.encoders import jsonable_encoder
 from ..config import Config
 
-from fastapi import APIRouter, Depends, status, BackgroundTasks, Cookie, Request
+from fastapi import APIRouter, Depends, status, Cookie, Request
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+
 from authlib.integrations.starlette_client import OAuth
-from starlette.config import Config as StarletteConfig
 
 from .schemas import (
     UserCreateModel,
-    UserModel,
     UserLoginModel,
-    EmailModel
+    UserLoginResponseModel,
+    UserModel,
 )
 
 from .utils import (
     verify_password,
     decode_token,
     create_access_token,
-    create_url_safe_token,
     decode_url_safe_token,
+    set_auth_cookies,
 )
 
 from .service import UserService
@@ -34,86 +35,60 @@ from ..database.db import get_session
 
 auth_router = APIRouter()
 user_service = UserService()
+logger = logging.getLogger(__name__)
 
 REFRESH_TOKEN_EXPIRY = 2
 
-@auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
-async def create_user_Account(
+
+@auth_router.post("/signup", response_model=UserLoginResponseModel, status_code=status.HTTP_201_CREATED)
+async def create_user_account(
     user_data: UserCreateModel,
-    bg_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        fullname = user_data.fullname
-        email = user_data.email
-
-        user_exists = await user_service.user_exists(email, session)
-
-        if user_exists:
+        if await user_service.user_exists(user_data.email, session):
             raise UserAlreadyExists()
 
         new_user = await user_service.create_user(user_data, session)
 
         access_token = create_access_token(
             user_data={
-                "id": str(new_user.uuid),
+                "id": str(new_user.id),
                 "email": new_user.email,
                 "role": new_user.role,
             }
         )
 
         refresh_token = create_access_token(
-            user_data={"id": str(new_user.uuid), "email": new_user.email},
+            user_data={"id": str(new_user.id), "email": new_user.email},
             refresh=True,
             expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
         )
 
-        response = JSONResponse(
-            content={
-                "message": "Sign-up successful",
-                "user" : {
-                        "id": str(new_user.uuid),
-                        "fullname": new_user.fullname,
-                        "email": new_user.email,
-                        "role": new_user.role,
-                    }
-                }
+        response_data = UserLoginResponseModel(
+            message="Sign-up successful",
+            user = UserModel(
+                id=new_user.id,
+                fullname=new_user.fullname,
+                email=new_user.email,
+                role=new_user.role,
             )
-
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
-            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-            path="/",
-            max_age=36000,
         )
-
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
-            domain=".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-            path="/",
-            max_age=172800,
-        )
-
+        
+        response = JSONResponse(content=jsonable_encoder(response_data))
+        set_auth_cookies(response, access_token, refresh_token)
         return response
     except UserAlreadyExists:
         raise
     except Exception as e:
-        print(f"Signup error: {str(e)}")
+        logger.error(f"Signup error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during signup"
         )
 
-@auth_router.post("/signin")
-async def login_users(
+@auth_router.post("/signin", response_model=UserLoginResponseModel)
+async def login_user(
     login_data: UserLoginModel, session: AsyncSession = Depends(get_session)
 ):
     try:
@@ -130,62 +105,38 @@ async def login_users(
         if not password_valid:
             raise InvalidCredentials()
 
-        
         access_token = create_access_token(
             user_data={
-                "id": str(user.uuid),
+                "id": str(user.id),
                 "email": user.email,
                 "role": user.role,
             }
         )
 
         refresh_token = create_access_token(
-            user_data={"email": user.email, "id": str(user.uuid)},
+            user_data={"email": user.email, "id": str(user.id)},
             refresh=True,
             expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
         )
 
-        response = JSONResponse(
-            content={
-                "message": "Login successful",
-                "user" : {
-                        "id": str(user.uuid),
-                        "fullname": user.fullname,
-                        "email": user.email,
-                        "role": user.role,
-                    }
-            }
+        response_data = UserLoginResponseModel(
+            message="Login successful",
+            user = UserModel(
+                id=user.id,
+                fullname=user.fullname,
+                email=user.email,
+                role=user.role,
+            )
         )
-
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
-            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-            path="/",
-            max_age=36000,
-        )
-
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=Config.ENVIRONMENT == "prod",
-            samesite="lax",
-            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
-            path="/",
-            max_age=172800,
-        )
-
-
+        
+        response = JSONResponse(content=jsonable_encoder(response_data))
+        set_auth_cookies(response, access_token, refresh_token)
         return response
 
     except InvalidCredentials:
         raise
     except Exception as e:
-        print(f"Login error: {str(e)}")
+        logger.error(f"Login error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during login",
@@ -259,7 +210,7 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
             status_code = status.HTTP_200_OK,
             content = {"valid": True,
                         "user" : {
-                            "id": str(user.uuid),
+                            "id": str(user.id),
                             "fullname": user.fullname,
                             "email": user.email,
                             "role": user.role,
@@ -450,14 +401,14 @@ async def github_callback(request: Request, session: AsyncSession = Depends(get_
 async def create_oauth_response(user):
     access_token = create_access_token(
         user_data={
-            "id": str(user.uuid),
+            "id": str(user.id),
             "email": user.email,
             "role": user.role,
         }
     )
 
     refresh_token = create_access_token(
-        user_data={"id": str(user.uuid), "email": user.email},
+        user_data={"id": str(user.id), "email": user.email},
         refresh=True,
         expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
     )
@@ -466,7 +417,7 @@ async def create_oauth_response(user):
         content={
             "message": "OAuth login successful",
             "user": {
-                "id": str(user.uuid),
+                "id": str(user.id),
                 "fullname": user.fullname,
                 "email": user.email,
                 "role": user.role,
