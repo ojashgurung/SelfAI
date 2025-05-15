@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 import re
 
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, field_validator
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, field_validator, model_validator
 
 class UserCreateModel(BaseModel):
     fullname: str = Field(max_length=40)
@@ -11,22 +11,28 @@ class UserCreateModel(BaseModel):
     google_id: Optional[str] = None
     github_id: Optional[str] = None
     auth_provider: Optional[str] = None
-    profile_image: Optional[HttpUrl] = None
+    profile_image: Optional[str] = None
 
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v):
-        if len(v) < 8:
+    @model_validator(mode='after')
+    def validate_password(cls, values):
+        provider = values.auth_provider
+        password = values.password
+
+        if provider in {"google", "github"}:
+            return values
+
+        if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        if not re.search(r"[A-Z]", v):
+        if not re.search(r"[A-Z]", password):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r"[a-z]", v):
+        if not re.search(r"[a-z]", password):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r"[0-9]", v):
+        if not re.search(r"[0-9]", password):
             raise ValueError("Password must contain at least one digit")
-        if not re.search(r"[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]", v):
+        if not re.search(r"[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]", password):
             raise ValueError("Password must contain at least one special character")
-        return v
+
+        return values
 
     @field_validator("email")
     @classmethod
