@@ -2,6 +2,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 
+from fastapi.responses import JSONResponse
 from itsdangerous import URLSafeTimedSerializer
 
 import jwt
@@ -72,3 +73,29 @@ def decode_url_safe_token(token:str):
     
     except Exception as e:
         logging.error(str(e))
+
+
+def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str):
+    response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=Config.ENVIRONMENT == "prod",
+            samesite="lax",
+            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            path="/",
+            max_age=36000,
+        )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=Config.ENVIRONMENT == "prod",
+        samesite="lax",
+        domain=".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+        path="/",
+        max_age=172800,
+    )
+
+    return response
