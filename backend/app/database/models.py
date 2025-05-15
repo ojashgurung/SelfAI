@@ -1,23 +1,22 @@
-import uuid as uuid_pkg
+import uuid
 from datetime import datetime
 from typing import Optional, List, Dict
 from enum import Enum
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON
 from sqlmodel import Field, SQLModel, Relationship
-
 
 class UserRole(str, Enum):
     ADMIN = "admin"
     USER = "user"
 
 class Users(SQLModel, table = True):
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, nullable=False, primary_key=True)
     fullname: str = Field(nullable=False)
     email: str = Field(unique=True, nullable=False)
     password_hash: str = Field(nullable=False, exclude=True)
     profile_image: Optional[str] = Field(default=None, nullable=True)
     created_at: datetime = Field(default_factory=datetime.now)
-    update_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
     personal_bio: Optional[str] = Field(default=None, nullable=True) 
     linkedin_url: Optional[str] = Field(default=None, nullable=True)
     github_url: Optional[str] = Field(default=None, nullable=True)
@@ -47,15 +46,15 @@ class Users(SQLModel, table = True):
         return f"<User {self.email} - Premium: {self.is_premium}>"
     
 class Documents(SQLModel, table = True):
-    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
-    user_id: uuid_pkg.UUID = Field(foreign_key="users.uuid", nullable=False)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, nullable=False, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
     file_name: str = Field(nullable=False)
     file_size: str
     file_path: str
     vector_ids: List[str] = Field(sa_type=JSON, default=[])
     namespace: str
     created_at: datetime = Field(default_factory=datetime.now)
-    update_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
     users: "Users" = Relationship(back_populates="documents")
 
@@ -63,10 +62,10 @@ class Documents(SQLModel, table = True):
         return f"<Documents(user_id={self.user_id}, source={self.file_name}, created_at={self.created_at})>"
 
 class ChatSessions(SQLModel, table=True):
-    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
-    user_id: Optional[uuid_pkg.UUID]  = Field(foreign_key="users.uuid", nullable=True)
-    visitor_id: Optional[uuid_pkg.UUID] = Field(foreign_key="users.uuid", nullable=True)
-    parent_id: Optional[uuid_pkg.UUID] = Field(foreign_key="chatsessions.id", nullable=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, nullable=False, primary_key=True)
+    user_id: Optional[uuid.UUID]  = Field(foreign_key="users.id", nullable=True)
+    visitor_id: Optional[uuid.UUID] = Field(foreign_key="users.id", nullable=True)
+    parent_id: Optional[uuid.UUID] = Field(foreign_key="chatsessions.id", nullable=True)
     namespace: str
     title: str
     is_public: bool = Field(default=False)
@@ -81,19 +80,20 @@ class ChatSessions(SQLModel, table=True):
     child_sessions: List["ChatSessions"] = Relationship(back_populates="parent_session", sa_relationship_kwargs={"foreign_keys": "ChatSessions.parent_id"})
 
 class ChatMessages(SQLModel, table=True):
-    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
-    session_id: uuid_pkg.UUID = Field(foreign_key="chatsessions.id")
-    user_id: Optional[uuid_pkg.UUID] = Field(foreign_key="users.uuid", nullable=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, nullable=False, primary_key=True)
+    session_id: uuid.UUID = Field(foreign_key="chatsessions.id")
+    user_id: Optional[uuid.UUID] = Field(foreign_key="users.id", nullable=True)
     role: str
     content: str
     created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
     session: "ChatSessions" = Relationship(back_populates="messages")
     user: Optional["Users"] = Relationship(back_populates="messages")
 
 
 class Widgets(SQLModel, table=True):
-    id: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, nullable=False, primary_key=True)
-    user_id: uuid_pkg.UUID = Field(foreign_key="users.uuid", nullable=False)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, nullable=False, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
     share_token: str = Field(unique=True, index=True)
     theme: str
     color: str
@@ -102,6 +102,7 @@ class Widgets(SQLModel, table=True):
     subtitle: str
     prompts: List[Dict] = Field(sa_type= JSON, default=[])
     created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
     expires_at: Optional[datetime] = Field(default=None)
     is_active: bool = Field(default=True)
 
