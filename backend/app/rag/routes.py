@@ -26,15 +26,11 @@ access_token_bearer = AccessTokenBearer()
 @rag_router.get("/documents", status_code=status.HTTP_200_OK)
 async def get_user_documents(
     current_user: dict = Depends(access_token_bearer),
-    session: AsyncSession = Depends(get_session),
+    db_session: AsyncSession = Depends(get_session),
 ):
     try:
         user_id = current_user["user"]["id"]
-        
-        # Query documents for the current user
-        query = select(Documents).where(Documents.user_id == user_id)
-        result = await session.exec(query)
-        documents = result.all()
+        documents = await rag_service.get_user_documents(user_id, db_session)
 
         return {
             "message": "Documents retrieved successfully",
