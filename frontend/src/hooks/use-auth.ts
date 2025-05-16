@@ -16,6 +16,7 @@ interface AuthStore {
   setUser: (user: User) => void;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
+  refreshToken: () => Promise<boolean>;
 }
 
 export const useAuth = create<AuthStore>()(
@@ -41,6 +42,33 @@ export const useAuth = create<AuthStore>()(
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
+
+      refreshToken: async () => {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
+            {
+              method: "POST",
+              credentials: "include",
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to refresh token");
+          }
+          const data = await response.json();
+          console.log(data);
+          if (data.message === "Token refreshed") {
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Token refresh failed:", error);
+          set({ user: null, isAuthenticated: false, isLoading: false });
+          return false;
+        }
+      },
+
       checkAuth: async () => {
         set({ isLoading: true });
 
@@ -52,7 +80,37 @@ export const useAuth = create<AuthStore>()(
             }
           );
 
-          if (!response.ok) throw new Error("Unauthorized");
+          if (!response.ok) {
+            const refreshed = await get().refreshToken();
+            if (refreshed) {
+              const retryResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-token`,
+                {
+                  credentials: "include",
+                }
+              );
+
+              if (retryResponse.ok) {
+                const data = await retryResponse.json();
+                if (data.valid && data.user) {
+                  set({
+                    user: {
+                      id: data.user.id,
+                      email: data.user.email,
+                      fullname: data.user.fullname,
+                      role: data.user.role,
+                      profile_image: data.user.profile_image,
+                    },
+                    isAuthenticated: true,
+                    isLoading: false,
+                  });
+                  return true;
+                }
+              }
+            }
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            return false;
+          }
 
           const data = await response.json();
 

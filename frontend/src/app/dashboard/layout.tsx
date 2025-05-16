@@ -27,7 +27,7 @@ export default function DashboardLayout({
 
     verify();
 
-    const interval = setInterval(verify, 5 * 60 * 1000); // 5 mins
+    const interval = setInterval(verify, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkAuth, logout, router]);
 
