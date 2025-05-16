@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from fastapi import HTTPException, status
 from sqlmodel import select, join
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -83,12 +85,12 @@ class ChatService:
         return session
     
     async def get_or_create_visitor_session(
-    self,
-    template_session_id: UUID,
-    visitor_id: str,
-    namespace: str,
-    db_session: AsyncSession
-) -> ChatSessions:
+        self,
+        template_session_id: UUID,
+        visitor_id: str,
+        namespace: str,
+        db_session: AsyncSession
+    ) -> ChatSessions:
         try:
             statement = select(ChatSessions).where(
                 ChatSessions.parent_id == template_session_id,
@@ -211,3 +213,31 @@ class ChatService:
         if session:
             await db_session.refresh(session, ['messages'])
         return session
+
+    async def get_total_chat_count(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession
+    ) -> int:
+        statement = select(ChatSessions).where(
+            ChatSessions.user_id == user_id,
+            ChatSessions.visitor_id != None
+        )
+        result = await db_session.exec(statement)
+        sessions = result.all()
+        return len(sessions)
+
+    async def get_weekly_chat_count(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession
+    ) -> int:
+        statement = select(ChatSessions).where(
+            ChatSessions.user_id == user_id,
+            ChatSessions.visitor_id != None,
+            ChatSessions.created_at >= datetime.now() - timedelta(days=7)
+        )
+        result = await db_session.exec(statement)
+        sessions = result.all()
+
+        return len(sessions)

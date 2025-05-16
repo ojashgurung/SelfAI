@@ -1,13 +1,13 @@
 import os
 from io import BytesIO
-import uuid
 from typing import Any
-import shutil
-import aiofiles
 from fastapi import UploadFile
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+from sqlmodel.ext.asyncio.session import AsyncSession
+from ..database.models import Documents
+from sqlmodel import select
 
 from .utils import (
     clean_text,
@@ -32,6 +32,18 @@ class RagService:
     def __init__(self):
         self.upload_dir = "./documents/uploads"
         os.makedirs(self.upload_dir, exist_ok=True)
+
+    async def get_user_documents(self, user_id: str, db_session: AsyncSession):
+        query = select(Documents).where(Documents.user_id == user_id)
+        result = await db_session.exec(query)
+        response = result.all()
+        return response
+
+    async def get_user_doc_count(self, user_id: str, db_session: AsyncSession) -> int:
+        query = select(Documents).where(Documents.user_id == user_id)
+        result = await db_session.exec(query)
+        response = result.all()
+        return len(response)
 
     async def save_and_extract_text(self, file: UploadFile, user_id: str) -> dict:
         allowed_extension = ['.pdf','.docx', '.html','.md']
