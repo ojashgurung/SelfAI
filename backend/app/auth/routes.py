@@ -20,6 +20,7 @@ from .schemas import (
 )
 
 from .utils import (
+    set_access_cookie,
     verify_password,
     decode_token,
     create_token,
@@ -38,8 +39,7 @@ auth_router = APIRouter()
 user_service = UserService()
 logger = logging.getLogger(__name__)
 
-REFRESH_TOKEN_EXPIRY = 2
-
+REFRESH_TOKEN_EXPIRY = 7
 
 @auth_router.post("/signup", response_model=UserLoginResponseModel, status_code=status.HTTP_201_CREATED)
 async def create_user_account(
@@ -143,43 +143,40 @@ async def login_user(
             detail="An error occurred during login",
         )
 
-@auth_router.get("/verify/{token}")
-async def verify_user_account(token: str, session: AsyncSession = Depends(get_session)):
+@auth_router.post("/logout")
+async def logout():
     try:
-        payload = decode_url_safe_token(token)
-        if not payload:
-            return JSONResponse(
-                content={"message": "Invalid verification token"},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user_email = payload.get("email")
-        if not user_email:
-            return JSONResponse(
-                content={"message": "Email not found in token"},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-
+        response = JSONResponse(
+            content={
+                "message": "Logged out successfully"
+            },
+            status_code=status.HTTP_200_OK
+        )
         
-        user = await user_service.get_user_by_email(user_email, session)
-
-        if not user:
-            raise UserNotFound()
-
-        await user_service.update_user(user, {"is_verified": True}, session)
-
-        return JSONResponse(
-            content={"message": "Account verified successfully"},
-            status_code=status.HTTP_200_OK,
-        )
-    except UserNotFound:
-        raise
+        remove_auth_cookies(response)
+        return response
+        
     except Exception as e:
-        print(f"Verification error: {str(e)}")
-        return JSONResponse(
-            content={"message": "Error occurred during verification"},
+        logger.error(f"Logout error: {str(e)}")
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during logout"
         )
+
+@auth_router.post("/refresh-token")
+async def refresh_token(refresh_token: str = Cookie(None)):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token provided")
+    
+    payload = decode_token(refresh_token)
+    if not payload or not payload.get("refresh"):
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    new_access_token = create_token(user_data=payload["user"])
+
+    response = JSONResponse(content={"message": "Token refreshed"})
+    set_access_cookie(response, new_access_token)
+    return response
 
 
 @auth_router.get("/verify-token")
@@ -226,48 +223,6 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
             status_code = status.HTTP_401_UNAUTHORIZED,
             content = {"message": "Invalid token"}
         )
-
-@auth_router.post("/logout")
-async def logout():
-    try:
-        response = JSONResponse(
-            content={
-                "message": "Logged out successfully"
-            },
-            status_code=status.HTTP_200_OK
-        )
-        
-        remove_auth_cookies(response)
-        return response
-        
-    except Exception as e:
-        logger.error(f"Logout error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during logout"
-        )
-
-@auth_router.post("/refresh-token")
-async def refresh_token(refresh_token: str = Cookie(None)):
-    if not refresh_token:
-        raise HTTPException(status_code=401, detail="No refresh token provided")
-    
-    payload = decode_token(refresh_token)
-    if not payload or not payload.get("refresh"):
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-
-    new_access_token = create_token(user_data=payload["user"])
-
-    response = JSONResponse(content={"message": "Token refreshed"})
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        samesite="lax",
-        secure=False,  # True in prod
-        max_age=36000,
-    )
-    return response
 
 
 oauth = OAuth()
@@ -413,3 +368,42 @@ async def create_oauth_response(user):
     set_auth_cookies(response, access_token, refresh_token)
 
     return response
+
+@auth_router.get("/verify/{token}")
+async def verify_user_account(token: str, session: AsyncSession = Depends(get_session)):
+    try:
+        payload = decode_url_safe_token(token)
+        if not payload:
+            return JSONResponse(
+                content={"message": "Invalid verification token"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_email = payload.get("email")
+        if not user_email:
+            return JSONResponse(
+                content={"message": "Email not found in token"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        
+        user = await user_service.get_user_by_email(user_email, session)
+
+        if not user:
+            raise UserNotFound()
+
+        await user_service.update_user(user, {"is_verified": True}, session)
+
+        return JSONResponse(
+            content={"message": "Account verified successfully"},
+            status_code=status.HTTP_200_OK,
+        )
+    except UserNotFound:
+        raise
+    except Exception as e:
+        print(f"Verification error: {str(e)}")
+        return JSONResponse(
+            content={"message": "Error occurred during verification"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+

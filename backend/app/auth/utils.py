@@ -1,39 +1,31 @@
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from fastapi.responses import JSONResponse
 from itsdangerous import URLSafeTimedSerializer
 
 import jwt
 from passlib.context import CryptContext
+
 from ..config import Config
 
 passwd_context = CryptContext(schemes=["bcrypt"])
 
-ACCESS_TOKEN_EXPIRY = 36000
-
+ACCESS_TOKEN_EXPIRY = 30
+REFRESH_TOKEN_EXPIRY = 7
 
 def generate_passwd_hash(password: str) -> str:
-    hash = passwd_context.hash(password)
-
-    return hash
-
+    return passwd_context.hash(password)
 
 def verify_password(password: str, hash: str) -> bool:
     return passwd_context.verify(password, hash)
 
-def create_token(
-    user_data: dict, expiry: timedelta = None, refresh: bool = False
-):
+def create_token(user_data: dict, expiry: timedelta = None, refresh: bool = False):
     payload = {}
-
     payload["user"] = user_data
-    payload["exp"] = datetime.now() + (
-        expiry if expiry is not None else timedelta(seconds=ACCESS_TOKEN_EXPIRY)
-    )
+    payload["exp"] = datetime.now(UTC) + (expiry or timedelta(seconds=ACCESS_TOKEN_EXPIRY))
     payload["jti"] = str(uuid.uuid4())
-
     payload["refresh"] = refresh
 
     token = jwt.encode(
@@ -47,7 +39,6 @@ def decode_token(token: str) -> dict:
         token_data = jwt.decode(
             jwt=token, key=Config.JWT_SECRET, algorithms=[Config.JWT_ALGORITHM]
         )
-
         return token_data
 
     except jwt.PyJWTError as e:
@@ -74,6 +65,18 @@ def decode_url_safe_token(token:str):
     except Exception as e:
         logging.error(str(e))
 
+def set_access_cookie(response: JSONResponse, new_access_token: str):
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        domain=None,
+        path="/",
+        max_age=ACCESS_TOKEN_EXPIRY * 60,
+    )
+    return response
 
 def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str):
     response.set_cookie(
@@ -84,7 +87,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
             samesite="lax",
             domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
             path="/",
-            max_age=36000,
+            max_age=ACCESS_TOKEN_EXPIRY * 60,
         )
 
     response.set_cookie(
@@ -95,7 +98,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         samesite="lax",
         domain=".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
         path="/",
-        max_age=172800,
+        max_age=REFRESH_TOKEN_EXPIRY * 86400,
     )
 
     return response
