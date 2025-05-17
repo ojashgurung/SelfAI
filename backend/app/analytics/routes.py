@@ -2,10 +2,13 @@ from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
+from ..user.service import UserService
+
 from .schemas import HighlightResponseModel
 
 from ..rag.service import RagService
 from ..chat.service import ChatService
+from ..user.service import UserService
 from .service import AnalyticsService
 from ..auth.dependencies import AccessTokenBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -16,6 +19,7 @@ analytics_router = APIRouter()
 chat_service = ChatService()
 document_service = RagService()
 analytics_service = AnalyticsService()
+user_service = UserService()
 access_token_bearer = AccessTokenBearer()
 
 @analytics_router.get("/highlight", response_model=HighlightResponseModel)
@@ -41,12 +45,17 @@ async def get_contextual_highlight(
     response = JSONResponse(content=jsonable_encoder(response_data))
     return response
     
-@analytics_router.get("/get-message-count")
-async def get_message_count(
+
+@analytics_router.get("/profile-completion")
+async def get_profile_completion(
     current_user: dict = Depends(access_token_bearer),
     session: AsyncSession = Depends(get_session),
 ):
-
     user_id = current_user["user"]["id"]
-    message_count = await chat_service.get_total_chat_count(user_id, session)
-    return {"message_count": message_count}
+    user_profile = await user_service.get_user(user_id, session)
+    
+    profile_completion_data = await analytics_service.getProfileCompletion(user_profile)
+
+    response = JSONResponse(content=jsonable_encoder(profile_completion_data))  
+    return response
+

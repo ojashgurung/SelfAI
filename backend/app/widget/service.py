@@ -76,6 +76,16 @@ class WidgetService:
         )
         result = await db_session.exec(statement)
         return result.all()
+    
+    async def get_user_widget_count(self, user_id: UUID, db_session: AsyncSession) -> int:
+        """Get the count of widgets for a user"""
+        statement = (
+            select(Widgets)
+            .where(Widgets.user_id == user_id)
+        )
+        result = await db_session.exec(statement)
+        widgets = result.all()
+        return len(widgets)
 
     
     async def update_widget(self, widget_id: UUID, widget_data: WidgetUpdate, user_id: UUID, db_session: AsyncSession) -> Widgets:

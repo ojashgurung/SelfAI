@@ -1,4 +1,12 @@
-from .schemas import HighlightResponseModel
+from .schemas import (
+    HighlightResponseModel,
+    ProfileCompletionResponseModel,
+    ProfileCompletionSectionModel
+    )
+
+from ..user.schemas import (
+    UserResponse,
+)
 
 class AnalyticsService:
     async def getHighlight(self, total_chats: int, recent_chats: int, document_count: int) -> HighlightResponseModel:
@@ -38,3 +46,48 @@ class AnalyticsService:
                 "stat": recent_chats,
                 "description": f"{recent_chats} queries answered this week. Keep it growing!"
             }
+    
+    async def getProfileCompletion(self, user_profile: UserResponse) -> ProfileCompletionResponseModel:
+        REQ_DOCUMENT_COUNT = 3
+        REQ_WIDGET_COUNT = 1
+        REQ_PROFILE_FIELD_COUNT = 4
+        DOCUMENT_TOTAL_PERCENT = 42
+        PROFILE_TOTAL_PERCENT = 34
+        WIDGET_TOTAL_PERCENT = 24
+
+        widget_count = len(user_profile.widgets)
+        document_count = len(user_profile.documents)
+        profile_fields = [user_profile.personal_bio, user_profile.linkedin_url, user_profile.github_url, user_profile.profile_image]
+        profile_fields_count = sum(1 for field in profile_fields if field is not None)
+        
+        widget_percent = float(widget_count/REQ_WIDGET_COUNT)
+        document_percent = float(document_count/REQ_DOCUMENT_COUNT)
+        profile_percent = float(profile_fields_count/REQ_PROFILE_FIELD_COUNT)
+        total_percent = widget_percent * WIDGET_TOTAL_PERCENT + document_percent * DOCUMENT_TOTAL_PERCENT + profile_percent * PROFILE_TOTAL_PERCENT
+
+        sections = []
+
+        sections.append(ProfileCompletionSectionModel(
+                    label="Uploaded Documents",
+                    percent=document_percent * 100,
+                ))
+        
+          
+        sections.append(ProfileCompletionSectionModel(
+                    label="Profile",
+                    percent=profile_percent * 100,
+                ))
+        
+        sections.append(ProfileCompletionSectionModel(
+                    label="Widgets",
+                    percent=widget_percent * 100,
+                ))
+
+        response = ProfileCompletionResponseModel(
+            completion_score=float(total_percent),
+            sections = sections
+        )
+
+        return response
+        
+        

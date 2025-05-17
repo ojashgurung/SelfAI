@@ -1,12 +1,16 @@
 from fastapi import APIRouter,status, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+
+from .service import UserService
 from ..database.models import Users
 from ..database.db import get_session
 from .schemas import UserResponse
 from ..auth.dependencies import AccessTokenBearer
 
 user_router = APIRouter()
+user_service = UserService()
 access_token_bearer = AccessTokenBearer()
 
 @user_router.get("/health-check", status_code=status.HTTP_200_OK)
@@ -52,30 +56,11 @@ async def get_user_by_id(
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        statement = select(Users).where(Users.uuid == user_id)
-        result = await session.exec(statement)
-        user = result.first()
-        
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        user_data = await user_service.get_user(user_id, session)
 
-        await session.refresh(user, ['documents'])
+        response = JSONResponse(content=jsonable_encoder(user_data))
+        return response
 
-        return UserResponse(
-            user_id=user_id,
-            fullname=user.fullname,
-            email=user.email,
-            personal_bio=user.personal_bio,
-            linkedin_url=user.linkedin_url,
-            github_url=user.github_url,
-            profile_image = user.profile_image,
-            documents=[{
-                "id": str(doc.id),
-                "namespace": doc.namespace,
-                "file_name": doc.file_name,
-                "created_at": doc.created_at
-            } for doc in user.documents]
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
