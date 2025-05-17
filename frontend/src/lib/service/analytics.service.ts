@@ -12,4 +12,16 @@ export const analyticsService = {
     const result = await response.json();
     return result;
   },
+
+  async getProfileCompletionStatus() {
+    const response = await fetch(`${ANALYTICS_BASE_URL}/profile-completion`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const result = await response.json();
+    return result;
+  },
 };
