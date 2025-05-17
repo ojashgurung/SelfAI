@@ -60,7 +60,7 @@ export const ChatService = {
 
   async getChatHistory(): Promise<ChatSession[]> {
     try {
-      const response = await fetch(`${CHAT_BASE_URL}/sessions/history`, {
+      const response = await fetch(`${CHAT_BASE_URL}/sessions/connections`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -92,6 +92,39 @@ export const ChatService = {
       return data;
     } catch (error) {
       console.error("Chat history fetch error:", error);
+      throw error;
+    }
+  },
+  async getJoinChatSession(token: string) {
+    try {
+      const response = await fetch(`${CHAT_BASE_URL}/public/${token}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Chat history error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
+        if (response.status === 401) {
+          throw new Error("Please login to join this chat");
+        }
+        if (response.status === 404) {
+          throw new Error("Invalid share token or chat not found");
+        }
+        throw new Error("Failed to join chat");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Join chat error:", error);
       throw error;
     }
   },

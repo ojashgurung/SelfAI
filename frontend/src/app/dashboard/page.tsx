@@ -15,6 +15,7 @@ import { ModernLineChart } from "@/components/ui/nivo-line-chart";
 import { useAuth } from "@/hooks/use-auth";
 import { HighlightCard } from "@/components/dashboard/HighlightCard";
 import { ProfileCompletion } from "@/components/dashboard/ProfileCompletion";
+import { ConnectChat } from "@/components/dashboard/ConnectChat";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -70,30 +71,7 @@ export default function DashboardPage() {
           <ProfileCompletion />
         </div>
         <div className="col-span-4">
-          <Card className="p-6 bg-white rounded-3xl h-[280px] 2xl:h-[300px]">
-            <div className="flex flex-col h-full">
-              <div className="mb-4 2xl:mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Connect with a SelfAI
-                </h2>
-                <p className="text-base text-gray-600">
-                  Paste a SelfAI share link to chat with their profile.
-                </p>
-              </div>
-
-              <div className="relative mb-6">
-                <input
-                  type="text"
-                  placeholder="Enter SelfAI share link..."
-                  className="w-full p-4 bg-gray-50 rounded-2xl text-gray-700 text-base outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <Button className="w-full py-6 bg-indigo-600 hover:bg-indigo-700 rounded-2xl text-white text-base font-medium">
-                Start Chatting
-              </Button>
-            </div>
-          </Card>
+          <ConnectChat />
         </div>
         {/* Second Row */}
         <div className="col-span-8">
