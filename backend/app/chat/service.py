@@ -214,6 +214,25 @@ class ChatService:
             await db_session.refresh(session, ['messages'])
         return session
 
+    async def get_session_connections(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession,
+    ):
+        user = await db_session.get(Users, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        await db_session.refresh(user, ['visited_chats'])
+
+        all_chats = user.visited_chats
+        all_chats.sort(key=lambda x: x.updated_at, reverse=True)
+
+        for chat in all_chats:
+            await db_session.refresh(chat, ['messages', 'owner'])
+        
+        return all_chats
+
     async def get_total_chat_count(
         self,
         user_id: UUID,
