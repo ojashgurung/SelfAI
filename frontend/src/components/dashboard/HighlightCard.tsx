@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { analyticsService } from "@/lib/service/analytics.service";
 import { useState, useEffect } from "react";
 
-export function DashboardHighlightCard() {
-  const [highlightData, setHighlightData] = useState({
+export function HighlightCard() {
+  const [highlightData, setHighlightData] = useState<HighlightProps>({
     label: "Loading...",
     stat: "",
     description: "Loading your highlights....",

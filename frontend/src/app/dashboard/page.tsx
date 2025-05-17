@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { ModernLineChart } from "@/components/ui/nivo-line-chart";
 import { useAuth } from "@/hooks/use-auth";
-import { DashboardHighlightCard } from "@/components/dashboard/dashboardHighlightCard";
+import { HighlightCard } from "@/components/dashboard/HighlightCard";
+import { ProfileCompletion } from "@/components/dashboard/ProfileCompletion";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -63,77 +64,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-12 gap-2 2xl:gap-4">
         {/* First Row */}
         <div className="col-span-3">
-          <DashboardHighlightCard />
+          <HighlightCard />
         </div>
         <div className="col-span-5">
-          <Card className="p-6 bg-white rounded-3xl h-[280px] 2xl:h-[300px]">
-            <div className="flex flex-col h-full">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Profile Completion
-                </h3>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-4xl font-medium 2xl:font-bold">
-                    87%
-                  </span>
-                  <div className="text-xs 2xl:text-sm bg-gray-100 p-2 px-5 rounded-full text-black">
-                    You're Almost there!
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex h-2 rounded-full overflow-hidden gap-1">
-                    <div className="w-[42%] h-full bg-indigo-600 rounded-full" />
-                    <div className="w-[34%] h-full bg-orange-400 rounded-full" />
-                    <div className="w-[24%] h-full bg-gray-200 rounded-full" />
-                  </div>
-                  <div className="flex">
-                    <div className="flex items-center gap-2 w-[42%]">
-                      <div className="w-2 h-2 pl-1 bg-indigo-600 rounded-full" />
-
-                      <span className="text-xs 2xl:text-sm text-gray-500 w-full">
-                        Uploaded Documents
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 w-[34%]">
-                      <div className="w-2 h-2 pl-1 bg-orange-600 rounded-full" />
-                      <span className="text-xs 2xl:text-sm text-gray-500 w-full">
-                        Widgets
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 w-[24%]">
-                      <div className="w-2 h-2 bg-gray-200 rounded-full" />
-                      <span className="text-xs 2xl:text-sm text-gray-500 w-full">
-                        Profile
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="text-sm 2xl:text-base text-gray-500">
-                  Secure your account further by:
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <button className="flex rounded-full border border-gray-200 py-2 px-4 items-center gap-2">
-                    <MailIcon className="w-4 h-4 2xl:w-6 2xl:h-6  text-gray-400" />
-                    <span className="text-sm  text-gray-600">Verify email</span>
-                  </button>
-                  <button className="flex rounded-full border border-gray-200 py-2 px-4 items-center gap-2">
-                    <ShieldCheckIcon className="w-4 h-4 2xl:w-6 2xl:h-6  text-gray-400" />
-                    <span className="text-sm text-gray-600">Enable 2FA</span>
-                  </button>
-                  <button className="ml-auto border border-gray-200 p-2 rounded-full">
-                    <MoreHorizontal className="w-4 h-4 2xl:w-6 2xl:h-6  text-xl text-gray-400" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
+          <ProfileCompletion />
         </div>
         <div className="col-span-4">
           <Card className="p-6 bg-white rounded-3xl h-[280px] 2xl:h-[300px]">
