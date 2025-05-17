@@ -5,14 +5,13 @@ from typing import List, Optional
 from uuid import UUID
 from qrcode import QRCode
 from fastapi.responses import StreamingResponse
-from langchain_core.messages import AIMessage
-from app.database.models import ChatMessages
 from io import BytesIO
 
 from ..database.db import get_session
 from ..database.models import Users
 from .service import ChatService
 from .schemas import (
+    ChatSessionConnectionResponse,
     ChatSessionWithMessages,
     MessageCreate,
     MessageRead
@@ -82,7 +81,6 @@ async def get_public_chat_session(
     share_token: str,
     request: Request,
     current_user: Optional[dict] = Security(access_token_bearer),
-    rag_service: RagService = Depends(get_rag_service),
     db_session: AsyncSession = Depends(get_session),
 ):
     """Access a public chat session using share token"""
@@ -131,28 +129,35 @@ async def get_session_qr(
     
     return StreamingResponse(img_buffer, media_type="image/png")
 
-@chat_router.get("/sessions/history", response_model=List[ChatSessionWithMessages])
-async def get_user_chat_history(
+@chat_router.get("/sessions/connections", response_model=List[ChatSessionConnectionResponse])
+async def get_user_chat_connections(
     current_user: dict = Depends(strict_token_bearer),
     db_session: AsyncSession = Depends(get_session),
 ):
     """Get all chat sessions related to the user"""
     try:
         user_id = current_user["user"]["id"]
-        user = await db_session.get(Users, user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        
+        chat_sessions = await chat_service.get_session_connections(user_id, db_session)
+        
+        response_data = []
+        for session in chat_sessions:
+            session_data = {
+                "id": session.id,
+                "namespace": session.namespace,
+                "title": session.title,
+                "is_public": session.is_public,
+                "user_id": session.user_id,
+                "visitor_id": session.visitor_id,
+                "share_token": session.share_token,
+                "created_at": session.created_at,
+                "updated_at": session.updated_at,
+                "messages": session.messages,
+                "owner_name": session.owner.fullname if session.owner else "Unknown"
+            }
+            response_data.append(session_data)
 
-        await db_session.refresh(user, ['visited_chats'])
-
-
-        all_chats = user.visited_chats
-        all_chats.sort(key=lambda x: x.updated_at, reverse=True)
-
-        for chat in all_chats:
-            await db_session.refresh(chat, ['messages'])
-
-        return all_chats
+        return response_data
 
     except Exception as e:
         raise HTTPException(
