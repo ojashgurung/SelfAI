@@ -15,7 +15,6 @@ export function RecentInteractions() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentShareUrl, setCurrentShareUrl] = useState("");
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   useEffect(() => {
     const fetchInteractions = async () => {
@@ -34,7 +33,6 @@ export function RecentInteractions() {
       return;
     }
     try {
-      setIsCreatingSession(true);
       const session = await ChatService.getMasterSession();
 
       setCurrentShareUrl(
@@ -43,8 +41,6 @@ export function RecentInteractions() {
       setShareDialogOpen(true);
     } catch (error) {
       console.error("Failed to create chat session:", error);
-    } finally {
-      setIsCreatingSession(false);
     }
   };
   return (
