@@ -15,8 +15,6 @@ class Users(SQLModel, table = True):
     email: str = Field(unique=True, nullable=False)
     password_hash: str = Field(nullable=False, exclude=True)
     profile_image: Optional[str] = Field(default=None, nullable=True)
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
     personal_bio: Optional[str] = Field(default=None, nullable=True) 
     linkedin_url: Optional[str] = Field(default=None, nullable=True)
     github_url: Optional[str] = Field(default=None, nullable=True)
@@ -29,6 +27,9 @@ class Users(SQLModel, table = True):
     auth_provider: str = Field(default="email")
     is_premium: bool = Field(default=False)
     role: UserRole = Field(default= UserRole.USER)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    last_login_at: datetime = Field(default_factory=datetime.now)
     documents: List["Documents"] = Relationship(back_populates="users")
     messages: List["ChatMessages"] = Relationship(back_populates="user")
     owned_chats: List["ChatSessions"] = Relationship(

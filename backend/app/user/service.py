@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 
 from sqlmodel import select
 from typing import Optional
@@ -49,6 +50,21 @@ class UserService:
                     created_at = doc.created_at
                 ) for doc in user.documents]
             )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e)
+            )
+    
+    async def get_user_last_login(self, user_id: UUID, db_session: AsyncSession) -> Optional[datetime]:
+        """Get user last login date"""
+        try:
+            statement = select(Users).where(Users.id == user_id)
+            result = await db_session.exec(statement)
+            user = result.first()
+
+            return user.last_login_at
+
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
