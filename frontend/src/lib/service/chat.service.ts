@@ -128,4 +128,29 @@ export const ChatService = {
       throw error;
     }
   },
+
+  async getRecentInteractions() {
+    try {
+      const response = await fetch(`${CHAT_BASE_URL}/recent-interactions`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Recent interactions error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Join chat error:", error);
+      throw error;
+    }
+  },
 };
