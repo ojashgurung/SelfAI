@@ -29,6 +29,48 @@ access_token_bearer = AccessTokenBearer(auto_error=False)
 async def get_rag_service():
     return RagService()
 
+@chat_router.get("/sessions")
+async def get_chat_session(
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+    """Get User Chat session"""
+    try:
+        user_id = current_user["user"]["id"]
+        sessions = await chat_service.get_user_sessions(user_id, db_session)
+        
+        if not sessions:
+            return []
+            
+        return sessions
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@chat_router.get("/recent-interactions")
+async def get_recent_interactions(
+    current_user: dict = Depends(strict_token_bearer),
+    db_session: AsyncSession = Depends(get_session),
+):
+
+    """Get recent interactions with chatbots"""
+    try:
+        user_id = current_user["user"]["id"]
+        sessions = await chat_service.get_recent_interactions(user_id, db_session)
+
+        if not sessions:
+            return []
+
+        return sessions
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
 @chat_router.post("/sessions/{session_id}/messages", response_model=MessageRead)
 async def send_message(
     session_id: UUID,
@@ -338,4 +380,6 @@ async def get_chat_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
 
