@@ -276,7 +276,7 @@ class ChatService:
 
     def _format_time_difference(self, timestamp: datetime) -> str:
         if not timestamp:
-            return "No messages"
+            return "-"
             
         time_diff = datetime.now() - timestamp
         minutes = time_diff.total_seconds() / 60

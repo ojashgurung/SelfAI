@@ -1,4 +1,5 @@
 from sqlmodel import select
+from datetime import timedelta
 from typing import Optional
 from fastapi.exceptions import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -7,8 +8,15 @@ from ..database.models import Users
 from .schemas import UserCreateModel
 from .utils import generate_passwd_hash
 from ..errors import UserAlreadyExists
+from fastapi.responses import JSONResponse
 
-class UserService:
+from .utils import (
+    create_token,
+    set_auth_cookies,
+
+)
+
+class AuthService:
     async def get_user_by_email(self, email: str, session : AsyncSession):
         normalized_email = email.lower()
         statement = select(Users).where(Users.email.ilike(normalized_email))
@@ -138,3 +146,35 @@ class UserService:
         except Exception as e:
             print(f"Error in get_or_create_github_user: {str(e)}")
             raise
+    
+    async def create_oauth_response(self, user: Users, REFRESH_TOKEN_EXPIRY: int):
+        access_token = create_token(
+            user_data={
+                "id": str(user.id),
+                "email": user.email,
+                "role": user.role,
+            }
+        )
+
+        refresh_token = create_token(
+            user_data={"id": str(user.id), "email": user.email},
+            refresh=True,
+            expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
+        )
+
+        response = JSONResponse(
+            content={
+                "message": "OAuth login successful",
+                "user": {
+                    "id": str(user.id),
+                    "fullname": user.fullname,
+                    "email": user.email,
+                    "role": user.role,
+                    "profile_image": user.profile_image 
+                }
+            }
+        )
+
+        set_auth_cookies(response, access_token, refresh_token)
+
+        return response

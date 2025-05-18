@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 
 from fastapi.encoders import jsonable_encoder
@@ -29,14 +29,14 @@ from .utils import (
     remove_auth_cookies
 )
 
-from .service import UserService
+from .service import AuthService
 from ..errors import UserAlreadyExists, UserNotFound, InvalidCredentials
 from ..config import Config
 from ..database.db import get_session
 
 
 auth_router = APIRouter()
-user_service = UserService()
+auth_service = AuthService()
 logger = logging.getLogger(__name__)
 
 REFRESH_TOKEN_EXPIRY = 7
@@ -47,10 +47,10 @@ async def create_user_account(
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        if await user_service.user_exists(user_data.email, session):
+        if await auth_service.user_exists(user_data.email, session):
             raise UserAlreadyExists()
 
-        new_user = await user_service.create_user(user_data, session)
+        new_user = await auth_service.create_user(user_data, session)
 
         access_token = create_token(
             user_data={
@@ -96,7 +96,7 @@ async def login_user(
         email = login_data.email
         password = login_data.password
 
-        user = await user_service.get_user_by_email(email, session)
+        user = await auth_service.get_user_by_email(email, session)
 
         if not user:
             raise InvalidCredentials()
@@ -129,6 +129,9 @@ async def login_user(
                 role=user.role,
             )
         )
+        user.last_login_at = datetime.now()
+        session.add(user)
+        await session.commit()
         
         response = JSONResponse(content=jsonable_encoder(response_data))
         set_auth_cookies(response, access_token, refresh_token)
@@ -196,7 +199,7 @@ async def verify_access_token(session : AsyncSession = Depends(get_session), acc
             )
         user_email = payload["user"].get("email")
         
-        user = await user_service.get_user_by_email(user_email, session)
+        user = await auth_service.get_user_by_email(user_email, session)
 
         if not user:
             return JSONResponse(
@@ -280,9 +283,12 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
             print(f"Parse error: {str(parse_error)}")
             raise HTTPException(status_code=400, detail="Failed to get user info")
 
-        user = await user_service.get_or_create_google_user(user_info, session)
+        user = await auth_service.get_or_create_google_user(user_info, session)
         
-        response = await create_oauth_response(user)
+        user.last_login_at = datetime.now()
+        session.add(user)
+        await session.commit()
+        response = await auth_service.create_oauth_response(user)
         response.headers['Location'] = f"{Config.FRONTEND_URL}/dashboard"
         response.status_code = status.HTTP_302_FOUND
         return response
@@ -318,9 +324,12 @@ async def github_callback(request: Request, session: AsyncSession = Depends(get_
             emails = emails_resp.json()
             primary_email = next(email['email'] for email in emails if email['primary'])
 
-            user = await user_service.get_or_create_github_user(user_info, primary_email, session)
+            user = await auth_service.get_or_create_github_user(user_info, primary_email, session)
             
-            response = await create_oauth_response(user)
+            user.last_login_at = datetime.now()
+            session.add(user)
+            await session.commit()
+            response = await auth_service.create_oauth_response(user, REFRESH_TOKEN_EXPIRY)
             response.headers['Location'] = f"{Config.FRONTEND_URL}/dashboard"
             response.status_code = status.HTTP_302_FOUND
             return response
@@ -336,38 +345,6 @@ async def github_callback(request: Request, session: AsyncSession = Depends(get_
             status_code=status.HTTP_302_FOUND
         )
 
-
-async def create_oauth_response(user):
-    access_token = create_token(
-        user_data={
-            "id": str(user.id),
-            "email": user.email,
-            "role": user.role,
-        }
-    )
-
-    refresh_token = create_token(
-        user_data={"id": str(user.id), "email": user.email},
-        refresh=True,
-        expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
-    )
-
-    response = JSONResponse(
-        content={
-            "message": "OAuth login successful",
-            "user": {
-                "id": str(user.id),
-                "fullname": user.fullname,
-                "email": user.email,
-                "role": user.role,
-                "profile_image": user.profile_image 
-            }
-        }
-    )
-
-    set_auth_cookies(response, access_token, refresh_token)
-
-    return response
 
 @auth_router.get("/verify/{token}")
 async def verify_user_account(token: str, session: AsyncSession = Depends(get_session)):
@@ -387,12 +364,12 @@ async def verify_user_account(token: str, session: AsyncSession = Depends(get_se
             )
 
         
-        user = await user_service.get_user_by_email(user_email, session)
+        user = await auth_service.get_user_by_email(user_email, session)
 
         if not user:
             raise UserNotFound()
 
-        await user_service.update_user(user, {"is_verified": True}, session)
+        await auth_service.update_user(user, {"is_verified": True}, session)
 
         return JSONResponse(
             content={"message": "Account verified successfully"},
