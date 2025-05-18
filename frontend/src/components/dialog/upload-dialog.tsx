@@ -18,11 +18,7 @@ interface UploadDialogProps {
   onSuccess?: (response: { session_id: string }) => void;
 }
 
-export function UploadDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-}: UploadDialogProps) {
+export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
   const router = useRouter();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<
@@ -76,7 +72,6 @@ export function UploadDialog({
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       if (masterSession) {
-        onSuccess?.({ session_id: masterSession.id });
         onOpenChange(false);
         toast.info("Training complete and Redirecting to chat!", {
           description:
