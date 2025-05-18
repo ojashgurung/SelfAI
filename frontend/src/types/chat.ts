@@ -33,3 +33,14 @@ export interface Document {
   file_name: string;
   created_at: string;
 }
+
+export interface RecentInteractionProps {
+  id: string;
+  title: string;
+  visitor_name: string;
+  visitor_profile_image?: string;
+  last_message: string;
+  created_at: string;
+  updated_at: string;
+  last_message_created_at: string;
+}
