@@ -36,7 +36,6 @@ export default function DocumentPage() {
   const { user } = useAuth();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [ownerSessionId, setOwnerSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentShareUrl, setCurrentShareUrl] = useState("");
@@ -75,19 +74,6 @@ export default function DocumentPage() {
       console.error("Failed to create chat session:", error);
     } finally {
       setIsCreatingSession(false);
-    }
-  };
-
-  const handleUploadSuccess = async (response: { session_id: string }) => {
-    try {
-      setUploadOpen(false);
-      if (response.session_id) {
-        localStorage.setItem("ownerSessionId", response.session_id);
-        setOwnerSessionId(response.session_id);
-      }
-      await loadDocuments();
-    } catch (error) {
-      console.error("Failed to handle upload success:", error);
     }
   };
 
@@ -443,11 +429,7 @@ export default function DocumentPage() {
           </div>
         </div>
       </div>
-      <UploadDialog
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        onSuccess={handleUploadSuccess}
-      />
+      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} />
       <ShareDialog
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
