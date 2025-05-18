@@ -1,3 +1,8 @@
+from uuid import UUID
+from datetime import datetime
+
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from .schemas import (
     HighlightResponseModel,
     ProfileCompletionResponseModel,
@@ -7,6 +12,15 @@ from .schemas import (
 from ..user.schemas import (
     UserResponse,
 )
+
+from ..database.models import (
+    ChatMessages, 
+    ChatSessions, 
+    Users
+)
+
+from sqlmodel import distinct, select, between, func
+
 
 class AnalyticsService:
     async def getHighlight(self, total_chats: int, recent_chats: int, document_count: int) -> HighlightResponseModel:
@@ -89,5 +103,69 @@ class AnalyticsService:
         )
 
         return response
+    
+    @staticmethod
+    async def count_user_queries(user_id: UUID, start: datetime, end: datetime, db_session: AsyncSession):
+        stmt = (
+            select(func.count())
+            .select_from(ChatMessages)
+            .join(ChatSessions, ChatMessages.session_id == ChatSessions.id)
+            .where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.title != "Owner",
+                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
+                ChatMessages.role == "assistant",
+                ChatMessages.created_at.between(start, end)
+            )
+        )
+        result = await db_session.exec(stmt)
+        return result.first()
+    
+    @staticmethod
+    async def count_unique_visitors(user_id: UUID, start: datetime, end: datetime, db_session: AsyncSession):
+        statement = (
+            select(func.count())
+            .select_from(ChatSessions)
+            .where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.title != "Owner",
+                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
+                ChatSessions.created_at.between(start, end)
+            )
+        )
+
+        result = await db_session.exec(statement)
+        return result.first()
+
+    @staticmethod
+    async def count_total_user_queries(user_id: UUID, db_session: AsyncSession):
+        stmt = (
+            select(func.count())
+            .select_from(ChatMessages)
+            .join(ChatSessions, ChatMessages.session_id == ChatSessions.id)
+            .where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.title != "Owner",
+                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
+                ChatMessages.role == "assistant",
+            )
+        )
+        result = await db_session.exec(stmt)
+        return result.first()
+
+    @staticmethod
+    async def count_total_unique_visitors(user_id: UUID, db_session: AsyncSession):
+        statement = (
+            select(func.count())
+            .select_from(ChatSessions)
+            .where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.title != "Owner",
+                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
+            )
+        )
+
+        result = await db_session.exec(statement)
+        return result.first()
         
         

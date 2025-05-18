@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 from pydantic import BaseModel
 
@@ -18,3 +19,20 @@ class ProfileCompletionResponseModel(BaseModel):
     completion_score: float
     sections: List[ProfileCompletionSectionModel]
     # actions: List[ProfileCompletionActionModel]
+
+class MetricsSummaryQueries(BaseModel):
+    total_queries: int
+    current: int
+    previous: int
+    growth: int
+
+class MetricsSummaryVisitors(BaseModel):
+    total_visitors: int
+    current: int
+    previous: int
+    growth: int
+
+class MetricsSummaryResponseModel(BaseModel):
+    queries: MetricsSummaryQueries
+    visitors: MetricsSummaryVisitors
+    since: datetime

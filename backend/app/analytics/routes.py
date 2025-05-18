@@ -1,10 +1,16 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from ..user.service import UserService
 
-from .schemas import HighlightResponseModel
+from .schemas import (
+    HighlightResponseModel,
+    MetricsSummaryQueries,
+    MetricsSummaryResponseModel,
+    MetricsSummaryVisitors
+)
 
 from ..rag.service import RagService
 from ..chat.service import ChatService
@@ -57,5 +63,55 @@ async def get_profile_completion(
     profile_completion_data = await analytics_service.getProfileCompletion(user_profile)
 
     response = JSONResponse(content=jsonable_encoder(profile_completion_data))  
+    return response
+
+@analytics_router.get("/metrics/summary", response_model=MetricsSummaryResponseModel)
+async def get_summary_metrics(
+    current_user: dict = Depends(access_token_bearer),
+    session : AsyncSession = Depends(get_session)
+):
+    now = datetime.now()
+    user_id = current_user["user"]["id"]
+    
+    last_login_date = await user_service.get_user_last_login(user_id, session)
+    window_size = now - last_login_date
+
+    previous_start = last_login_date - window_size
+    previous_end = last_login_date
+
+    new_queries = await analytics_service.count_user_queries(user_id, last_login_date, now, session)
+    old_queries = await analytics_service.count_user_queries(user_id, previous_start, previous_end, session)
+
+    new_visitors = await analytics_service.count_unique_visitors(user_id, last_login_date, now, session)
+    old_visitors = await analytics_service.count_unique_visitors(user_id, previous_start, previous_end, session)
+    
+    total_user_queries = await analytics_service.count_total_user_queries(user_id, session)
+    total_unique_visitors = await analytics_service.count_total_unique_visitors(user_id, session)
+
+    def growth(new, old) -> int:
+        if old == 0:
+            return 0
+        return round(((new - old)/ old) * 100)
+    
+    queries_growth = growth(new_queries, old_queries)
+    visitors_growth = growth(new_visitors, old_visitors)
+    
+    response_data = MetricsSummaryResponseModel(
+        queries = MetricsSummaryQueries(
+            total_queries= total_user_queries,
+            current= new_queries,
+            previous= old_queries,
+            growth= queries_growth
+        ),
+        visitors = MetricsSummaryVisitors(
+            total_visitors= total_unique_visitors,
+            current= new_visitors,
+            previous= old_visitors,
+            growth= visitors_growth
+        ),
+        since= last_login_date
+    )
+
+    response = JSONResponse(content=jsonable_encoder(response_data))
     return response
 
