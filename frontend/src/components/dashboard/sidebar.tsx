@@ -38,7 +38,7 @@ interface ChatSession {
   owner_name: string;
   created_at: string;
   updated_at: string;
-  messages: Array<{
+  messages?: Array<{
     id: string;
     session_id: string;
     content: string;
@@ -310,7 +310,7 @@ export function Sidebar() {
             </div>
             <div className="space-y-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent max-h-[calc(100vh-450px)]">
               {chatHistory.map((session) => (
-                <div key={session.id}>
+                <div key={session.id} className="hover:text-indigo-600 ">
                   <Link
                     key={session.id}
                     href={`/dashboard/chat/${session.id}`}
@@ -318,8 +318,9 @@ export function Sidebar() {
                   >
                     {session.owner_name +
                       " - " +
-                      session.messages[0]?.content?.slice(0, 16) +
-                      "..." || "Untitled Chat"}
+                      (session.messages && session.messages.length > 0
+                        ? session.messages[0].content.substring(0, 20) + "..."
+                        : "No messages yet")}
                   </Link>
                 </div>
               ))}
