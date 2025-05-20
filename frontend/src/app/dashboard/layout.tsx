@@ -1,9 +1,9 @@
 "use client";
 
-import { Sidebar } from "@/components/dashboard/Sidebar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { Sidebar } from "@/components/dashboard/Sidebar/Sidebar";
 
 export default function DashboardLayout({
   children,

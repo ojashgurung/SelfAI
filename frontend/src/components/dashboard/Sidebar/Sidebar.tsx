@@ -25,7 +25,7 @@ import { LogoutDialog } from "@/components/dialog/logout-dialog";
 import { JoinChatDialog } from "@/components/dialog/join-chat-dialog";
 import { UserDropdown } from "@/components/dropdown/user-dropdown";
 import { ChatService } from "@/lib/service/chat.service";
-import { Logo } from "../logo/Logo";
+import { Logo } from "../../logo/Logo";
 
 interface ChatSession {
   namespace: string;
