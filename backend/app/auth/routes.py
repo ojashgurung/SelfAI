@@ -288,7 +288,7 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
         user.last_login_at = datetime.now()
         session.add(user)
         await session.commit()
-        response = await auth_service.create_oauth_response(user)
+        response = await auth_service.create_oauth_response(user, REFRESH_TOKEN_EXPIRY)
         response.headers['Location'] = f"{Config.FRONTEND_URL}/dashboard"
         response.status_code = status.HTTP_302_FOUND
         return response
