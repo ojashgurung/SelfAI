@@ -109,15 +109,15 @@ export function UserDropdown({
           alignOffset={alignOffset}
         >
           <Link href={"/dashboard/profile"}>
-            <DropdownMenuItem className="hover:bg-gray-50">
+            <DropdownMenuItem className="hover:bg-gray-50" disabled>
               <User className="w-4 h-4 mr-2" />
-              <span>Profile</span>
+              <span>Profile (coming soon)</span>
             </DropdownMenuItem>
           </Link>
           <Link href={"/dashboard/settings"}>
-            <DropdownMenuItem className="hover:bg-gray-50">
+            <DropdownMenuItem className="hover:bg-gray-50" disabled>
               <Settings className="w-4 h-4 mr-2" />
-              <span>Settings</span>
+              <span>Settings (coming soon)</span>
             </DropdownMenuItem>
           </Link>
           <DropdownMenuSeparator className="bg-gray-200" />
