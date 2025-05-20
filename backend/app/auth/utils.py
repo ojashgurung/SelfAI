@@ -67,15 +67,15 @@ def decode_url_safe_token(token:str):
 
 def set_access_cookie(response: JSONResponse, new_access_token: str):
     response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        domain=None,
-        path="/",
-        max_age=ACCESS_TOKEN_EXPIRY * 60,
-    )
+            key="access_token",
+            value=new_access_token,
+            httponly=True,
+            secure=Config.ENVIRONMENT == "prod",
+            samesite="lax",
+            domain= ".selfai.tech" if Config.ENVIRONMENT == "prod" else None,
+            path="/",
+            max_age=ACCESS_TOKEN_EXPIRY * 60,
+        )
     return response
 
 def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str):
