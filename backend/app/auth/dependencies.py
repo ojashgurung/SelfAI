@@ -6,14 +6,14 @@ from ..database.db import get_session
 from ..database.models import Users
 
 from .service import (
-    UserService
+    AuthService
 )
 
 from .utils import decode_token
 from ..errors import InvalidToken, AccessTokenRequired, RefreshTokenRequired
 
 
-user_service = UserService()
+auth_service = AuthService()
 
 class TokenBearer:
     def __init__(self, auto_error: bool=True):
@@ -70,7 +70,7 @@ async def get_current_user(
 ):
     user_email = token_details["user"]["email"]
 
-    user = await user_service.get_user_by_email(user_email, session)
+    user = await auth_service.get_user_by_email(user_email, session)
     
     if not user:
         raise HTTPException(

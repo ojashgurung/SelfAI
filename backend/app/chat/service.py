@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta
+
 from fastapi import HTTPException, status
-from sqlmodel import select, join
+from qrcode.util import create_data
+from sqlmodel import select, join, func, desc
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Optional
 from uuid import UUID
@@ -70,6 +73,18 @@ class ChatService:
             await db_session.refresh(session, ['messages'])
         return session
 
+    async def get_user_sessions(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession
+    ) -> List[ChatSessions]:
+        statement = select(ChatSessions).where(ChatSessions.user_id == user_id)
+        result = await db_session.exec(statement)
+        sessions = result.all()
+        for session in sessions:
+            await db_session.refresh(session, ['messages'])
+        return list(sessions)
+
     async def get_session_by_token(
         self,
         token: str,
@@ -83,12 +98,12 @@ class ChatService:
         return session
     
     async def get_or_create_visitor_session(
-    self,
-    template_session_id: UUID,
-    visitor_id: str,
-    namespace: str,
-    db_session: AsyncSession
-) -> ChatSessions:
+        self,
+        template_session_id: UUID,
+        visitor_id: str,
+        namespace: str,
+        db_session: AsyncSession
+    ) -> ChatSessions:
         try:
             statement = select(ChatSessions).where(
                 ChatSessions.parent_id == template_session_id,
@@ -211,3 +226,135 @@ class ChatService:
         if session:
             await db_session.refresh(session, ['messages'])
         return session
+
+    async def get_session_connections(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession,
+    ):
+        user = await db_session.get(Users, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        await db_session.refresh(user, ['visited_chats'])
+
+        all_chats = user.visited_chats
+        all_chats.sort(key=lambda x: x.updated_at, reverse=True)
+
+        for chat in all_chats:
+            await db_session.refresh(chat, ['messages', 'owner'])
+        
+        return all_chats
+
+    async def get_total_chat_count(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession
+    ) -> int:
+        statement = select(ChatSessions).where(
+            ChatSessions.user_id == user_id,
+            ChatSessions.visitor_id != None
+        )
+        result = await db_session.exec(statement)
+        sessions = result.all()
+        return len(sessions)
+
+    async def get_weekly_chat_count(
+        self,
+        user_id: UUID,
+        db_session: AsyncSession
+    ) -> int:
+        statement = select(ChatSessions).where(
+            ChatSessions.user_id == user_id,
+            ChatSessions.visitor_id != None,
+            ChatSessions.created_at >= datetime.now() - timedelta(days=7)
+        )
+        result = await db_session.exec(statement)
+        sessions = result.all()
+
+        return len(sessions)
+
+    def _format_time_difference(self, timestamp: datetime) -> str:
+        if not timestamp:
+            return "-"
+            
+        time_diff = datetime.now() - timestamp
+        minutes = time_diff.total_seconds() / 60
+        
+        if minutes < 60:
+            return f"{int(minutes)}min"
+        else:
+            hours = minutes / 60
+            return f"{int(hours)}hr"
+
+    async def get_recent_interactions(self, user_id: UUID, db_session: AsyncSession):
+        latest_messages = (
+            select(
+                ChatMessages.session_id,
+                ChatMessages.content,
+                ChatMessages.created_at,
+                func.row_number().over(
+                    partition_by=ChatMessages.session_id,
+                    order_by=ChatMessages.created_at.desc()
+                ).label('msg_rank')
+            ).where(ChatMessages.role == "user") .subquery()
+        )
+
+        # Get latest session for each visitor
+        latest_visitor_sessions = (
+            select(
+                ChatSessions.id,
+                ChatSessions.visitor_id,
+                func.row_number().over(
+                    partition_by=ChatSessions.visitor_id,
+                    order_by=ChatSessions.updated_at.desc()
+                ).label('session_rank')
+            )
+            .where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.title != "Owner",
+                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id)
+            )
+            .subquery()
+        )
+
+        statement = (
+            select(
+                ChatSessions.id,
+                ChatSessions.title,
+                ChatSessions.created_at,
+                ChatSessions.updated_at,
+                Users.fullname.label('visitor_name'),
+                Users.profile_image.label('visitor_profile_image'),
+                latest_messages.c.content.label('last_message'),
+                latest_messages.c.created_at.label('last_message_created_at')
+            )
+            .join(latest_visitor_sessions, 
+                  (ChatSessions.id == latest_visitor_sessions.c.id) &
+                  (latest_visitor_sessions.c.session_rank == 1))
+            .join(Users, ChatSessions.visitor_id == Users.id, isouter=True)
+            .join(
+                latest_messages,
+                (latest_messages.c.session_id == ChatSessions.id) &
+                (latest_messages.c.msg_rank == 1),
+                isouter=True
+            )
+            .order_by(ChatSessions.updated_at.desc())
+        )
+        
+        result = await db_session.exec(statement)
+        rows = result.all()
+
+        return [
+            {
+                "id": str(row.id),
+                "title": row.title,
+                "visitor_name": row.visitor_name or "Anonymous",
+                "visitor_profile_image": row.visitor_profile_image or None,
+                "last_message": row.last_message or "No messages yet",
+                "created_at": row.created_at.isoformat(),
+                "updated_at": row.updated_at.isoformat(),
+                "last_message_created_at" : self._format_time_difference(row.last_message_created_at)
+            }
+            for row in rows[:4]
+        ]

@@ -22,28 +22,29 @@ import {
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { LogoutDialog } from "@/components/dialog/logout-dialog";
-import { ShareLinkDialog } from "@/components/dialog/share-link-dialog";
+import { JoinChatDialog } from "@/components/dialog/join-chat-dialog";
 import { UserDropdown } from "@/components/dropdown/user-dropdown";
 import { ChatService } from "@/lib/service/chat.service";
-import { Logo } from "../logo/Logo";
+import { Logo } from "../../logo/Logo";
 
 interface ChatSession {
+  namespace: string;
+  title: string;
+  is_public: boolean;
   id: string;
   user_id?: string;
   visitor_id?: string;
   share_token?: string;
+  owner_name: string;
   created_at: string;
   updated_at: string;
-  messages: Array<{
+  messages?: Array<{
     id: string;
     session_id: string;
     content: string;
     role: string;
     created_at: string;
   }>;
-  namespace: string;
-  title: string;
-  is_public: boolean;
 }
 
 export function Sidebar() {
@@ -57,7 +58,6 @@ export function Sidebar() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
 
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
@@ -70,14 +70,6 @@ export function Sidebar() {
       router.replace("/auth/signin");
     } catch (error) {
       toast.error("Failed to logout. Please try again.");
-    }
-  };
-
-  const handleJoinChat = async () => {
-    try {
-      setShowShareDialog(false);
-    } catch (error) {
-      console.error("Failed to join chat:", error);
     }
   };
 
@@ -97,15 +89,14 @@ export function Sidebar() {
       setIsLoading(true);
 
       try {
-        // Fetch both in parallel
         const [masterResult, historyResult] = await Promise.all([
           ChatService.getMasterSession(),
           ChatService.getChatHistory(),
         ]);
 
         if (isMounted) {
-          setMasterSession(masterResult);
-          setChatHistory(historyResult || []);
+          setMasterSession(masterResult as ChatSession);
+          setChatHistory((historyResult as ChatSession[]) || []);
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -318,17 +309,19 @@ export function Sidebar() {
             </div>
             <div className="space-y-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent max-h-[calc(100vh-450px)]">
               {chatHistory.map((session) => (
-                <Link
-                  key={session.id}
-                  href={`/dashboard/chat/${session.id}`}
-                  className="block w-full text-left px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md truncate bg-transparent"
-                >
-                  {"User " +
-                    session.user_id?.slice(0, 5) +
-                    " - " +
-                    session.messages[0]?.content?.slice(0, 16) +
-                    "..." || "Untitled Chat"}
-                </Link>
+                <div key={session.id} className="hover:text-indigo-600 ">
+                  <Link
+                    key={session.id}
+                    href={`/dashboard/chat/${session.id}`}
+                    className="block w-full text-left px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md truncate bg-transparent"
+                  >
+                    {session.owner_name +
+                      " - " +
+                      (session.messages && session.messages.length > 0
+                        ? session.messages[0].content.substring(0, 20) + "..."
+                        : "No messages yet")}
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
@@ -350,10 +343,9 @@ export function Sidebar() {
         onConfirm={handleLogoutConfirm}
         email={user?.email || ""}
       />
-      <ShareLinkDialog
+      <JoinChatDialog
         isOpen={showShareDialog}
         onClose={() => setShowShareDialog(false)}
-        onJoin={handleJoinChat}
       />
     </>
   );

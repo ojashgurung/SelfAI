@@ -8,6 +8,7 @@ from .rag.routes import rag_router
 from .user.routes import user_router
 from .chat.routes import chat_router
 from .widget.routes import widget_router
+from .analytics.routes import analytics_router
 from .database.db import init_db
 from .errors import register_all_errors
 
@@ -68,4 +69,5 @@ app.include_router(rag_router, prefix=f"{version_prefix}/rag", tags=["rag"])
 app.include_router(user_router, prefix=f"{version_prefix}/user", tags=["user"])
 app.include_router(chat_router, prefix=f"{version_prefix}/chat", tags=["chat"])
 app.include_router(widget_router, prefix=f"{version_prefix}/widget", tags=["widget"])
+app.include_router(analytics_router, prefix=f"{version_prefix}/analytics", tags=["analytics"])
 

@@ -8,6 +8,14 @@ class DocumentInfo(BaseModel):
     file_name: str
     created_at: datetime
 
+class WidgetInfo(BaseModel):
+    id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    expires_at: Optional[datetime]
+    is_active: bool
+
 class UserResponse(BaseModel):
     user_id: str
     fullname: str
@@ -16,4 +24,5 @@ class UserResponse(BaseModel):
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
     profile_image: Optional[str] = None
+    widgets: List[WidgetInfo] = []
     documents: List[DocumentInfo] = []

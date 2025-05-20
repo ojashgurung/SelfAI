@@ -1,30 +1,31 @@
 "use client";
 
 import { ResponsiveLine } from "@nivo/line";
+import { ChartSeries } from "@/types/performanceOverview";
 
-const chartData = [
-  {
-    id: "Views",
-    color: "hsl(252, 100%, 67%)", // Purple-ish
-    data: [
-      { x: "9 Jan", y: 3 },
-      { x: "10 Jan", y: 12 },
-      { x: "19 Jan", y: 45 },
-      { x: "20 Jan", y: 34 },
-      { x: "21 Jan", y: 74 },
-      { x: "22 Jan", y: 45 },
-      { x: "27 Jan", y: 123 },
-      { x: "30 Jan", y: 97 },
-    ],
-  },
-];
+interface ModernLineChartProps {
+  chartData: ChartSeries[];
+  minCount: number;
+  maxCount: number;
+}
 
-export function ModernLineChart() {
+export function ModernLineChart({
+  chartData,
+  minCount,
+  maxCount,
+}: ModernLineChartProps) {
+  const tickCount = 7;
+  const range = maxCount - minCount;
+  const step = Math.ceil(range / (tickCount - 1));
+  const tickValues = Array.from(
+    { length: tickCount },
+    (_, i) => minCount + i * step
+  );
   return (
     <div className="h-[220px] 2xl:h-[260px]">
       <ResponsiveLine
         data={chartData}
-        margin={{ top: 10, right: 20, bottom: 40, left: 40 }} // ⬅️ increased bottom margin
+        margin={{ top: 10, right: 20, bottom: 40, left: 40 }}
         xScale={{ type: "point" }}
         yScale={{
           type: "linear",
@@ -42,7 +43,7 @@ export function ModernLineChart() {
         axisLeft={{
           tickSize: 0,
           tickPadding: 10,
-          tickValues: [0, 10, 20, 30, 40, 50, 60],
+          tickValues: tickValues,
         }}
         enableGridX={false}
         gridYValues={7}
@@ -54,7 +55,7 @@ export function ModernLineChart() {
         pointBorderColor={{ from: "serieColor" }}
         enableArea={true}
         areaOpacity={0.15}
-        areaBaselineValue={0} // ⬅️ This ensures area starts from 0 instead of y-min
+        areaBaselineValue={0}
         useMesh={true}
         theme={{
           axis: {
@@ -98,9 +99,9 @@ export function ModernLineChart() {
               borderRadius: "6px",
             }}
           >
-            {slice.points.map((point) => (
-              <div key={point.id}>
-                <span style={{ color: point.serieColor }}>
+            {slice.points.map((point, index) => (
+              <div key={`${point.data.xFormatted}-${index}`}>
+                <span style={{ color: "hsl(252, 100%, 67%)" }}>
                   {point.data.yFormatted}
                 </span>{" "}
                 views

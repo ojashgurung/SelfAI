@@ -10,18 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ChatService } from "@/lib/service/chat.service";
+import { Loader2 } from "lucide-react";
 
 interface ShareLinkDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onJoin: (shareToken: string) => void;
 }
 
-export function ShareLinkDialog({
-  isOpen,
-  onClose,
-  onJoin,
-}: ShareLinkDialogProps) {
+export function JoinChatDialog({ isOpen, onClose }: ShareLinkDialogProps) {
   const [shareToken, setShareToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,27 +27,20 @@ export function ShareLinkDialog({
     const token = shareToken.includes("/chat/public/")
       ? shareToken.split("/chat/public/")[1]
       : shareToken;
+    setIsLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chat/public/${token}`,
-        {
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Please login to join this chat");
-        }
-        if (response.status === 404) {
-          throw new Error("Invalid share token or chat not found");
-        }
-        throw new Error("Failed to join chat");
-      }
+      const response = await ChatService.getJoinChatSession(token);
+      toast.info("Joining Chat", {
+        description:
+          "This may take a few moments. Please don’t close the page.",
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      window.location.href = `/dashboard/chat/${response?.id}`;
 
-      onJoin(token);
+      toast.info("Chat Joined now redirecting to chat!", {
+        description:
+          "Successfully joined chat is now ready to chat. Redirecting...",
+      });
       setShareToken("");
       onClose();
     } catch (error) {
@@ -96,6 +86,7 @@ export function ShareLinkDialog({
               type="submit"
               disabled={!shareToken.trim() || isLoading}
             >
+              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isLoading ? "Joining..." : "Join Chat"}
             </Button>
           </DialogFooter>

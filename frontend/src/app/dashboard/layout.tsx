@@ -1,9 +1,9 @@
 "use client";
 
-import { Sidebar } from "@/components/dashboard/sidebar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { Sidebar } from "@/components/dashboard/Sidebar/Sidebar";
 
 export default function DashboardLayout({
   children,
@@ -27,7 +27,7 @@ export default function DashboardLayout({
 
     verify();
 
-    const interval = setInterval(verify, 5 * 60 * 1000); // 5 mins
+    const interval = setInterval(verify, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkAuth, logout, router]);
 

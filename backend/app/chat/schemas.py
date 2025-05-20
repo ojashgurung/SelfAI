@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Literal
 from uuid import UUID
 
 class MessageBase(BaseModel):
@@ -13,7 +13,7 @@ class MessageCreate(MessageBase):
 class MessageRead(MessageBase):
     id: UUID
     session_id: UUID
-    role: str
+    role: Literal["user", "assistant"]
     content: str    
     created_at: datetime
 
@@ -40,3 +40,6 @@ class ChatSessionRead(ChatSessionBase):
 
 class ChatSessionWithMessages(ChatSessionRead):
     messages: List[MessageRead] = []
+
+class ChatSessionConnectionResponse(ChatSessionWithMessages):
+    owner_name: str

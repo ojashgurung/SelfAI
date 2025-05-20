@@ -1,8 +1,10 @@
-from typing import Any, Callable
+from typing import Any, Callable, Union
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, status
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import ValidationError
+from fastapi.exceptions import RequestValidationError
 
 class SelfAIException(Exception):
     pass
@@ -57,6 +59,7 @@ def create_exception_handler(
         return JSONResponse(content=initial_detail, status_code=status_code)
 
     return exception_handler
+
 
 
 def register_all_errors(app: FastAPI):
@@ -171,15 +174,44 @@ def register_all_errors(app: FastAPI):
         ),
     )
 
-    @app.exception_handler(SQLAlchemyError)
-    async def database__error(request, exc):
-        print(str(exc))
+    @app.exception_handler(RequestValidationError)
+    @app.exception_handler(ValidationError)
+    async def validation_error_handler(request: Request, exc: Union[RequestValidationError, ValidationError]):
+        error = exc.errors()[0] 
+        field = error.get("loc", [])[-1]
+        msg = str(error.get("msg", ""))
+        msg = msg.split(",")[1:]
+        
+        # Handle password validation errors
+        if field == "password":
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "title": "Password validation failed",
+                    "message": msg,
+                    "error_code": "invalid_password"
+                }
+            )
+        
+        # Handle email validation errors
+        if field == "email":
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "title": "Email validation failed",
+                    "message": msg,
+                    "error_code": "invalid_email"
+                }
+            )
+        
+        # Handle other validation errors
         return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={
-                "message": "Oops! Something went wrong",
-                "error_code": "server_error",
-            },
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "title": f"Validation failed for {field}",
+                "message": msg,
+                "error_code": "validation_error"
+            }
         )
     
     
