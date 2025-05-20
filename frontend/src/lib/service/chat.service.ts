@@ -32,13 +32,6 @@ export const ChatService = {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Master session error:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText,
-        });
-
         if (response.status === 401) {
           throw new Error("Unauthorized. Please login again.");
         }
