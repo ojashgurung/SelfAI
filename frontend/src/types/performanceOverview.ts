@@ -17,3 +17,29 @@ export interface PerformanceOverviewProps {
   visitors: VisitorsProps;
   since: Date | null;
 }
+
+export interface TrendDataItem {
+  date: string;
+  visitors: number;
+}
+
+export interface TrendDataResponse {
+  min_count: number;
+  max_count: number;
+  data: TrendDataItem[];
+  period: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface ChartDataPoint {
+  x: string;
+  y: number;
+}
+
+export interface ChartSeries {
+  id: string;
+  color: string;
+  data: ChartDataPoint[];
+}

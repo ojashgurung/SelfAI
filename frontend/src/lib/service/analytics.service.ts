@@ -36,4 +36,34 @@ export const analyticsService = {
     const result = await response.json();
     return result;
   },
+
+  async getMetricsTrend(period: string) {
+    const response = await fetch(
+      `${ANALYTICS_BASE_URL}/metrics/trend?period=${period}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
+
+  async getMetricsAverageResponseTime() {
+    const response = await fetch(
+      `${ANALYTICS_BASE_URL}/metrics/average-response-time`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  },
 };
