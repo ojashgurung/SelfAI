@@ -68,7 +68,6 @@ export function PerformanceOverview() {
         };
         setTrendData(data);
         setChartData([formattedData]);
-        console.log(formattedData.data);
       } catch (error) {
         console.error("Failed to fetch highlight data:", error);
       }

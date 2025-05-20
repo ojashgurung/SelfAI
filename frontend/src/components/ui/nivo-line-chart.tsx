@@ -99,8 +99,8 @@ export function ModernLineChart({
               borderRadius: "6px",
             }}
           >
-            {slice.points.map((point) => (
-              <div key={point.id}>
+            {slice.points.map((point, index) => (
+              <div key={`${point.data.xFormatted}-${index}`}>
                 <span style={{ color: "hsl(252, 100%, 67%)" }}>
                   {point.data.yFormatted}
                 </span>{" "}
