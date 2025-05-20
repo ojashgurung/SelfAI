@@ -6,6 +6,7 @@ import { Plus, FilePlus, Share, ScanQrCode } from "lucide-react";
 import { UploadDialog } from "@/components/dialog/upload-dialog";
 import { ShareDialog } from "@/components/dialog/share-dialog";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export function RecentInteractions() {
   const { user } = useAuth();
@@ -35,12 +36,34 @@ export function RecentInteractions() {
     try {
       const session = await ChatService.getMasterSession();
 
+      if (!session || !session.share_token) {
+        toast.error("Session not found", {
+          description:
+            "You need to upload and train a document before retrieving session to share.",
+        });
+        return; // Add early return to prevent setting share URL
+      }
+
       setCurrentShareUrl(
-        `${window.location.origin}/chat/public/${session?.share_token}`
+        `${window.location.origin}/chat/public/${session.share_token}`
       );
       setShareDialogOpen(true);
     } catch (error) {
-      console.error("Failed to create chat session:", error);
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes("404")) {
+          toast.error("No document found", {
+            description:
+              "Please upload and train a document first to share your AI.",
+          });
+        } else {
+          toast.error("Failed to get session", {
+            description:
+              "There was an error retrieving your session. Please try again.",
+          });
+        }
+      }
+      console.error("Failed to get master session:", error);
     }
   };
   return (

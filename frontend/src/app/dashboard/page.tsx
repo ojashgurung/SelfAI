@@ -11,6 +11,7 @@ import { PerformanceOverview } from "@/components/dashboard/PerformanceOverview"
 import { RecentInteractions } from "@/components/dashboard/RecentInteractions";
 import { ShareDialog } from "@/components/dialog/share-dialog";
 import { ChatService } from "@/lib/service/chat.service";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -23,12 +24,34 @@ export default function DashboardPage() {
     try {
       const session = await ChatService.getMasterSession();
 
+      if (!session || !session.share_token) {
+        toast.error("Session not found", {
+          description:
+            "You need to upload and train a document before retrieving session to share.",
+        });
+        return; // Add early return to prevent setting share URL
+      }
+
       setCurrentShareUrl(
-        `${window.location.origin}/chat/public/${session?.share_token}`
+        `${window.location.origin}/chat/public/${session.share_token}`
       );
       setShareDialogOpen(true);
     } catch (error) {
-      console.error("Failed to create chat session:", error);
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes("404")) {
+          toast.error("No document found", {
+            description:
+              "Please upload and train a document first to share your AI.",
+          });
+        } else {
+          toast.error("Failed to get session", {
+            description:
+              "There was an error retrieving your session. Please try again.",
+          });
+        }
+      }
+      console.error("Failed to get master session:", error);
     }
   };
   return (
@@ -37,14 +60,18 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center mb-6 2xl:mb-10">
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative w-10 h-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative w-10 h-10 transition-all duration-150 ease-in-out hover:scale-105"
+            >
               <BellIcon className="w-4 h-4 2xl:w-6 2xl:h-6" />
               <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="w-10 h-10"
+              className="w-10 h-10 transition-all duration-150 ease-in-out hover:scale-105"
               onClick={handleShareClick}
               title="Share your SelfAI"
             >
