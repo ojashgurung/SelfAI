@@ -1,5 +1,5 @@
-from datetime import datetime
-from fastapi import APIRouter, Depends
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -115,3 +115,32 @@ async def get_summary_metrics(
     response = JSONResponse(content=jsonable_encoder(response_data))
     return response
 
+@analytics_router.get("/metrics/trend")
+async def get_trend_metrics(
+    current_user: dict = Depends(access_token_bearer),
+    period: str = Query("week", enum=["week", "month", "year"]),
+    session : AsyncSession = Depends(get_session)
+): 
+    user_id = current_user["user"]["id"]
+    now = datetime.now()
+
+    start_date = {
+        "week": now - timedelta(days=7),
+        "month": now - timedelta(days=30),
+        "year": now - timedelta(days=365)
+    }[period]
+
+    trend_data = await analytics_service.get_trend_metrics(user_id, start_date, now, session, period)
+    response = JSONResponse(content=jsonable_encoder(trend_data))
+    return response
+
+
+@analytics_router.get("/metrics/average-response-time")
+async def get_average_response_time(
+    current_user: dict = Depends(access_token_bearer),
+    session : AsyncSession = Depends(get_session)
+): 
+    user_id = current_user["user"]["id"]
+    average_response_time = await analytics_service.get_average_response_time(user_id, session)
+    response = JSONResponse(content=jsonable_encoder(average_response_time))
+    return response

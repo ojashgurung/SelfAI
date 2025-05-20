@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -167,5 +167,119 @@ class AnalyticsService:
 
         result = await db_session.exec(statement)
         return result.first()
+
+    @staticmethod
+    async def get_trend_metrics(user_id: UUID, start_date: datetime, end_date: datetime, db_session: AsyncSession, period: str = "week"):
+        dates = []
+        current = start_date
+        if period == "week":
+            # Daily data for week view
+            while current <= end_date:
+                dates.append(current)
+                current += timedelta(days=1)
+            
+            daily_data = []
+            for date in dates:
+                next_date = date + timedelta(days=1)
+                count = await AnalyticsService.count_user_queries(user_id, date, next_date, db_session)
+                daily_data.append({
+                    "date": date.strftime("%Y-%m-%d"),
+                    "visitors": count
+                })
+            data = daily_data
+            
+        elif period == "month":
+            # Weekly data for month view
+            while current <= end_date:
+                dates.append(current)
+                current += timedelta(days=7)
+            
+            weekly_data = []
+            for date in dates:
+                next_date = date + timedelta(days=7)
+                count = await AnalyticsService.count_user_queries(user_id, date, next_date, db_session)
+                weekly_data.append({
+                    "date": date.strftime("%Y-%m-%d"),
+                    "visitors": count
+                })
+            data = weekly_data
+            
+        else:  # year
+            # Monthly data for year view
+            while current <= end_date:
+                dates.append(current)
+                current += timedelta(days=30)  # Approximate month
+            
+            monthly_data = []
+            for date in dates:
+                next_date = date + timedelta(days=30)
+                count = await AnalyticsService.count_user_queries(user_id, date, next_date, db_session)
+                monthly_data.append({
+                    "date": date.strftime("%Y-%m-%d"),
+                    "visitors": count
+                })
+            data = monthly_data
+
+        visitor_counts = [day["visitors"] for day in data]
+        response = {
+            "min_count": min(visitor_counts) if visitor_counts else 0,
+            "max_count": max(visitor_counts) if visitor_counts else 0,
+            "data" : data,
+            "period" : {
+                "start" : start_date.isoformat(),
+                "end" : end_date.isoformat()
+            }
+        }
+
+        return response
+    
+    @staticmethod
+    async def get_average_response_time(user_id: UUID, db_session: AsyncSession):
+        messages_subquery = (
+            select(
+                ChatMessages.session_id,
+                ChatMessages.created_at,
+                ChatMessages.role,
+                func.lag(ChatMessages.created_at).over(
+                    partition_by=ChatMessages.session_id,
+                    order_by=ChatMessages.created_at
+                ).label('prev_time'),
+                func.lag(ChatMessages.role).over(
+                    partition_by=ChatMessages.session_id,
+                    order_by=ChatMessages.created_at
+                ).label('prev_role')
+            )
+            .select_from(ChatMessages)
+            .join(ChatSessions, ChatMessages.session_id == ChatSessions.id)
+            .where(
+                ChatSessions.user_id == user_id,
+                ChatSessions.title != "Owner",
+                (ChatSessions.visitor_id.is_(None)) | (ChatSessions.visitor_id != user_id)
+            )
+            .subquery()
+        )
+
+        stmt = (
+            select(func.avg(
+                func.extract('epoch', messages_subquery.c.created_at) - 
+                func.extract('epoch', messages_subquery.c.prev_time)
+            ))
+            .select_from(messages_subquery)
+            .where(
+                messages_subquery.c.role == "assistant",
+                messages_subquery.c.prev_role == "user",
+                messages_subquery.c.prev_time != None
+            )
+        )
+
+        result = await db_session.exec(stmt)
+        average_time = result.first()
+
+        if average_time is None:
+            return 0
+        
+        return round(float(average_time), 2)
+
+
         
         
