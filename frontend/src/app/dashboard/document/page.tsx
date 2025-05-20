@@ -212,9 +212,9 @@ export default function DocumentPage() {
             </div>
           ) : (
             <div className="grid grid-cols-5 gap-4">
-              {documents.slice(0, 4).map((doc) => (
+              {documents.slice(0, 4).map((doc, index) => (
                 <div
-                  key={doc.id}
+                  key={`doc-${doc.id || index}`}
                   className="bg-indigo-50 p-6 w-52 rounded-xl space-y-2 cursor-pointer"
                 >
                   <Folder className="w-6 h-6 text-indigo-500" />
