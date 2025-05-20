@@ -108,13 +108,14 @@ export function UserDropdown({
           sideOffset={sideOffset}
           alignOffset={alignOffset}
         >
-          <Link href={"/dashboard/profile"}>
+          {/* TODO: Change the href route after completing the pages (profile & setting) */}
+          <Link href={"/dashboard"}>
             <DropdownMenuItem className="hover:bg-gray-50" disabled>
               <User className="w-4 h-4 mr-2" />
               <span>Profile (coming soon)</span>
             </DropdownMenuItem>
           </Link>
-          <Link href={"/dashboard/settings"}>
+          <Link href={"/dashboard"}>
             <DropdownMenuItem className="hover:bg-gray-50" disabled>
               <Settings className="w-4 h-4 mr-2" />
               <span>Settings (coming soon)</span>
