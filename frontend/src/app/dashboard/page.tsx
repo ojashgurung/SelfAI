@@ -11,12 +11,18 @@ import { PerformanceOverview } from "@/components/dashboard/PerformanceOverview"
 import { RecentInteractions } from "@/components/dashboard/RecentInteractions";
 import { ShareDialog } from "@/components/dialog/share-dialog";
 import { ChatService } from "@/lib/service/chat.service";
+import { UserDropdown } from "@/components/dropdown/user-dropdown";
+import { LogoutDialog } from "@/components/dialog/logout-dialog";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentShareUrl, setCurrentShareUrl] = useState("");
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
   const handleShareClick = async () => {
     if (!user) {
       return;
@@ -54,20 +60,35 @@ export default function DashboardPage() {
       console.error("Failed to get master session:", error);
     }
   };
+
+  const handleLogoutClick = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      await logout();
+      setShowLogoutDialog(false);
+      router.replace("/auth/signin");
+    } catch (error) {
+      toast.error("Failed to logout. Please try again.");
+    }
+  };
   return (
     <>
       <div className="px-6 py-4 bg-gray-50 min-h-full">
         <div className="flex justify-between items-center mb-6 2xl:mb-10">
           <h1 className="text-4xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <Button
+            {/* TODO: Notification after Websocket integration */}
+            {/* <Button
               variant="ghost"
               size="icon"
               className="relative w-10 h-10 transition-all duration-150 ease-in-out hover:scale-105"
             >
               <BellIcon className="w-4 h-4 2xl:w-6 2xl:h-6" />
               <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="icon"
@@ -77,34 +98,26 @@ export default function DashboardPage() {
             >
               <ScanQrCode className="w-4 h-4 2xl:w-6 2xl:h-6" />
             </Button>
+
             <div className="flex items-center gap-3 ml-2 border-l pl-4">
-              <div className="flex flex-col items-end">
-                <span className="text-sm 2xl:text-base font-medium">
-                  {user?.fullname || "Loading..."}
-                </span>
-                <span className="text-xs 2xl:text-sm text-gray-500">
-                  {user?.email || "Loading..."}
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center">
-                {user?.profile_image ? (
-                  <img
-                    src={user.profile_image}
-                    alt={user.fullname}
-                    className="w-full h-full rounded-full object-cover"
+              {user ? (
+                <div className="relative z-50 bg-gray-50 border-t">
+                  <UserDropdown
+                    user={user}
+                    onLogout={handleLogoutClick}
+                    style=""
+                    withIcon={false}
+                    reversed={true}
+                    align="center"
+                    side="bottom"
+                    sideOffset={12}
                   />
-                ) : (
-                  <span className="text-white font-medium">
-                    {user?.fullname
-                      ? user.fullname
-                          .split(" ")
-                          .map((name) => name[0])
-                          .join("")
-                          .toUpperCase()
-                      : "..."}
-                  </span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="p-4 border-t">
+                  <div className="animate-pulse h-10 bg-gray-100 rounded-md" />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -132,6 +145,12 @@ export default function DashboardPage() {
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
         shareUrl={currentShareUrl}
+      />
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogoutConfirm}
+        email={user?.email || ""}
       />
     </>
   );
