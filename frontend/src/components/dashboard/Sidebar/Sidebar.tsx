@@ -328,7 +328,16 @@ export function Sidebar() {
 
           {user ? (
             <div className="relative z-50 bg-gray-50 border-t">
-              <UserDropdown user={user} onLogout={handleLogoutClick} />
+              <UserDropdown
+                user={user}
+                onLogout={handleLogoutClick}
+                style="p-4 mt-4 border-t"
+                withIcon={true}
+                align="end"
+                side="right"
+                sideOffset={-20}
+                alignOffset={50}
+              />
             </div>
           ) : (
             <div className="p-4 border-t">
