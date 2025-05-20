@@ -58,7 +58,6 @@ export function Sidebar() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
 
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
