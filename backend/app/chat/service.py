@@ -223,8 +223,12 @@ class ChatService:
         )
         result = await db_session.exec(statement)
         session = result.first()
-        if session:
-            await db_session.refresh(session, ['messages'])
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No master session found. Please upload a document first."
+            )
+        await db_session.refresh(session, ['messages'])
         return session
 
     async def get_session_connections(

@@ -210,9 +210,9 @@ function WidgetConfiguration() {
           <div>
             <label className="mb-2 block text-sm font-medium">Pick Color</label>
             <div className="flex flex-wrap gap-2">
-              {presetColors.map((presetColor) => (
+              {presetColors.map((presetColor, index) => (
                 <button
-                  key={presetColor}
+                  key={`color-${presetColor || index}`}
                   className={`h-8 w-8 rounded-full ${
                     color === presetColor ? "ring-2 ring-offset-2" : ""
                   }`}

@@ -329,7 +329,7 @@ async def get_chat_analytics(
             detail=str(e)
         )
 
-@chat_router.get("/sessions/master", response_model=ChatSessionWithMessages)
+@chat_router.get("/sessions/master", response_model=ChatSessionWithMessages, status_code=status.HTTP_200_OK)
 async def get_master_session(
     current_user: dict = Depends(strict_token_bearer),
     db_session: AsyncSession = Depends(get_session),
@@ -338,13 +338,14 @@ async def get_master_session(
     try:
         user_id = current_user["user"]["id"]
     
-        master_session = await chat_service.get_master_session(user_id, user_id, db_session)
+        master_session = await chat_service.get_master_session(str(user_id), user_id, db_session)
         
         if not master_session:
             raise HTTPException(status_code=404, detail="Master session not found")
             
         return master_session
-
+    except HTTPException as he:
+            raise he
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
