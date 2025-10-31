@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: selfai-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-selfai_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-selfai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-selfai123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Changed from 5432:5432 to avoid conflict
+    networks:
+      - selfai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-selfai} -d ${POSTGRES_DB:-selfai_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: selfai-redis-dev
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"  # Changed from 6379:6379 to avoid potential conflict
+    networks:
+      - selfai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Backend API (Development with hot reload)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: selfai-backend-dev
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-selfai}:${POSTGRES_PASSWORD:-selfai123}@postgres:5432/${POSTGRES_DB:-selfai_dev}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+    volumes:
+      - ./backend:/app:cached
+      - ./backend/documents:/app/documents
+      - ./.env:/app/.env:ro
+    ports:
+      - "8000:8000"
+    networks:
+      - selfai-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Frontend (Development with hot reload)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: selfai-frontend-dev
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_URL=http://localhost:3000
+      - NEXT_PUBLIC_ENVIRONMENT=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend:/app:cached
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    networks:
+      - selfai-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Widget App (Development with hot reload)
+  widget-app:
+    build:
+      context: ./widget-app
+      dockerfile: Dockerfile.dev
+    container_name: selfai-widget-dev
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_URL=http://localhost:3001
+      - NEXT_PUBLIC_ENVIRONMENT=development
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./widget-app:/app:cached
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3001:3001"
+    networks:
+      - selfai-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  selfai-network:
+    driver: bridge
