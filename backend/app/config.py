@@ -1,8 +1,10 @@
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
+import os
 
-load_dotenv()
+# Load environment variables from the root .env file
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -20,7 +22,7 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str
     SESSION_SECRET_KEY: str
     VECTOR_DB_INDEX_NAME: str
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file="../../.env", extra="ignore")
 
 
 Config = Settings()
