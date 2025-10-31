@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 
 # Only load .env file in development (when not in production environment)
-if os.getenv("ENVIRONMENT") != "production":
+if os.getenv("ENVIRONMENT") != "prod":
     env_file_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
     if os.path.exists(env_file_path):
         load_dotenv(dotenv_path=env_file_path)
@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     VECTOR_DB_INDEX_NAME: str
     
     model_config = SettingsConfigDict(
-        env_file="../../.env" if os.getenv("ENVIRONMENT") != "production" else None,
+        env_file="../../.env" if os.getenv("ENVIRONMENT") != "prod" else None,
         extra="ignore"
     )
 
