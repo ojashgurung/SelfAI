@@ -12,6 +12,7 @@ from .analytics.routes import analytics_router
 from .database.db import init_db
 from .errors import register_all_errors
 from graph.api.routes_health import router as graph_health_router
+from graph.api.routes_ingest import graph_ingest_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -75,6 +76,11 @@ app.include_router(
     graph_health_router,
     prefix=f"{version_prefix}/graph",
     tags=["graph"]
+)
+app.include_router(
+    graph_ingest_router,
+    prefix=f"{version_prefix}/graph",
+    tags=["ingest"]
 )
 
 
