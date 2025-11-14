@@ -3,6 +3,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from graph.models.node import GraphNode
+from graph.models.edge import GraphEdge
+from graph.models.integration import GraphIntegration
+
 from ..config import Config
 
 async_engine: AsyncEngine  = create_async_engine(url=Config.DATABASE_URL, echo=True)
