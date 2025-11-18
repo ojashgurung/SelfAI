@@ -6,6 +6,7 @@ class GraphEdge(SQLModel, table=True):
     __tablename__ = "graph_edges"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
 
     from_node_id: uuid.UUID = Field(foreign_key="graph_nodes.id", index=True)
     to_node_id: uuid.UUID = Field(foreign_key="graph_nodes.id", index=True)

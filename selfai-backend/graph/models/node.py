@@ -9,7 +9,7 @@ class GraphNode(SQLModel, table=True):
     __tablename__ = "graph_nodes"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: uuid.UUID = Field(nullable=False, index=True)
+    user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
 
     type: str = Field(nullable=False)   # e.g. "github_repo", "document"
     title: str = Field(nullable=False)
