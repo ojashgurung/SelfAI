@@ -4,7 +4,6 @@ from core.database.db import AsyncSession
 from graph.models.node import GraphNode
 
 class NodeService:
-
     @staticmethod
     async def get_or_create_user_node(session: AsyncSession, user_id: str, username: str):
         result = await session.exec(
@@ -22,7 +21,7 @@ class NodeService:
             type="user",
             title=username,
             source="system",
-            node_metadata={}
+            node_metadata={"username": username}
         )
         session.add(user_node)
         await session.commit()
