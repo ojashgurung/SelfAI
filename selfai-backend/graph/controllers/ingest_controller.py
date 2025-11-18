@@ -36,6 +36,7 @@ async def ingest_github_repo(user_id: str, username: str):
 
             await EdgeService.create_edge(
                 session=session,
+                user_id=user_id,
                 from_id=user_node.id,
                 to_id=node.id,
                 type="owns"
