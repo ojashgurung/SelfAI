@@ -11,8 +11,7 @@ from .widget.routes import widget_router
 from .analytics.routes import analytics_router
 from .database.db import init_db
 from .errors import register_all_errors
-from graph.api.routes_health import router as graph_health_router
-from graph.api.routes_ingest import graph_ingest_router
+from graph.api.router import graph_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -72,15 +71,4 @@ app.include_router(user_router, prefix=f"{version_prefix}/user", tags=["user"])
 app.include_router(chat_router, prefix=f"{version_prefix}/chat", tags=["chat"])
 app.include_router(widget_router, prefix=f"{version_prefix}/widget", tags=["widget"])
 app.include_router(analytics_router, prefix=f"{version_prefix}/analytics", tags=["analytics"])
-app.include_router(
-    graph_health_router,
-    prefix=f"{version_prefix}/graph",
-    tags=["graph"]
-)
-app.include_router(
-    graph_ingest_router,
-    prefix=f"{version_prefix}/graph",
-    tags=["ingest"]
-)
-
-
+app.include_router(graph_router, prefix=f"{version_prefix}/graph", tags=["graph"])
