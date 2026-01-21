@@ -1,18 +1,18 @@
-from .config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from .database.db import get_session
+from core.config import Config
+from core.database.db import get_session
 from contextlib import asynccontextmanager
-from .auth.routes import auth_router
-from .auth.seed import seed_dev_user
-from .rag.routes import rag_router
-from .user.routes import user_router
-from .chat.routes import chat_router
-from .widget.routes import widget_router
-from .analytics.routes import analytics_router
-from .database.db import init_db
-from .errors import register_all_errors
+from core.auth.routes import auth_router
+from core.auth.seed import seed_dev_user
+from core.rag.routes import rag_router
+from core.user.routes import user_router
+from core.chat.routes import chat_router
+from core.widget.routes import widget_router
+from core.analytics.routes import analytics_router
+from core.database.db import init_db
+from core.errors import register_all_errors
 from graph.api.router import graph_router
 import logging
 
@@ -28,9 +28,10 @@ async def lifespan(app: FastAPI):
     await init_db()  # Initialize the database on startup
 
     print("🌱 Attempting to seed dev user...")
-    async for session in get_session():
-        await seed_dev_user(session)
-        break
+    if Config.ENVIRONMENT != "production":
+        async for session in get_session():
+            await seed_dev_user(session)
+            break
     print("✅ Startup complete.")
 
     yield  # This allows the app to run
