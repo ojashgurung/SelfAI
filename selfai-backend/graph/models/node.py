@@ -1,9 +1,14 @@
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import JSON, Column
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, TYPE_CHECKING
 import uuid
 from datetime import datetime, timezone
 
+if TYPE_CHECKING:
+    from graph.models.edge import GraphEdge
+
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class GraphNode(SQLModel, table=True):
     __tablename__ = "graph_nodes"
@@ -18,11 +23,11 @@ class GraphNode(SQLModel, table=True):
     node_metadata: Dict = Field(default_factory=dict, sa_column=Column(JSON))
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
 

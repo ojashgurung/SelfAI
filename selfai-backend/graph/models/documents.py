@@ -1,10 +1,17 @@
 # graph/models/documents.py
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, JSON, UniqueConstraint, Index
 from datetime import datetime, timezone
-from typing import Optional, Dict
+from typing import Optional, Dict, TYPE_CHECKING
 import uuid
 
+if TYPE_CHECKING:
+    from graph.models.sources import Source
+    from core.database.models import User
+    from graph.models.file_assets import FileAsset
+
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class Document(SQLModel, table=True):
     __tablename__ = "documents"
@@ -13,6 +20,7 @@ class Document(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="users.id", index=True, nullable=False)
 
     source_id: uuid.UUID = Field(foreign_key="sources.id", index=True, nullable=False)
+    file_asset_id: Optional[uuid.UUID] = Field(foreign_key="file_assets.id", default=None, index=True)
 
     # External identifier from platform side (stable key)
     # Examples:
@@ -41,13 +49,18 @@ class Document(SQLModel, table=True):
     doc_metadata: Dict = Field(default_factory=dict, sa_column=Column(JSON))
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow, 
         nullable=False
     )
+
+    # Relationships
+    user: "User" = Relationship(back_populates="documents")
+    source: "Source" = Relationship(back_populates="documents")
+    file_asset: Optional["FileAsset"] = Relationship(back_populates="documents")
 
     __table_args__ = (
         # prevents duplicate documents per source/external_id

@@ -3,6 +3,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 class Connection(SQLModel, table=True):
     __tablename__ = "connections"
 
@@ -22,14 +25,14 @@ class Connection(SQLModel, table=True):
     status: str = Field(default="connected")
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
     last_synced_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )

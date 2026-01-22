@@ -2,6 +2,9 @@ from sqlmodel import SQLModel, Field, Relationship
 import uuid
 from datetime import datetime, timezone
 
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 class GraphEdge(SQLModel, table=True):
     __tablename__ = "graph_edges"
 
@@ -13,7 +16,7 @@ class GraphEdge(SQLModel, table=True):
 
     type: str = Field(nullable=False)  # "owns", "contributes_to", "authored", etc.
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
 

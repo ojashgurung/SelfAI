@@ -1,8 +1,16 @@
 from sqlmodel import SQLModel, Field, Session
 from sqlalchemy import event, Column, JSON
 from datetime import datetime, timezone
-from typing import Optional, Dict
+from typing import TYPE_CHECKING, Optional, Dict
 import uuid
+from sqlmodel import Relationship
+from typing import List, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from graph.models.documents import Document
+
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class Source(SQLModel, table=True):
     __tablename__ = "sources"
@@ -20,17 +28,19 @@ class Source(SQLModel, table=True):
     last_ingested_at: Optional[datetime] = Field(default=None)
     last_error: Optional[str] = Field(default=None)
     source_metadata: Dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+    documents: List["Document"] = Relationship(back_populates="source")
     
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=utcnow,
         nullable=False
     )
 
 # Auto-update timestamp before any update
 @event.listens_for(Source, 'before_update')
 def update_timestamp(mapper, connection, target):
-    target.updated_at = datetime.now(timezone.utc)
+    target.updated_at = utcnow()
