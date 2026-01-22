@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 class GraphEdge(SQLModel, table=True):
     __tablename__ = "graph_edges"
@@ -12,7 +12,10 @@ class GraphEdge(SQLModel, table=True):
     to_node_id: uuid.UUID = Field(foreign_key="graph_nodes.id", index=True)
 
     type: str = Field(nullable=False)  # "owns", "contributes_to", "authored", etc.
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
     # Disambiguate relationships by specifying which FK each uses
     from_node_rel: "GraphNode" = Relationship(

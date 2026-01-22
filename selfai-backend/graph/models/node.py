@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import JSON, Column
 from typing import Optional, List, Dict
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class GraphNode(SQLModel, table=True):
@@ -17,8 +17,14 @@ class GraphNode(SQLModel, table=True):
 
     node_metadata: Dict = Field(default_factory=dict, sa_column=Column(JSON))
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
     # Relationships — edge models will define the FK fields
     outgoing_edges: List["GraphEdge"] = Relationship(
