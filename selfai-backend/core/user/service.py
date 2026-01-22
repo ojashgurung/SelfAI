@@ -12,13 +12,13 @@ from .schemas import (
     DocumentInfo
 )
 
-from ..database.models import Users
+from ..database.models import User
 
 class UserService:
     async def get_user(self, user_id: UUID, db_session: AsyncSession) -> UserResponse:
         """Get user by id"""
         try:
-            statement = select(Users).where(Users.id == user_id)
+            statement = select(User).where(User.id == user_id)
             result = await db_session.exec(statement)
             user = result.first()
             
@@ -59,7 +59,7 @@ class UserService:
     async def get_user_last_login(self, user_id: UUID, db_session: AsyncSession) -> Optional[datetime]:
         """Get user last login date"""
         try:
-            statement = select(Users).where(Users.id == user_id)
+            statement = select(User).where(User.id == user_id)
             result = await db_session.exec(statement)
             user = result.first()
 

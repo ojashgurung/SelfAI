@@ -3,9 +3,17 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from graph.models.node import GraphNode
-from graph.models.edge import GraphEdge
-from graph.models.connections import Connection
+# Import all models to ensure they are registered with SQLModel
+from core.database.models import User, ChatSession, ChatMessage, Widget
+from graph.models import (
+    Connection,
+    Document,
+    GraphEdge,
+    Entity,
+    FileAsset,
+    GraphNode,
+    Source
+)
 
 from ..config import Config
 

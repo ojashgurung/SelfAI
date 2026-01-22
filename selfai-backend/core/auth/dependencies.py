@@ -3,7 +3,6 @@ from fastapi.security.http import HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database.db import get_session
-from ..database.models import Users
 
 from .service import (
     AuthService

@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .service import UserService
-from ..database.models import Users
+from ..database.models import User
 from ..database.db import get_session
 from .schemas import UserResponse
 from ..auth.dependencies import AccessTokenBearer
@@ -23,7 +23,7 @@ async def get_current_user_info(
     session: AsyncSession = Depends(get_session),):
     try:
         user_id = current_user["user"]["id"]
-        user = await session.get(Users, user_id)
+        user = await session.get(User, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 

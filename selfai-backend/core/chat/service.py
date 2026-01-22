@@ -8,7 +8,7 @@ from typing import List, Optional
 from uuid import UUID
 import secrets
 
-from ..database.models import ChatSessions, ChatMessages, Users
+from ..database.models import ChatSession, ChatMessage, User
 from .schemas import ChatSessionCreate, ChatSessionUpdate, MessageCreate
 from ..rag.service import RagService
 
@@ -37,7 +37,7 @@ class ChatService:
 
             share_token = secrets.token_urlsafe(16) if session_data.is_public else None
 
-            chat_session = ChatSessions(
+            chat_session = ChatSession(
                 user_id=user_id,
                 share_token=share_token,
                 namespace=session_data.namespace,
@@ -65,8 +65,8 @@ class ChatService:
         self,
         session_id: UUID,
         db_session: AsyncSession
-    ) -> Optional[ChatSessions]:
-        statement = select(ChatSessions).where(ChatSessions.id == session_id)
+    ) -> Optional[ChatSession]:
+        statement = select(ChatSession).where(ChatSession.id == session_id)
         result = await db_session.exec(statement)
         session = result.first()
         if session:
@@ -77,8 +77,8 @@ class ChatService:
         self,
         user_id: UUID,
         db_session: AsyncSession
-    ) -> List[ChatSessions]:
-        statement = select(ChatSessions).where(ChatSessions.user_id == user_id)
+    ) -> List[ChatSession]:
+        statement = select(ChatSession).where(ChatSession.user_id == user_id)
         result = await db_session.exec(statement)
         sessions = result.all()
         for session in sessions:
@@ -89,8 +89,8 @@ class ChatService:
         self,
         token: str,
         db_session: AsyncSession
-    ) -> Optional[ChatSessions]:
-        statement = select(ChatSessions).where(ChatSessions.share_token == token, ChatSessions.is_public == True)
+    ) -> Optional[ChatSession]:
+        statement = select(ChatSession).where(ChatSession.share_token == token, ChatSession.is_public == True)
         result = await db_session.exec(statement)
         session = result.first()
         if session:
@@ -103,11 +103,11 @@ class ChatService:
         visitor_id: str,
         namespace: str,
         db_session: AsyncSession
-    ) -> ChatSessions:
+    ) -> ChatSession:
         try:
-            statement = select(ChatSessions).where(
-                ChatSessions.parent_id == template_session_id,
-                ChatSessions.title == f"Visitor: {visitor_id}"
+            statement = select(ChatSession).where(
+                ChatSession.parent_id == template_session_id,
+                ChatSession.title == f"Visitor: {visitor_id}"
             )
             result = await db_session.exec(statement)
             session = result.first()
@@ -126,7 +126,7 @@ class ChatService:
                 visitor_uuid = None
 
             # Create new session
-            new_session = ChatSessions(
+            new_session = ChatSession(
                 parent_id=template_session_id,
                 user_id= template_session.user_id,
                 title=f"Visitor: {visitor_id}",
@@ -165,7 +165,7 @@ class ChatService:
                 detail="Not authorized to access this chat"
             )
 
-        user_msg = ChatMessages(
+        user_msg = ChatMessage(
             session_id=session_id,
             role="user",
             user_id=user_id,
@@ -191,7 +191,7 @@ class ChatService:
         else:
             response_content = "I couldn't find relevant information to answer your question."
 
-        ai_message = ChatMessages(
+        ai_message = ChatMessage(
             session_id=session_id,
             role="assistant",
             user_id=user_id,
@@ -214,12 +214,12 @@ class ChatService:
         namespace: str,
         user_id: UUID,
         db_session: AsyncSession
-    ) -> Optional[ChatSessions]:
+    ) -> Optional[ChatSession]:
         """Get master/owner session for a namespace"""
-        statement = select(ChatSessions).where(
-            ChatSessions.user_id == user_id,
-            ChatSessions.namespace == namespace,
-            ChatSessions.title == "Owner"
+        statement = select(ChatSession).where(
+            ChatSession.user_id == user_id,
+            ChatSession.namespace == namespace,
+            ChatSession.title == "Owner"
         )
         result = await db_session.exec(statement)
         session = result.first()
@@ -236,7 +236,7 @@ class ChatService:
         user_id: UUID,
         db_session: AsyncSession,
     ):
-        user = await db_session.get(Users, user_id)
+        user = await db_session.get(User, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -255,9 +255,9 @@ class ChatService:
         user_id: UUID,
         db_session: AsyncSession
     ) -> int:
-        statement = select(ChatSessions).where(
-            ChatSessions.user_id == user_id,
-            ChatSessions.visitor_id != None
+        statement = select(ChatSession).where(
+            ChatSession.user_id == user_id,
+            ChatSession.visitor_id != None
         )
         result = await db_session.exec(statement)
         sessions = result.all()
@@ -268,10 +268,10 @@ class ChatService:
         user_id: UUID,
         db_session: AsyncSession
     ) -> int:
-        statement = select(ChatSessions).where(
-            ChatSessions.user_id == user_id,
-            ChatSessions.visitor_id != None,
-            ChatSessions.created_at >= datetime.now() - timedelta(days=7)
+        statement = select(ChatSession).where(
+            ChatSession.user_id == user_id,
+            ChatSession.visitor_id != None,
+            ChatSession.created_at >= datetime.now() - timedelta(days=7)
         )
         result = await db_session.exec(statement)
         sessions = result.all()
@@ -294,56 +294,56 @@ class ChatService:
     async def get_recent_interactions(self, user_id: UUID, db_session: AsyncSession):
         latest_messages = (
             select(
-                ChatMessages.session_id,
-                ChatMessages.content,
-                ChatMessages.created_at,
+                ChatMessage.session_id,
+                ChatMessage.content,
+                ChatMessage.created_at,
                 func.row_number().over(
-                    partition_by=ChatMessages.session_id,
-                    order_by=ChatMessages.created_at.desc()
+                    partition_by=ChatMessage.session_id,
+                    order_by=ChatMessage.created_at.desc()
                 ).label('msg_rank')
-            ).where(ChatMessages.role == "user") .subquery()
+            ).where(ChatMessage.role == "user") .subquery()
         )
 
         # Get latest session for each visitor
         latest_visitor_sessions = (
             select(
-                ChatSessions.id,
-                ChatSessions.visitor_id,
+                ChatSession.id,
+                ChatSession.visitor_id,
                 func.row_number().over(
-                    partition_by=ChatSessions.visitor_id,
-                    order_by=ChatSessions.updated_at.desc()
+                    partition_by=ChatSession.visitor_id,
+                    order_by=ChatSession.updated_at.desc()
                 ).label('session_rank')
             )
             .where(
-                ChatSessions.user_id == user_id,
-                ChatSessions.title != "Owner",
-                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id)
+                ChatSession.user_id == user_id,
+                ChatSession.title != "Owner",
+                ChatSession.visitor_id.is_(None) | (ChatSession.visitor_id != user_id)
             )
             .subquery()
         )
 
         statement = (
             select(
-                ChatSessions.id,
-                ChatSessions.title,
-                ChatSessions.created_at,
-                ChatSessions.updated_at,
-                Users.fullname.label('visitor_name'),
-                Users.profile_image.label('visitor_profile_image'),
+                ChatSession.id,
+                ChatSession.title,
+                ChatSession.created_at,
+                ChatSession.updated_at,
+                User.fullname.label('visitor_name'),
+                User.profile_image.label('visitor_profile_image'),
                 latest_messages.c.content.label('last_message'),
                 latest_messages.c.created_at.label('last_message_created_at')
             )
             .join(latest_visitor_sessions, 
-                  (ChatSessions.id == latest_visitor_sessions.c.id) &
+                  (ChatSession.id == latest_visitor_sessions.c.id) &
                   (latest_visitor_sessions.c.session_rank == 1))
-            .join(Users, ChatSessions.visitor_id == Users.id, isouter=True)
+            .join(User, ChatSession.visitor_id == User.id, isouter=True)
             .join(
                 latest_messages,
-                (latest_messages.c.session_id == ChatSessions.id) &
+                (latest_messages.c.session_id == ChatSession.id) &
                 (latest_messages.c.msg_rank == 1),
                 isouter=True
             )
-            .order_by(ChatSessions.updated_at.desc())
+            .order_by(ChatSession.updated_at.desc())
         )
         
         result = await db_session.exec(statement)

@@ -6,7 +6,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from sqlmodel.ext.asyncio.session import AsyncSession
-from ..database.models import Documents
+from graph.models.documents import Document
 from sqlmodel import select
 
 from .utils import (
@@ -30,17 +30,17 @@ from ..errors import UnsupportedFileType
 
 class RagService:
     def __init__(self):
-        self.upload_dir = "./documents/uploads"
+        self.upload_dir = "./Document/uploads"
         os.makedirs(self.upload_dir, exist_ok=True)
 
-    async def get_user_documents(self, user_id: str, db_session: AsyncSession):
-        query = select(Documents).where(Documents.user_id == user_id)
+    async def get_user_Document(self, user_id: str, db_session: AsyncSession):
+        query = select(Document).where(Document.user_id == user_id)
         result = await db_session.exec(query)
         response = result.all()
         return response
 
     async def get_user_doc_count(self, user_id: str, db_session: AsyncSession) -> int:
-        query = select(Documents).where(Documents.user_id == user_id)
+        query = select(Document).where(Document.user_id == user_id)
         result = await db_session.exec(query)
         response = result.all()
         return len(response)
@@ -104,7 +104,7 @@ class RagService:
     
     async def handle_answer(self, answer):
         if not answer or not answer.get("matches"):
-            return "No relevant information found in the documents."
+            return "No relevant information found in the Document."
             
         extracted_texts = [
             match["metadata"].get("content", "") for match in answer["matches"]
@@ -112,13 +112,13 @@ class RagService:
         
         
         if not extracted_texts:
-            return "No readable content found in the matched documents."
+            return "No readable content found in the matched Document."
             
         return "\n\n".join(extracted_texts)
     
     async def query_llm(self, retrieved_text: str, user_query: str): 
         PROMPT_TEMPLATE = """
-        You are an AI assistant designed to answer questions about a specific person, based on the documents and data they've provided.
+        You are an AI assistant designed to answer questions about a specific person, based on the Document and data they've provided.
 
         Speak in a professional, third-person tone — for example: "They are currently pursuing a Master's degree..." or "This person has worked on...".
 

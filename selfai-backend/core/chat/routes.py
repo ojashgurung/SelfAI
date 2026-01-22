@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from io import BytesIO
 
 from ..database.db import get_session
-from ..database.models import Users
+from ..database.models import User
 from .service import ChatService
 from .schemas import (
     ChatSessionConnectionResponse,
@@ -215,7 +215,7 @@ async def delete_chat_history(
     """Delete all chat sessions related to the user"""
     try:
         user_id = current_user["user"]["id"]
-        user = await db_session.get(Users, user_id)
+        user = await db_session.get(User, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -280,7 +280,7 @@ async def get_chat_analytics(
 ):
     try:
         user_id = current_user["user"]["id"]
-        user = await db_session.get(Users, user_id)
+        user = await db_session.get(User, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 

@@ -1,7 +1,8 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
-from ..database.models import Documents, ChatSessions, ChatMessages
+from ..database.models import ChatSession, ChatMessage
+from graph.models.documents import Document
 from ..database.db import get_session
 from ..errors import NoSourceProvided
 from .service import RagService
@@ -23,18 +24,18 @@ chat_service = ChatService()
 access_token_bearer = AccessTokenBearer()
 
 
-@rag_router.get("/documents", status_code=status.HTTP_200_OK)
-async def get_user_documents(
+@rag_router.get("/Document", status_code=status.HTTP_200_OK)
+async def get_user_Document(
     current_user: dict = Depends(access_token_bearer),
     db_session: AsyncSession = Depends(get_session),
 ):
     try:
         user_id = current_user["user"]["id"]
-        documents = await rag_service.get_user_documents(user_id, db_session)
+        Document = await rag_service.get_user_Document(user_id, db_session)
 
         return {
-            "message": "Documents retrieved successfully",
-            "documents": [
+            "message": "Document retrieved successfully",
+            "Document": [
                 {
                     "id": doc.id,
                     "filename": doc.file_name,
@@ -43,7 +44,7 @@ async def get_user_documents(
                     "namespace": doc.namespace,
                     "vector_ids": doc.vector_ids
                 }
-                for doc in documents
+                for doc in Document
             ]
         }
     except Exception as e:
@@ -91,10 +92,10 @@ async def upload(
 
         try:
             master_session = await session.exec(
-                select(ChatSessions).where(
-                    ChatSessions.user_id == user_id,
-                    ChatSessions.namespace == result["namespace"],
-                    ChatSessions.title == "Owner",
+                select(ChatSession).where(
+                    ChatSession.user_id == user_id,
+                    ChatSession.namespace == result["namespace"],
+                    ChatSession.title == "Owner",
                 )
             )
             existing_session = master_session.first()
@@ -113,7 +114,7 @@ async def upload(
                 )
                 await session.commit() 
                 
-            document = Documents(
+            document = Document(
                 user_id=user_id,
                 file_name=file.filename,
                 file_size=file_size,
@@ -150,7 +151,7 @@ async def upload(
             detail=str(e)
         )
 
-@rag_router.delete("/documents/{document_id}", status_code=status.HTTP_200_OK)
+@rag_router.delete("/Document/{document_id}", status_code=status.HTTP_200_OK)
 async def delete_document(
     document_id: str,
     current_user: dict = Depends(access_token_bearer),
@@ -160,7 +161,7 @@ async def delete_document(
         user_id = current_user["user"]["id"]
         print("User ID:", user_id)
 
-        query = select(Documents).where(Documents.id == document_id, Documents.user_id == user_id)
+        query = select(Document).where(Document.id == document_id, Document.user_id == user_id)
         result = await session.exec(query)
         document = result.first()
         print("Document found:", document)
@@ -187,16 +188,16 @@ async def delete_document(
             # Delete document and related data
             await session.delete(document)
 
-            # Check for remaining documents
+            # Check for remaining Document
             result = await session.exec(
-                select(Documents).where(Documents.user_id == user_id)
+                select(Document).where(Document.user_id == user_id)
             )
             remaining_docs = result.all()
 
             if not remaining_docs:
                 # Delete related sessions and messages
                 owned_sessions = await session.exec(
-                    select(ChatSessions.id).where(ChatSessions.user_id == user_id)
+                    select(ChatSession.id).where(ChatSession.user_id == user_id)
                 )
                 owned_sessions_ids = owned_sessions.all()
 
@@ -204,10 +205,10 @@ async def delete_document(
                     session_ids = [str(sid) for sid in owned_sessions_ids]
 
                     await session.exec(
-                        delete(ChatMessages).where(ChatMessages.session_id.in_(session_ids))
+                        delete(ChatMessage).where(ChatMessage.session_id.in_(session_ids))
                     )
                     await session.exec(
-                        delete(ChatSessions).where(ChatSessions.id.in_(session_ids))
+                        delete(ChatSession).where(ChatSession.id.in_(session_ids))
                     )
 
             await session.commit()

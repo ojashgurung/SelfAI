@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi.exceptions import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ..database.models import Users
+from ..database.models import User
 from .schemas import UserCreateModel
 from .utils import generate_passwd_hash
 from ..errors import UserAlreadyExists
@@ -19,7 +19,7 @@ from .utils import (
 class AuthService:
     async def get_user_by_email(self, email: str, session : AsyncSession):
         normalized_email = email.lower()
-        statement = select(Users).where(Users.email.ilike(normalized_email))
+        statement = select(User).where(User.email.ilike(normalized_email))
 
         result = await session.exec(statement)
 
@@ -37,7 +37,7 @@ class AuthService:
         user_data_dict.pop("password", None)
         user_data_dict["role"] = "user"
 
-        new_user = Users(**user_data_dict)
+        new_user = User(**user_data_dict)
 
         session.add(new_user)
 
@@ -47,7 +47,7 @@ class AuthService:
 
         return new_user
 
-    async def update_user(self, user: Users, update_data: dict, session: AsyncSession):
+    async def update_user(self, user: User, update_data: dict, session: AsyncSession):
         """Update user attributes"""
         for field, value in update_data.items():
             setattr(user, field, value)
@@ -58,13 +58,13 @@ class AuthService:
         
         return user
     
-    async def get_user_by_google_id(self, google_id: str, session: AsyncSession) -> Optional[Users]:
-        query = select(Users).where(Users.google_id == google_id)
+    async def get_user_by_google_id(self, google_id: str, session: AsyncSession) -> Optional[User]:
+        query = select(User).where(User.google_id == google_id)
         result = await session.exec(query)
         return result.first()
     
 
-    async def get_or_create_google_user(self, user_info: dict, session: AsyncSession) -> Users:
+    async def get_or_create_google_user(self, user_info: dict, session: AsyncSession) -> User:
         """Get existing user or create new one from Google OAuth data"""
         try:
             user = await self.get_user_by_google_id(user_info['sub'], session)
@@ -103,12 +103,12 @@ class AuthService:
             print(f"Error in get_or_create_google_user: {str(e)}")
             raise
 
-    async def get_user_by_github_id(self, github_id: str, session: AsyncSession) -> Optional[Users]:
-        query = select(Users).where(Users.github_id == github_id)
+    async def get_user_by_github_id(self, github_id: str, session: AsyncSession) -> Optional[User]:
+        query = select(User).where(User.github_id == github_id)
         result = await session.exec(query)
         return result.first()
 
-    async def get_or_create_github_user(self, user_info: dict, primary_email: str, session: AsyncSession) -> Users:
+    async def get_or_create_github_user(self, user_info: dict, primary_email: str, session: AsyncSession) -> User:
         """Get existing user or create new one from GitHub OAuth data"""
         try:
             user = await self.get_user_by_github_id(str(user_info['id']), session)
@@ -147,7 +147,7 @@ class AuthService:
             print(f"Error in get_or_create_github_user: {str(e)}")
             raise
     
-    async def create_oauth_response(self, user: Users, REFRESH_TOKEN_EXPIRY: int):
+    async def create_oauth_response(self, user: User, REFRESH_TOKEN_EXPIRY: int):
         access_token = create_token(
             user_data={
                 "id": str(user.id),

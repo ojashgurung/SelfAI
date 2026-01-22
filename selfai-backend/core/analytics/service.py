@@ -14,9 +14,8 @@ from ..user.schemas import (
 )
 
 from ..database.models import (
-    ChatMessages, 
-    ChatSessions, 
-    Users
+    ChatMessage, 
+    ChatSession, 
 )
 
 from sqlmodel import distinct, select, between, func
@@ -108,14 +107,14 @@ class AnalyticsService:
     async def count_user_queries(user_id: UUID, start: datetime, end: datetime, db_session: AsyncSession):
         stmt = (
             select(func.count())
-            .select_from(ChatMessages)
-            .join(ChatSessions, ChatMessages.session_id == ChatSessions.id)
+            .select_from(ChatMessage)
+            .join(ChatSession, ChatMessage.session_id == ChatSession.id)
             .where(
-                ChatSessions.user_id == user_id,
-                ChatSessions.title != "Owner",
-                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
-                ChatMessages.role == "assistant",
-                ChatMessages.created_at.between(start, end)
+                ChatSession.user_id == user_id,
+                ChatSession.title != "Owner",
+                ChatSession.visitor_id.is_(None) | (ChatSession.visitor_id != user_id),
+                ChatMessage.role == "assistant",
+                ChatMessage.created_at.between(start, end)
             )
         )
         result = await db_session.exec(stmt)
@@ -125,12 +124,12 @@ class AnalyticsService:
     async def count_unique_visitors(user_id: UUID, start: datetime, end: datetime, db_session: AsyncSession):
         statement = (
             select(func.count())
-            .select_from(ChatSessions)
+            .select_from(ChatSession)
             .where(
-                ChatSessions.user_id == user_id,
-                ChatSessions.title != "Owner",
-                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
-                ChatSessions.created_at.between(start, end)
+                ChatSession.user_id == user_id,
+                ChatSession.title != "Owner",
+                ChatSession.visitor_id.is_(None) | (ChatSession.visitor_id != user_id),
+                ChatSession.created_at.between(start, end)
             )
         )
 
@@ -141,13 +140,13 @@ class AnalyticsService:
     async def count_total_user_queries(user_id: UUID, db_session: AsyncSession):
         stmt = (
             select(func.count())
-            .select_from(ChatMessages)
-            .join(ChatSessions, ChatMessages.session_id == ChatSessions.id)
+            .select_from(ChatMessage)
+            .join(ChatSession, ChatMessage.session_id == ChatSession.id)
             .where(
-                ChatSessions.user_id == user_id,
-                ChatSessions.title != "Owner",
-                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
-                ChatMessages.role == "assistant",
+                ChatSession.user_id == user_id,
+                ChatSession.title != "Owner",
+                ChatSession.visitor_id.is_(None) | (ChatSession.visitor_id != user_id),
+                ChatMessage.role == "assistant",
             )
         )
         result = await db_session.exec(stmt)
@@ -157,11 +156,11 @@ class AnalyticsService:
     async def count_total_unique_visitors(user_id: UUID, db_session: AsyncSession):
         statement = (
             select(func.count())
-            .select_from(ChatSessions)
+            .select_from(ChatSession)
             .where(
-                ChatSessions.user_id == user_id,
-                ChatSessions.title != "Owner",
-                ChatSessions.visitor_id.is_(None) | (ChatSessions.visitor_id != user_id),
+                ChatSession.user_id == user_id,
+                ChatSession.title != "Owner",
+                ChatSession.visitor_id.is_(None) | (ChatSession.visitor_id != user_id),
             )
         )
 
@@ -237,24 +236,24 @@ class AnalyticsService:
     async def get_average_response_time(user_id: UUID, db_session: AsyncSession):
         messages_subquery = (
             select(
-                ChatMessages.session_id,
-                ChatMessages.created_at,
-                ChatMessages.role,
-                func.lag(ChatMessages.created_at).over(
-                    partition_by=ChatMessages.session_id,
-                    order_by=ChatMessages.created_at
+                ChatMessage.session_id,
+                ChatMessage.created_at,
+                ChatMessage.role,
+                func.lag(ChatMessage.created_at).over(
+                    partition_by=ChatMessage.session_id,
+                    order_by=ChatMessage.created_at
                 ).label('prev_time'),
-                func.lag(ChatMessages.role).over(
-                    partition_by=ChatMessages.session_id,
-                    order_by=ChatMessages.created_at
+                func.lag(ChatMessage.role).over(
+                    partition_by=ChatMessage.session_id,
+                    order_by=ChatMessage.created_at
                 ).label('prev_role')
             )
-            .select_from(ChatMessages)
-            .join(ChatSessions, ChatMessages.session_id == ChatSessions.id)
+            .select_from(ChatMessage)
+            .join(ChatSession, ChatMessage.session_id == ChatSession.id)
             .where(
-                ChatSessions.user_id == user_id,
-                ChatSessions.title != "Owner",
-                (ChatSessions.visitor_id.is_(None)) | (ChatSessions.visitor_id != user_id)
+                ChatSession.user_id == user_id,
+                ChatSession.title != "Owner",
+                (ChatSession.visitor_id.is_(None)) | (ChatSession.visitor_id != user_id)
             )
             .subquery()
         )
