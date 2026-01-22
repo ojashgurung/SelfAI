@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from graph.models.node import GraphNode
 from graph.models.edge import GraphEdge
-from graph.models.integration import UserIntegration
+from graph.models.connections import Connection
 
 from ..config import Config
 
