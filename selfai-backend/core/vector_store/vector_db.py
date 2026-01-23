@@ -1,5 +1,5 @@
 from ..config import Config
-from typing import List, Any, TypedDict
+from typing import List, Any, TypedDict, Optional, Dict
 import asyncio
 
 from pinecone.grpc import PineconeGRPC as Pinecone
@@ -60,20 +60,33 @@ async def upsert_to_pinecone(embeddings: List[EmbeddingDict], namespace: str) ->
         }
 
 
-async def get_query_pinecone(query_embedding, namespace: str):
+async def get_query_pinecone(
+    query_embedding: dict,
+    namespace: str,
+    *,
+    top_k: int = 8,
+    filter: Optional[Dict[str, Any]] = None,
+    include_metadata: bool = True,
+    include_values: bool = False,
+):
     try:
+        kwargs = {}
+        if filter:
+            kwargs["filter"] = filter
+
         result = await asyncio.to_thread(
             index.query,
             vector=query_embedding["values"],
             namespace=namespace,
-            top_k=3,
-            include_metadata=True,
-            include_values=False
+            top_k=top_k,
+            include_metadata=include_metadata,
+            include_values=include_values,
+            **kwargs,
         )
         return result
     except Exception as e:
-        print(f"Error while Quering to Pinecone: {e}")
-        
+        print(f"Error while querying Pinecone: {e}")
+        raise
 
 async def delete_vectors(vector_ids: list, namespace: str):
     try:
