@@ -19,13 +19,13 @@ class IntegrationsService:
 
         expires_at = None
         if token.get("expires_at"):
-            expires_at = datetime.fromtimestamp(token["expires_at"], tz=timezone.utc)
+            expires_at = datetime.fromtimestamp(token["expires_at"], tz=timezone.utc).replace(tzinfo=None)
 
         if integration:
             integration.access_token = token.get("access_token")
             integration.refresh_token = token.get("refresh_token", integration.refresh_token)
             integration.expires_at = expires_at
-            integration.last_synced_at = datetime.now(timezone.utc)
+            integration.last_synced_at = datetime.now(timezone.utc).replace(tzinfo=None)
         else:
             integration = UserIntegration(
                 user_id=user_id,

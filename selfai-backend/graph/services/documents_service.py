@@ -10,46 +10,60 @@ class DocumentsService:
         return (await session.exec(stmt)).all()
 
     @staticmethod
-    async def upsert_document(session, *, user_id, source_id, doc):
-        now = utcnow()
-        content_hash = sha256_text(doc.text)
-
+    async def upsert_document(
+        session,
+        *,
+        user_id,
+        source_id,
+        external_id: str,
+        doc_type: str,
+        title: str,
+        url: str | None,
+        extracted_text: str | None,
+        content_hash: str | None,
+        doc_metadata: dict,
+        updated_at_source=None,
+        file_asset_id=None,
+    ) -> Document:
         stmt = select(Document).where(
             Document.user_id == user_id,
             Document.source_id == source_id,
-            Document.external_id == doc.external_id,
+            Document.external_id == external_id,
         )
         existing = (await session.exec(stmt)).first()
 
+        now = utcnow()
+
         if existing:
-            if existing.content_hash == content_hash:
-                return existing, False  # unchanged
-            existing.title = doc.title
-            existing.doc_type = doc.doc_type
-            existing.url = doc.url
+            existing.doc_type = doc_type
+            existing.title = title
+            existing.url = url
+            existing.extracted_text = extracted_text
             existing.content_hash = content_hash
-            existing.extracted_text = doc.text
-            existing.updated_at_source = doc.updated_at_source
-            existing.doc_metadata = doc.metadata or {}
+            existing.doc_metadata = doc_metadata
+            existing.updated_at_source = updated_at_source
+            existing.file_asset_id = file_asset_id
             existing.updated_at = now
             session.add(existing)
             await session.flush()
-            return existing, True
+            return existing
 
-        row = Document(
+        doc = Document(
             user_id=user_id,
             source_id=source_id,
-            external_id=doc.external_id,
-            doc_type=doc.doc_type,
-            title=doc.title,
-            url=doc.url,
+            external_id=external_id,
+            doc_type=doc_type,
+            title=title,
+            url=url,
+            extracted_text=extracted_text,
             content_hash=content_hash,
-            extracted_text=doc.text,
-            updated_at_source=doc.updated_at_source,
-            doc_metadata=doc.metadata or {},
+            doc_metadata=doc_metadata,
+            updated_at_source=updated_at_source,
+            file_asset_id=file_asset_id,
             created_at=now,
             updated_at=now,
         )
-        session.add(row)
+        session.add(doc)
         await session.flush()
-        return row, True
+        return doc
+        
