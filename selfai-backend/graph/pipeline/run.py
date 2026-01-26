@@ -2,7 +2,6 @@ from graph.pipeline.chunking import chunk_text
 from graph.pipeline.embeddings import embed_texts
 from graph.pipeline.vector_store import upsert_document_vectors
 from graph.services.documents_service import DocumentsService
-from graph.services.sources_service import SourcesService
 from graph.utils.hash import sha256_text
 from graph.utils.time import utcnow
 

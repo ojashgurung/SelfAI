@@ -8,6 +8,7 @@ from graph.api.connections_routes import router as connections_router
 from graph.api.documents_routes import router as documents_router
 from graph.api.sources_routes import router as sources_router
 from graph.api.query_routes import router as query_router
+from graph.api.identity_routes import router as identity_router
 
 graph_router = APIRouter()
 
@@ -18,3 +19,4 @@ graph_router.include_router(connections_router)
 graph_router.include_router(documents_router)
 graph_router.include_router(sources_router)
 graph_router.include_router(query_router)
+graph_router.include_router(identity_router)
