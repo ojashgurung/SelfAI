@@ -114,3 +114,15 @@ async def check_namespace_exists(namespace: str) -> bool:
     except Exception as e:
         print(f"Error while checking namespace existence: {e}")
         return False
+
+async def delete_by_filter(
+    namespace: str,
+    *,
+    filter: Dict[str, Any],
+):
+    try:
+        await asyncio.to_thread(index.delete, namespace=namespace, filter=filter)
+        return True
+    except Exception as e:
+        print(f"Failed to delete vectors by filter: {e}")
+        raise
