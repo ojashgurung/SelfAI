@@ -1,4 +1,5 @@
 import { Settings, User, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,7 @@ interface UserDropdownProps {
   style: string;
   withIcon: boolean;
   reversed?: boolean;
+  minimized?: boolean;
   align: "start" | "center" | "end";
   side: "top" | "right" | "bottom" | "left";
   sideOffset?: number;
@@ -31,11 +33,17 @@ export function UserDropdown({
   sideOffset,
   alignOffset,
   reversed = false,
+  minimized = false,
 }: UserDropdownProps) {
   return (
     <div className={`${style}`}>
       <DropdownMenu>
-        <DropdownMenuTrigger className="w-full rounded-xl hover:bg-indigo-50  hover:underline  transition">
+        <DropdownMenuTrigger
+          className={cn(
+            "w-full rounded-xl hover:bg-indigo-50 hover:underline transition",
+            minimized && "flex justify-center",
+          )}
+        >
           {reversed ? (
             <div className="flex items-center gap-3 rounded-lg">
               <div className="flex-1 text-left">
@@ -68,8 +76,13 @@ export function UserDropdown({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-3 p-2 rounded-lg">
-              <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center">
+            <div
+              className={cn(
+                "flex items-center gap-3 p-2 rounded-lg",
+                minimized && "justify-center p-0",
+              )}
+            >
+              <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center flex-shrink-0">
                 {user?.profile_image ? (
                   <img
                     src={user.profile_image}
@@ -88,14 +101,18 @@ export function UserDropdown({
                   </span>
                 )}
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-left">
-                  {user?.fullname || "Loading..."}
-                </p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
-              </div>
-              {withIcon && (
-                <Settings className="w-5 h-5 mr-2 text-gray-500 hover:text-black transition-colors" />
+              {!minimized && (
+                <>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-left">
+                      {user?.fullname || "Loading..."}
+                    </p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  {withIcon && (
+                    <Settings className="w-5 h-5 mr-2 text-gray-500 hover:text-black transition-colors" />
+                  )}
+                </>
               )}
             </div>
           )}
