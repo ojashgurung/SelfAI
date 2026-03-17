@@ -5,6 +5,7 @@ from core.auth.dependencies import get_current_user
 from graph.pipeline.embeddings import embed_query
 from core.vector_store.vector_db import get_query_pinecone
 from graph.pipeline.answer import answer_with_context
+from graph.utils.build_context import build_context
 
 
 router = APIRouter(prefix="/query", tags=["graph-query"])
@@ -14,30 +15,7 @@ class QueryRequest(BaseModel):
     question: str = Field(..., min_length=1)
     top_k: int = Field(default=8, ge=1, le=20)
     source_id: str | None = None
-
-def build_context(matches, max_chars: int = 12000) -> str:
-    parts = []
-    used = 0
-
-    for m in matches:
-        md = m.metadata or {}
-        chunk = md.get("content") or ""
-        if not chunk:
-            continue
-
-        title = md.get("title") or md.get("document_name") or ""
-        url = md.get("url") or ""
-        header = f"{title}\n{url}".strip()
-
-        block = f"{header}\n\n{chunk}".strip() if header else chunk.strip()
-
-        if used + len(block) > max_chars:
-            break
-
-        parts.append(block)
-        used += len(block) + 2
-
-    return "\n\n---\n\n".join(parts)    
+    model: str = Field(default="gpt-4o")
 
 
 @router.post("")
@@ -69,7 +47,7 @@ async def query_selfai(body: QueryRequest, current_user=Depends(get_current_user
             "matches": [],
         }
 
-    answer = await answer_with_context(context=context, question=body.question)
+    answer = await answer_with_context(context=context, question=body.question, model_name=body.model)
 
     return {
         "answer": answer,
