@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo/Logo";
 
-export function Header() {
+export default function Header() {
   const [activeSection, setActiveSection] = useState("hero");
   const navigationItems = [
     {
@@ -28,7 +28,7 @@ export function Header() {
 
   const handleScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    href: string,
   ) => {
     e.preventDefault();
     const element = document.querySelector(href);
@@ -97,16 +97,10 @@ export function Header() {
             Join Waitlist
           </Button> */}
           <div className="border-r hidden md:inline"></div>
-          <Link
-            href="/auth/signin"
-            className="flex justify-between items-center"
-          >
+          <Link href="/signin" className="flex justify-between items-center">
             <Button variant="outline">Sign in</Button>
           </Link>
-          <Link
-            href="/auth/signup"
-            className="flex justify-between items-center "
-          >
+          <Link href="/signup" className="flex justify-between items-center ">
             <Button className="bg-indigo-600 hover:bg-indigo-700">
               Get Started
             </Button>

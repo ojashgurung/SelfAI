@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { NavigationWrapper } from "@/components/landing-page/navigation-wrapper/navigarion-wrapper";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -36,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
-        <NavigationWrapper>{children}</NavigationWrapper>
+        {children}
         <Toaster position="bottom-right" />
       </body>
     </html>

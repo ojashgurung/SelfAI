@@ -2,7 +2,7 @@ import { Section } from "@/components/ui/section";
 import { Logo } from "@/components/logo/Logo";
 import Link from "next/link";
 
-export function Footer() {
+export default function Footer() {
   return (
     <Section className="border-t border-border/10 bg-white ">
       <div className="mx-auto max-w-container flex flex-col gap-12 justify-between mt-36">
