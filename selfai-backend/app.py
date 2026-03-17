@@ -52,7 +52,6 @@ This REST API is able to;
 - Premium Users role to get premium features and many more e.t.c
 """
 
-version_prefix =f"/api/{api_version}"
 
 app = FastAPI(
     title="SelfAI",
@@ -80,6 +79,7 @@ app.add_middleware(
     allow_headers=["*"], 
 )
 
+version_prefix =f"/api/{api_version}"
 register_all_errors(app)
 
 app.include_router(auth_router, prefix=f"{version_prefix}/auth", tags=["auth"])
