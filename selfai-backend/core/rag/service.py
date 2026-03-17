@@ -2,8 +2,6 @@ import os
 from io import BytesIO
 from typing import Any
 from fastapi import UploadFile
-from langchain.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from graph.models.documents import Document
@@ -115,41 +113,6 @@ class RagService:
             return "No readable content found in the matched Document."
             
         return "\n\n".join(extracted_texts)
-    
-    async def query_llm(self, retrieved_text: str, user_query: str): 
-        PROMPT_TEMPLATE = """
-        You are an AI assistant designed to answer questions about a specific person, based on the Document and data they've provided.
-
-        Speak in a professional, third-person tone — for example: "They are currently pursuing a Master's degree..." or "This person has worked on...".
-
-        Use the context below to answer the user's question truthfully. If the context does not contain enough information, politely say so. Do not guess or make up information.
-
-        You can infer lightly based on what is available, but always prioritize accuracy. Be friendly and clear in your tone.
-
-        ---
-
-        Context:
-        {context}
-
-        User's Question:
-        {question}
-
-        Answer:
-        """
-
-        # Create the prompt template
-        prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-
-        # Format as list of messages
-        messages = prompt_template.format_messages(
-            context=retrieved_text,
-            question=user_query
-        )
-
-        model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
-
-        response = model.invoke(messages)
-        return response.content
     
     async def check_namespace_exists(self, namespace: str) -> bool:
         return await check_namespace_exists(namespace)
