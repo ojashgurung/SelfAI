@@ -9,7 +9,6 @@ from graph.api.documents_routes import router as documents_router
 from graph.api.sources_routes import router as sources_router
 from graph.api.query_routes import router as query_router
 from graph.api.compare_models_routes import router as compare_models_router
-from graph.api.identity_routes import router as identity_router
 
 graph_router = APIRouter()
 
@@ -21,4 +20,3 @@ graph_router.include_router(documents_router)
 graph_router.include_router(sources_router)
 graph_router.include_router(query_router)
 graph_router.include_router(compare_models_router)
-graph_router.include_router(identity_router)
