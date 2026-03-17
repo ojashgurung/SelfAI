@@ -1,7 +1,19 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # PostgreSQL Database
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: selfai-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@selfai.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - selfai-network
+
   postgres:
     image: postgres:15-alpine
     container_name: selfai-postgres-dev
@@ -12,16 +24,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"  # Changed from 5432:5432 to avoid conflict
+      - "5433:5432"
     networks:
       - selfai-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-selfai} -d ${POSTGRES_DB:-selfai_dev}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-selfai} -d ${POSTGRES_DB:-selfai_dev}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: selfai-redis-dev
@@ -29,7 +44,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6380:6379"  # Changed from 6379:6379 to avoid potential conflict
+      - "6380:6379"
     networks:
       - selfai-network
     healthcheck:
@@ -38,10 +53,9 @@ services:
       timeout: 3s
       retries: 5
 
-  # Backend API (Development with hot reload)
   backend:
     build:
-      context: ./backend
+      context: ./selfai-backend
       dockerfile: Dockerfile.dev
     container_name: selfai-backend-dev
     env_file:
@@ -50,8 +64,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-selfai}:${POSTGRES_PASSWORD:-selfai123}@postgres:5432/${POSTGRES_DB:-selfai_dev}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
     volumes:
-      - ./backend:/app:cached
-      - ./backend/documents:/app/documents
+      - ./selfai-backend:/app:cached
+      - ./selfai-backend/documents:/app/documents
       - ./.env:/app/.env:ro
     ports:
       - "8000:8000"
@@ -64,7 +78,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # Frontend (Development with hot reload)
   frontend:
     build:
       context: ./frontend
@@ -89,7 +102,6 @@ services:
       - backend
     restart: unless-stopped
 
-  # Widget App (Development with hot reload)
   widget-app:
     build:
       context: ./widget-app
