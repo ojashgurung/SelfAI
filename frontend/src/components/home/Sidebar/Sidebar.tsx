@@ -21,6 +21,7 @@ import {
   GitFork,
   PanelRightOpen,
   PanelRightClose,
+  Sparkles,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -128,44 +129,28 @@ export function Sidebar() {
   }, [user, router]);
 
   const menuItems = [
-    { title: "Overview", icon: HomeIcon, href: "/app/dashboard" },
-    { title: "Context", icon: GitFork, href: "/app/context" },
-
     {
-      title: "Connect & Train",
-      icon: GlobeIcon,
-      href: "/app/connections",
-      disabled: true,
-      subItems: [
-        {
-          title: "Connect LinkedIn",
-          href: "/app/connections/linkedin",
-          disabled: true,
-        },
-        {
-          title: "Comment GitHub",
-          href: "/app/connections/github",
-          disabled: true,
-        },
-      ],
+      title: "Context",
+      icon: GitFork,
+      href: "/context",
     },
     {
-      title: "Upload & Train",
-      icon: FileTextIcon,
-      href: "/app/document",
+      title: "Compare",
+      icon: Sparkles,
+      href: "/compare",
     },
     {
-      title: "Create Widget",
-      icon: LayoutTemplate,
-      disabled: !masterSession?.id,
-      href: "/app/widget",
-      matchPaths: ["/app/widget", "/app/widget/configuration"],
-    },
-    {
-      title: "Own Trained Chat",
+      title: "Chat",
       icon: UsersIcon,
       disabled: !masterSession?.id,
-      href: `/app/chat/${masterSession?.id}`,
+      href: `/chat/${masterSession?.id}`,
+    },
+    {
+      title: "Widget",
+      icon: LayoutTemplate,
+      disabled: !masterSession?.id,
+      href: "/widget",
+      matchPaths: ["/app/widget", "/app/widget/configuration"],
     },
   ];
   return (
@@ -223,69 +208,40 @@ export function Sidebar() {
             <nav className="space-y-1 mb-2 text-sm">
               {menuItems.map((item) => (
                 <div key={item.title}>
-                  {item.subItems ? (
-                    <button
-                      onClick={() => toggleMenu(item.title)}
-                      disabled={item.disabled}
-                      title={collapsed ? item.title : undefined}
+                  <Link
+                    href={item.href}
+                    title={collapsed ? item.title : undefined}
+                    onClick={(e) => {
+                      if (
+                        !masterSession?.id &&
+                        !item.href.includes("document") &&
+                        item.href !== "/app"
+                      ) {
+                        e.preventDefault();
+                        router.push("/context");
+                        toast.error("Please connect a data source first", {
+                          description:
+                            "Connect GitHub or upload a document in Context first.",
+                        });
+                        item.href !== "/context";
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 py-2 rounded-md text-gray-600 transition-all duration-200 ease-in-out",
+                      collapsed ? "justify-center px-2" : "px-3",
+                      (pathname === item.href ||
+                        item.matchPaths?.some((p) => pathname.startsWith(p)) ||
+                        (!masterSession?.id &&
+                          item.href === "/app/document" &&
+                          ["/app/widget", "/app/chat"].some((p) =>
+                            pathname.startsWith(p),
+                          ))) &&
+                        "p-3 bg-indigo-50 text-indigo-600 font-bold",
+                    )}
+                  >
+                    <item.icon
                       className={cn(
-                        "w-full flex items-center py-2 rounded-md transition-colors",
-                        collapsed
-                          ? "justify-center px-2"
-                          : "justify-between px-3",
-                        item.disabled
-                          ? "text-gray-400 cursor-not-allowed hover:bg-transparent"
-                          : "text-gray-600 hover:bg-gray-50",
-                        pathname.startsWith(item.href) &&
-                          "bg-indigo-50 text-indigo-600 font-extrabold",
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon
-                          className={cn(
-                            "w-5 h-5 transition-colors duration-200",
-                            pathname.startsWith(item.href) &&
-                              "text-indigo-600 font-extrabold",
-                          )}
-                        />
-                        {!collapsed && item.title}
-                      </div>
-                      {!collapsed && (
-                        <>
-                          {item.disabled && (
-                            <span className="text-xs bg-amber-500  text-white px-2 py-0.5 rounded ml-auto mr-2">
-                              Soon
-                            </span>
-                          )}
-                          {openMenus.includes(item.title) ? (
-                            <ChevronDownIcon className="w-4 h-4" />
-                          ) : (
-                            <ChevronRightIcon className="w-4 h-4" />
-                          )}
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      title={collapsed ? item.title : undefined}
-                      onClick={(e) => {
-                        if (
-                          !masterSession?.id &&
-                          !item.href.includes("document") &&
-                          item.href !== "/app"
-                        ) {
-                          e.preventDefault();
-                          router.push("/app/document");
-                          toast.error("Please upload a document first", {
-                            description:
-                              "You need to upload and train a document before accessing this feature.",
-                          });
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center gap-3 py-2 rounded-md text-gray-600 transition-all duration-200 ease-in-out",
-                        collapsed ? "justify-center px-2" : "px-3",
+                        "w-5 h-5 transition duration-200",
                         (pathname === item.href ||
                           item.matchPaths?.some((p) =>
                             pathname.startsWith(p),
@@ -295,46 +251,11 @@ export function Sidebar() {
                             ["/app/widget", "/app/chat"].some((p) =>
                               pathname.startsWith(p),
                             ))) &&
-                          "p-3 bg-indigo-50 text-indigo-600 font-bold",
+                          "w-6 h-6 text-indigo-600 font-bold",
                       )}
-                    >
-                      <item.icon
-                        className={cn(
-                          "w-5 h-5 transition duration-200",
-                          (pathname === item.href ||
-                            item.matchPaths?.some((p) =>
-                              pathname.startsWith(p),
-                            ) ||
-                            (!masterSession?.id &&
-                              item.href === "/app/document" &&
-                              ["/app/widget", "/app/chat"].some((p) =>
-                                pathname.startsWith(p),
-                              ))) &&
-                            "w-6 h-6 text-indigo-600 font-bold",
-                        )}
-                      />
-                      {!collapsed && item.title}
-                    </Link>
-                  )}
-                  {item.subItems &&
-                    openMenus.includes(item.title) &&
-                    !collapsed && (
-                      <div className="ml-8 mt-1 space-y-1">
-                        {item.subItems.map((subItem) => (
-                          <Link
-                            key={subItem.title}
-                            href={subItem.href}
-                            className={cn(
-                              "block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md",
-                              pathname === subItem.href &&
-                                "bg-gray-50 text-gray-900 font-extrabold",
-                            )}
-                          >
-                            {subItem.title}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                    />
+                    {!collapsed && item.title}
+                  </Link>
                 </div>
               ))}
             </nav>
