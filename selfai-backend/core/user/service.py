@@ -13,6 +13,7 @@ from .schemas import (
 )
 
 from ..database.models import User
+from graph.models.sources import Source
 
 class UserService:
     async def get_user(self, user_id: UUID, db_session: AsyncSession) -> UserResponse:
@@ -71,3 +72,11 @@ class UserService:
                 detail=str(e)
             )
        
+    async def has_ingested_data(self, user_id: UUID, db_session: AsyncSession) -> bool:
+        result = await db_session.exec(
+            select(Source).where(
+                Source.user_id == user_id,
+                Source.last_ingested_at != None
+            )
+        )
+        return result.first() is not None

@@ -5,9 +5,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .service import UserService
 from ..database.models import User
+from graph.models.sources import Source
 from ..database.db import get_session
 from .schemas import UserResponse
-from ..auth.dependencies import AccessTokenBearer
+from ..auth.dependencies import AccessTokenBearer, get_current_user
 
 user_router = APIRouter()
 user_service = UserService()
@@ -48,6 +49,15 @@ async def get_current_user_info(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
     )
+
+
+@user_router.get("/has-data")
+async def has_ingested_data(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session)
+):
+    has_data = await user_service.has_ingested_data(current_user.id, db)
+    return {"has_data": has_data}
 
 
 @user_router.get("/{user_id}", status_code=status.HTTP_200_OK, response_model=UserResponse)
