@@ -40,7 +40,7 @@ export function UserDropdown({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "w-full rounded-xl hover:bg-indigo-50 hover:underline transition",
+            "w-full rounded-xl hover:bg-white/10 hover:underline transition",
             minimized && "flex justify-center",
           )}
         >
@@ -52,7 +52,7 @@ export function UserDropdown({
                 </p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
                 {user?.profile_image ? (
                   <img
                     src={user.profile_image}
@@ -82,7 +82,7 @@ export function UserDropdown({
                 minimized && "justify-center p-0",
               )}
             >
-              <div className="w-10 h-10 rounded-full bg-indigo-400 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
                 {user?.profile_image ? (
                   <img
                     src={user.profile_image}
@@ -90,7 +90,7 @@ export function UserDropdown({
                     className="w-full h-full object-cover rounded-full"
                   />
                 ) : (
-                  <span className="text-white font-medium">
+                  <span className="text-black font-medium">
                     {user?.fullname
                       ? user.fullname
                           .split(" ")
@@ -104,7 +104,7 @@ export function UserDropdown({
               {!minimized && (
                 <>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-left">
+                    <p className="text-sm font-medium text-left text-white">
                       {user?.fullname || "Loading..."}
                     </p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
