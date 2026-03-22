@@ -42,7 +42,6 @@ export default function ContextLayout({
   }
   return (
     <div className="flex h-screen bg-gray-50">
-      <IntegrationsSidebar />
       <ContextCanvas />
       <SourceDetails />
     </div>

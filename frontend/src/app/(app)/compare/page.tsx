@@ -119,9 +119,9 @@ export default function ComparePage() {
 
             {/* Suggested prompts */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-              {SUGGESTED_PROMPTS.map((prompt) => (
+              {SUGGESTED_PROMPTS.map((prompt, index) => (
                 <Card
-                  key={prompt}
+                  key={`prompt-${index}`}
                   onClick={() => setQuestion(prompt)}
                   className="p-4 hover:bg-indigo-50 cursor-pointer transition-colors bg-white/95 rounded-2xl shadow-sm hover:shadow-md border border-gray-100"
                 >
