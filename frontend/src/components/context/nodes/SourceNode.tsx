@@ -13,11 +13,15 @@ export function SourceNode({ data }: NodeProps) {
   const Icon = config.icon;
   const { isConnected, isSelected } = data;
 
+  const isDocuments = data.platform === "documents";
+  const docCount = data.documentCount || 0;
+  const docNames: string[] = data.documentNames || [];
+
   return (
     <div
       onClick={isConnected ? data.onClick : undefined}
       style={{
-        width: 110,
+        width: isDocuments && isConnected && docCount > 0 ? 140 : 110,
         background: isConnected ? "#0a0a0a" : "#f5f5f5",
         border: `2px solid ${isSelected ? "#0a0a0a" : isConnected ? "#0a0a0a" : "#e5e5e5"}`,
         borderRadius: 16,
@@ -41,24 +45,50 @@ export function SourceNode({ data }: NodeProps) {
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
       <Handle type="target" position={Position.Bottom} style={{ opacity: 0 }} />
 
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          background: isConnected ? "rgba(255,255,255,0.12)" : config.bg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon
+      {/* Icon with count badge */}
+      <div style={{ position: "relative" }}>
+        <div
           style={{
-            width: 18,
-            height: 18,
-            color: isConnected ? "#fff" : config.color,
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: isConnected ? "rgba(255,255,255,0.12)" : config.bg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        >
+          <Icon
+            style={{
+              width: 18,
+              height: 18,
+              color: isConnected ? "#fff" : config.color,
+            }}
+          />
+        </div>
+        {isDocuments && isConnected && docCount > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: -6,
+              right: -10,
+              background: "#2563eb",
+              color: "#fff",
+              fontSize: 9,
+              fontWeight: 700,
+              borderRadius: 8,
+              minWidth: 18,
+              height: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0 5px",
+              border: "2px solid #0a0a0a",
+            }}
+          >
+            {docCount}
+          </div>
+        )}
       </div>
 
       <span
@@ -72,7 +102,41 @@ export function SourceNode({ data }: NodeProps) {
         {config.label}
       </span>
 
-      {isConnected && (
+      {/* Document file previews */}
+      {isDocuments && isConnected && docCount > 0 ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            width: "100%",
+            alignItems: "center",
+          }}
+        >
+          {docNames.slice(0, 2).map((name: string, i: number) => (
+            <span
+              key={i}
+              style={{
+                fontSize: 8,
+                color: "rgba(255,255,255,0.5)",
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "block",
+              }}
+              title={name}
+            >
+              {name}
+            </span>
+          ))}
+          {docCount > 2 && (
+            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.35)" }}>
+              +{docCount - 2} more
+            </span>
+          )}
+        </div>
+      ) : isConnected ? (
         <div
           style={{
             width: 6,
@@ -81,8 +145,7 @@ export function SourceNode({ data }: NodeProps) {
             background: "#4ade80",
           }}
         />
-      )}
-      {!isConnected && (
+      ) : (
         <span style={{ fontSize: 9, color: "#d1d5db", fontWeight: 500 }}>
           Not connected
         </span>
@@ -90,3 +153,4 @@ export function SourceNode({ data }: NodeProps) {
     </div>
   );
 }
+

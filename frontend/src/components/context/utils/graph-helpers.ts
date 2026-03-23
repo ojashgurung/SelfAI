@@ -17,6 +17,7 @@ export function buildGraphNodes(
   connected: string[],
   initials: string,
   onSourceClick: (platform: string) => void,
+  documents?: { filename: string }[],
 ) {
   const centerNode = {
     id: "user",
@@ -29,16 +30,24 @@ export function buildGraphNodes(
   // Only show nodes for sources that exist in backend
   const sourceNodes = connected.map((platform, i) => {
     const pos = getSourcePosition(i, connected.length);
+    const nodeData: Record<string, any> = {
+      platform,
+      isConnected: true,
+      isSelected: false,
+      onClick: () => onSourceClick(platform),
+    };
+
+    // Attach document metadata for the documents node
+    if (platform === "documents" && documents) {
+      nodeData.documentCount = documents.length;
+      nodeData.documentNames = documents.map((d) => d.filename);
+    }
+
     return {
       id: `source-${platform}`,
       type: "sourceNode",
       position: { x: pos.x - 55, y: pos.y - 55 },
-      data: {
-        platform,
-        isConnected: true,
-        isSelected: false,
-        onClick: () => onSourceClick(platform),
-      },
+      data: nodeData,
       draggable: false,
     };
   });
