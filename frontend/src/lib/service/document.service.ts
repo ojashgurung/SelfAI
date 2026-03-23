@@ -1,4 +1,4 @@
-const RAG_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/rag`;
+const GRAPH_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/graph`;
 
 export interface Document {
   id: string;
@@ -14,7 +14,7 @@ export const DocumentService = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${RAG_BASE_URL}/upload-document`, {
+    const response = await fetch(`${GRAPH_BASE_URL}/integrations/documents/upload`, {
       method: "POST",
       credentials: "include",
       body: formData,
@@ -30,8 +30,12 @@ export const DocumentService = {
     return response.json();
   },
 
-  async getDocuments() {
-    const response = await fetch(`${RAG_BASE_URL}/documents`, {
+  async getDocuments(sourceId?: string) {
+    const url = new URL(`${GRAPH_BASE_URL}/documents/`);
+    if (sourceId) {
+      url.searchParams.set("source_id", sourceId);
+    }
+    const response = await fetch(url.toString(), {
       method: "GET",
       credentials: "include",
       headers: {
@@ -46,11 +50,20 @@ export const DocumentService = {
     }
 
     const data = await response.json();
-    return data.documents as Document[];
+    // The graph endpoint returns a flat array of document objects with 'title' field
+    const docs = Array.isArray(data) ? data : data.documents || [];
+    return docs.map((doc: any) => ({
+      id: doc.id,
+      filename: doc.title || doc.filename || "Untitled",
+      filesize: doc.filesize || "",
+      created_at: doc.created_at,
+      namespace: doc.namespace || "",
+      vector_ids: doc.vector_ids || [],
+    })) as Document[];
   },
 
   async deleteDocument(documentId: string) {
-    const response = await fetch(`${RAG_BASE_URL}/documents/${documentId}`, {
+    const response = await fetch(`${GRAPH_BASE_URL}/documents/${documentId}`, {
       method: "DELETE",
       credentials: "include",
       headers: {
