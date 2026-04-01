@@ -23,8 +23,8 @@ export function Logo({
       aria-label="Go to SelfAI Home"
     >
       {withText && (
-        <span className="text-xl font-semibold text-indigo-600 group-hover:text-indigo-700 transition-colors">
-          {compact ? "selfAI" : "selfAI"}
+        <span className="text-xl font-semibold text-white group-hover:text-cyan-700 transition-colors">
+          {compact ? "self.AI" : "self.AI"}
         </span>
       )}
     </Link>

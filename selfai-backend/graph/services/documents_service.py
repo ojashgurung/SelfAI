@@ -5,8 +5,10 @@ from graph.utils.time import utcnow
 
 class DocumentsService:
     @staticmethod
-    async def get_all_documents(session, user_id):
+    async def get_all_documents(session, user_id, source_id=None):
         stmt = select(Document).where(Document.user_id == user_id)
+        if source_id:
+            stmt = stmt.where(Document.source_id == source_id)
         return (await session.exec(stmt)).all()
 
     @staticmethod

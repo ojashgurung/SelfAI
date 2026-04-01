@@ -1,12 +1,24 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException
 from core.auth.dependencies import get_current_user
+from core.database.db import AsyncSessionLocal
+from graph.models.documents import Document
 from graph.controllers.documents_controller import DocumentsController
+from core.vector_store.vector_db import delete_by_filter
+from sqlmodel import select
 
 router = APIRouter(prefix="/documents", tags=["graph-documents"])
 
 @router.get("/")
-async def get_all_documents(current_user=Depends(get_current_user)):
-    return await DocumentsController.get_all_documents(current_user.id)
+async def get_all_documents(
+    current_user=Depends(get_current_user),
+    source_id: Optional[UUID] = None
+):
+    return await DocumentsController.get_all_documents(
+        current_user.id,
+        source_id=source_id
+    )
 
 @router.delete("/{document_id}")
 async def delete_document(document_id: str, current_user=Depends(get_current_user)):

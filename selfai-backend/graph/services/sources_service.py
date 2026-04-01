@@ -109,3 +109,27 @@ class SourcesService:
             session.add(src)
             await session.commit()
             return {"status": "error", "message": "Pipeline failed", "detail": str(e)}
+
+    async def get_or_create_documents_source(session, user_id):
+        # Check if documents source exists
+        existing = (await session.exec(
+            select(Source).where(
+                Source.user_id == user_id,
+                Source.platform == "documents"
+            )
+        )).first()
+        
+        if existing:
+            return existing
+        
+        # Create it
+        source = Source(
+            user_id=user_id,
+            platform="documents",
+            display_name="Documents",
+            status="connected",
+            last_ingested_at= datetime.now(timezone.utc).replace(tzinfo=None)
+        )
+        session.add(source)
+        await session.flush()
+        return source

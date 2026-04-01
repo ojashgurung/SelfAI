@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import IntegrationsSidebar from "@/components/context/IntegrationsSidebar";
-import ContextCanvas from "@/components/context/ContextCanvas";
-import SourceDetails from "@/components/context/SourceDetails";
 
 export default function ContextLayout({
   children,
@@ -40,11 +37,10 @@ export default function ContextLayout({
       </div>
     );
   }
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      <IntegrationsSidebar />
-      <ContextCanvas />
-      <SourceDetails />
+    <div className="flex h-full bg-gray-50">
+      {children}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, Depends
+from fastapi.responses import RedirectResponse
 from core.auth.dependencies import get_current_user
 from core.database.db import AsyncSessionLocal
 
@@ -46,4 +47,6 @@ async def github_callback(request: Request, current_user=Depends(get_current_use
         )
         await session.commit()
 
-    return {"status": "connected", "platform": "github", "account_id": username, "source_id": str(src.id)}
+    return RedirectResponse(
+        url=f"{Config.FRONTEND_URL}/context?connected=github&source_id={str(src.id)}"
+    )

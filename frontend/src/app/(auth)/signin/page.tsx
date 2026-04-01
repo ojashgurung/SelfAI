@@ -27,7 +27,7 @@ export default function SigninPage() {
         const decodedError = decodeURIComponent(errorParam);
         setError(decodedError || "Authentication failed. Please try again.");
 
-        router.replace("/auth/signin");
+        router.replace("/signin");
       }
     }
   }, [router]);
@@ -56,7 +56,7 @@ export default function SigninPage() {
           email: response.user.email,
           role: response.user.role,
         });
-        router.push("/dashboard");
+        router.push("/context");
       } else {
         setError("Authentication failed. Please try again.");
       }
@@ -217,10 +217,7 @@ export default function SigninPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground animate-appear">
         Don&apos;t have an account?{" "}
-        <Link
-          href="/auth/signup"
-          className="text-indigo-600 hover:text-indigo-500"
-        >
+        <Link href="/signup" className="text-indigo-600 hover:text-indigo-500">
           Sign up
         </Link>
       </p>

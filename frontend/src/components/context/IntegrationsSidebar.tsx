@@ -1,170 +1,206 @@
-import React from "react";
-import { ConnectGithubDialog } from "@/components/dialog/connect-github-dialog";
-import { useState } from "react";
-import * as Accordion from "@radix-ui/react-accordion";
-import {
-  Search,
-  ChevronDown,
-  Star,
-  Mail,
-  FileSpreadsheet,
-  FileText,
-  Box,
-  File,
-  HardDrive,
-  RefreshCw,
-  LucideIcon,
-} from "lucide-react";
-import { FaGithub } from "react-icons/fa";
-import { Input } from "@/components/ui/input";
+"use client";
+
+import React, { useRef, useState } from "react";
 import { cn } from "@/lib/utils/utils";
+import { ConnectGithubDialog } from "@/components/dialog/connect-github-dialog";
+import { X, Loader2 } from "lucide-react";
+import { SOURCE_CONFIG, SIDEBAR_SOURCES } from "./utils/source-config";
+import { toast } from "sonner";
 
-type IntegrationItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: React.ElementType;
-  iconColor: string;
-  iconBg: string;
-  isFavorite: boolean;
-
-  // NEW
-  isConnected: boolean;
-  isEnabled: boolean; // toggle ON/OFF
-  metadata?: {
-    username?: string;
-    lastSynced?: string;
-    repoCount?: number;
-    primaryLanguages?: string[];
-  };
-};
-
-interface Integration {
-  id: string;
-  title: string;
-  items: IntegrationItem[];
+interface IntegrationsSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  connectedPlatforms: string[];
+  onConnectionAdded: () => void;
 }
 
-// Mock data for the sidebar sections
-const integrations: Integration[] = [
-  {
-    id: "favorites",
-    title: "Favorites",
-    items: [],
-  },
-  {
-    id: "integration",
-    title: "Integration",
-    items: [
-      {
-        id: "github",
-        title: "GitHub",
-        subtitle: "Connect your repositories",
-        icon: FaGithub as React.ElementType,
-        iconColor: "text-black",
-        iconBg: "bg-gray-100",
-        isFavorite: false,
-
-        isConnected: false,
-        isEnabled: false,
-      },
-    ],
-  },
-];
-
-export default function IntegrationsSidebar() {
+export default function IntegrationsSidebar({
+  isOpen,
+  onClose,
+  connectedPlatforms = [],
+  onConnectionAdded,
+}: IntegrationsSidebarProps) {
   const [showGithubDialog, setShowGithubDialog] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleItemClick = (itemId: string) => {
-    if (itemId === "github") {
+  const handleSourceClick = (id: string) => {
+    if (id === "github") {
       setShowGithubDialog(true);
+    } else if (id === "documents") {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large", { description: "Maximum size is 5MB" });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/graph/integrations/documents/upload`,
+        { method: "POST", credentials: "include", body: formData },
+      );
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      toast.success(`${file.name} uploaded and ingested`);
+      onConnectionAdded();
+      onClose();
+    } catch (error) {
+      toast.error("Upload failed", {
+        description: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
     }
   };
 
   return (
-    <div className="w-80 h-full border-r bg-white flex flex-col">
-      <ConnectGithubDialog
-        isOpen={showGithubDialog}
-        onClose={() => setShowGithubDialog(false)}
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="absolute inset-0 z-20 bg-black/10 backdrop-blur-[1px]"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx,.md,.html,.txt"
+        onChange={handleFileUpload}
+        className="hidden"
       />
-      <div className="p-4 border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Find"
-            className="pl-9 bg-gray-50 border-transparent focus:bg-white transition-colors"
-          />
+
+      {/* Drawer */}
+      <div
+        className={cn(
+          "absolute left-0 top-0 bottom-0 z-30 w-72 bg-white border-r border-gray-100 shadow-xl flex flex-col transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Add Source</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Connect a data source to your identity
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Sources list */}
+        <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+          {isUploading ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <p className="text-xs text-gray-400">
+                Uploading and ingesting...
+              </p>
+            </div>
+          ) : (
+            SIDEBAR_SOURCES.map((source) => {
+              const config = SOURCE_CONFIG[source.id];
+              const Icon = config?.icon;
+              const isConnected = connectedPlatforms.includes(source.id);
+              // Documents can always be clicked even if connected (to add more files)
+              const isClickable =
+                source.available && (source.id === "documents" || !isConnected);
+
+              return (
+                <button
+                  key={source.id}
+                  onClick={() => isClickable && handleSourceClick(source.id)}
+                  disabled={!isClickable}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all duration-150",
+                    isClickable
+                      ? "hover:bg-gray-50 cursor-pointer"
+                      : "cursor-not-allowed opacity-40",
+                  )}
+                >
+                  {/* Icon */}
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: config?.bg || "#f5f5f5" }}
+                  >
+                    {Icon && (
+                      <Icon
+                        className="w-5 h-5"
+                        style={{ color: config?.color }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {source.title}
+                    </p>
+                    <p className="text-xs text-gray-400">{source.subtitle}</p>
+                  </div>
+
+                  {/* Badge */}
+                  <div className="flex-shrink-0">
+                    {isConnected && source.id !== "documents" ? (
+                      <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        Connected
+                      </span>
+                    ) : source.comingSoon ? (
+                      <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        Soon
+                      </span>
+                    ) : source.id === "documents" && isConnected ? (
+                      <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                        Add more
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        Connect
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-gray-100">
+          <p className="text-[11px] text-gray-400 text-center">
+            More integrations coming soon
+          </p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <Accordion.Root
-          type="multiple"
-          defaultValue={["integration", "stores-utility"]}
-          className="w-full"
-        >
-          {integrations.map((integration) => (
-            <Accordion.Item
-              key={integration.id}
-              value={integration.id}
-              className="border-b last:border-0"
-            >
-              <Accordion.Header className="flex">
-                <Accordion.Trigger className="flex flex-1 items-center justify-between py-4 px-4 text-sm font-medium transition-all hover:bg-gray-50 [&[data-state=open]>svg]:rotate-180">
-                  {integration.title}
-                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                </Accordion.Trigger>
-              </Accordion.Header>
-              <Accordion.Content className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <div className="px-3 pb-3 pt-0 flex flex-col gap-2">
-                  {integration.items.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground text-xs italic">
-                      No items
-                    </div>
-                  ) : (
-                    integration.items.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleItemClick(item.id)}
-                        className="group flex items-center gap-3 rounded-lg border p-3 hover:shadow-md transition-all cursor-pointer bg-white"
-                      >
-                        <div
-                          className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                            item.iconBg,
-                          )}
-                        >
-                          <item.icon
-                            className={cn("h-5 w-5", item.iconColor)}
-                          />
-                        </div>
-                        <div className="flex flex-1 flex-col overflow-hidden">
-                          <span className="truncate font-medium">
-                            {item.title}
-                          </span>
-                          <span className="truncate text-xs text-muted-foreground">
-                            {item.subtitle}
-                          </span>
-                        </div>
-                        <button className="text-muted-foreground hover:text-yellow-400 focus:outline-none">
-                          <Star
-                            className={cn(
-                              "h-4 w-4",
-                              item.isFavorite
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300",
-                            )}
-                          />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Accordion.Content>
-            </Accordion.Item>
-          ))}
-        </Accordion.Root>
-      </div>
-    </div>
+      {/* GitHub Dialog */}
+      <ConnectGithubDialog
+        isOpen={showGithubDialog}
+        onClose={() => {
+          setShowGithubDialog(false);
+          onConnectionAdded();
+        }}
+      />
+    </>
   );
 }
